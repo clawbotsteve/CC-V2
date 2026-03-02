@@ -1,0 +1,100 @@
+TAVIRA LABS - TOOL & PLAN MAPPING
+
+Based on the new credit structure and the available tools, here is the breakdown of which tools are accessible on each plan, their underlying models, and their cost per use.
+
+---
+
+### TIER 0: FREE (1 generation only)
+*Goal: "Holy sh*t that's good" moment. Lowest compute cost possible.*
+
+- **Image Gen (Basic)**
+  - Model: Google Nano Banana Pro or Higgsfield Soul (720p)
+  - Access: 1 generation total (Watermarked)
+
+---
+
+### TIER 1: STARTER TRIAL & TIER 2: STARTER ($19.99/mo)
+*200 credits/month. Full tool access to get them hooked.*
+
+- **Image Gen (Basic)**
+  - Model: fal-ai/nano-banana-pro
+  - Cost: 1 credit
+- **Image Gen (High Quality - Soul 2.0)**
+  - Model: Higgsfield Text to Image [Soul] (1080p, 1 batch)
+  - Cost: 3 credits (Calculated for $0.20 margin based on $0.188 API cost)
+- **Prompt Gen/Optimizer**
+  - Model: Default LLM
+  - Cost: 1 credit
+- **Face Enhance**
+  - Model: Default Image processing
+  - Cost: 2 credits
+- **Image Editor/Upscaler**
+  - Model: fal-ai/nano-banana-pro/edit
+  - Cost: 3 credits
+- **Face Swap**
+  - Model: Default FaceSwap
+  - Cost: 4 credits
+- **Lipsync (Text-to-Video)**
+  - Model: fal-ai/kling-video/lipsync/text-to-video
+  - Cost: 5 credits
+- **Basic Video Gen (5s - Kling/Wan/Higgsfield Dop)**
+  - Model: wan_720p or Higgsfield Image to Video [Dop] (Lite)
+  - Cost: 10 credits
+- **Avatar to Video (5s)**
+  - Model: Kling standard
+  - Cost: 10 credits
+
+---
+
+### TIER 3: CREATOR ($49.99/mo)
+*600 credits/month. Introduction of premium audio and heavier video workflows.*
+
+- **ALL STARTER TOOLS**
+- **Lipsync (Audio-to-Video)**
+  - Model: fal-ai/kling-video/lipsync/audio-to-video or veed/lipsync
+  - Cost: 12 credits
+- **UGC Factory / Speak V2 (Talking Head)**
+  - Model: Higgsfield Speech to Video [Speak V2] (Mid Quality, 5s)
+  - Cost: 15 credits
+- **Standard Video Gen (10s)**
+  - Model: standard_10s
+  - Cost: 20 credits
+- **Soul ID (AI Characters)**
+  - Model: Higgsfield Character [Soul ID]
+  - Cost: 28 credits (calculated for $0.20/credit margin based on $2.50 API cost)
+
+---
+
+### TIER 4: STUDIO ($149.99/mo)
+*2,000 credits/month. Unlocks the highest-tier video generation and multi-step pipelines.*
+
+- **ALL CREATOR TOOLS**
+- **Premium Video Gen (Veo 3 High-Quality 4s)**
+  - Model: veo_4s
+  - Cost: 25 credits
+- **Premium Speech to Video [Speak V2]**
+  - Model: Higgsfield Speech to Video [Speak V2] (High Quality, 5s)
+  - Cost: 36 credits (calculated for $0.07/credit margin based on $1.13 API cost)
+- **Click to Ad (Full Pipeline)**
+  - Model: Combo (Veo 3/Speak V2 + scripting + Soul ID)
+  - Cost: 40 credits
+- **Multi-Avatar Training**
+  - Model: fal-ai/flux-lora-fast-training
+  - Cost: 80 credits
+- **API Access**
+- **White-label Exports (No branding)**
+
+---
+
+### Summary of Tool Endpoints (Including Higgsfield Native APIs):
+
+*Note: Since Soul 2.0 and Speak V2 are NOT on fal.ai, these will be requested directly from Higgsfield's newly announced API using their Node.js SDK.*
+
+| Tool                      | Higgsfield Model                           | Fal.ai Equivalent?                                   | Endpoint                                                                                                                           |
+| ------------------------- | ------------------------------------------ | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| UGC Factory / UGC Builder | Speech to Video [Speak V2]                 | Veo 3.1                                              | **Higgsfield API**: \`/speech-to-video\` OR **fal.ai**: \`fal-ai/veo3.1/reference-to-video\`                                           |
+| Lipsync Studio            | WAN 2.5 + proprietary lipsync              | Kling LipSync + VEED Lipsync                         | **fal.ai**: \`fal-ai/kling-video/lipsync/...\` and \`veed/lipsync\`                                                                    |
+| Soul ID (AI characters)   | Character [Soul ID]                        | Flux LoRA training + Nano Banana Pro                 | **Higgsfield API**: \`/character\` (Soul ID creation endpoint)                                                                         |
+| High-Quality Image Gen    | Text to Image [Soul 2.0]                   | Imagen 4 (Nano Banana Pro)                           | **Higgsfield API**: \`/text-to-image\` OR **fal.ai**: \`fal-ai/nano-banana-pro\`                                                       |
+| Video Gen (Fast)          | Image to Video [Dop]                       | Kling/Wan                                            | **Higgsfield API**: \`/image-to-video\`                                                                                                |
+| Click to Ad               | Combo: Speak V2 + scripting + Soul ID      | Can replicate with multiple models                   | *Pipeline built on backend utilizing Higgsfield endpoints*                                                                         |

@@ -1,0 +1,529 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+//
+// ENUMS
+//
+
+enum Mode {
+  character
+  product
+  style
+  general
+}
+
+enum Gender {
+  male
+  female
+}
+
+enum SpeedLevel {
+  standard
+  priority
+  fast
+  fastest
+}
+
+enum SupportLevel {
+  community_email
+  priority_email
+  dedicated
+  priority_chat
+}
+
+enum TrainingType {
+  full_ai
+  photo
+  video
+}
+
+enum ToolType {
+  IMAGE_GENERATOR
+  VIDEO_GENERATOR
+  IMAGE_EDITOR
+  FACE_ENHANCE
+  IMAGE_UPSCALER
+  PROMPT_GENERATOR
+  PROMPT_OPTIMIZER
+  AVATAR_TO_VIDEO
+  AVATAR_TRAINING
+}
+
+enum AspectRatio {
+  square
+  portrait_4_3
+  portrait_16_9
+  landscape_4_3
+  landscape_16_9
+}
+
+enum GenerationStatus {
+  queued
+  processing
+  completed
+  failed
+}
+
+enum ContentType {
+  sfw
+  nsfw
+}
+
+enum ImageVariant {
+  sfw
+  nsfw
+}
+
+enum VideoVariant {
+  standard_5s
+  nsfw_5s
+  standard_10s
+  nsfw_10s
+  wan_720p
+  veo_4s
+  veo_8s
+}
+
+enum OutputFormat {
+  png
+  jpeg
+}
+
+enum SafetyLevel {
+  LEVEL_1 @map("1")
+  LEVEL_2 @map("2")
+  LEVEL_3 @map("3")
+  LEVEL_4 @map("4")
+  LEVEL_5 @map("5")
+  LEVEL_6 @map("6")
+}
+
+//
+// USER + SUBSCRIPTION
+//
+
+model UserApiLimit {
+  id                      String   @id @default(cuid())
+  userId                  String   @unique
+  availableAvatarSlot     Int      @default(0)
+  avatarSlotUsed          Int      @default(0)
+  monthlyRemainingCredits Float    @default(0)
+  availableCredit         Float    @default(0)
+  creditUsed              Float    @default(0)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+}
+
+enum SubscriptionStatus {
+  active
+  canceled
+  past_due
+  trialing
+  incomplete
+  incomplete_expired
+}
+
+model UserSubscription {
+  id                     String             @id @default(cuid())
+  userId                 String             @unique
+  planId                 String
+  plan                   SubscriptionTier   @relation(fields: [planId], references: [id])
+  phyziroPriceId         String?            @map("phyziro_price_id")
+  phyziroCurrentPeriodEnd DateTime?         @map("phyziro_current_period_end")
+  phyziroSubscriptionId  String?            @map("phyziro_subscription_id")
+  status                 SubscriptionStatus @default(active)
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  @@index([userId])
+  @@index([planId])
+}
+
+enum PlanStatus {
+  active
+  archived
+}
+
+enum BillingPeriod {
+  weekly
+  monthly
+  three_months
+  half_yearly
+  yearly
+  two_years
+  three_years
+}
+
+model SubscriptionTier {
+  id                String             @id @default(cuid())
+  name              String
+  tier              String             @unique
+  price             Float              @default(0.00)
+  period            BillingPeriod      @default(monthly)
+  creditsPerMonth   Int
+  speed             SpeedLevel
+  support           SupportLevel
+  maxAvatarCount    Int
+  devPriceId        String?            @default("")
+  phyziroPriceId    String?            @default("")
+  status            PlanStatus         @default(active)
+  toolCosts         ToolCreditCost[]
+  userSubscriptions UserSubscription[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+model ToolCreditCost {
+  id         String           @id @default(cuid())
+  tool       ToolType
+  variant    String?
+  creditCost Float
+  tierId     String
+  tier       SubscriptionTier @relation(fields: [tierId], references: [id])
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  @@unique([tierId, tool, variant])
+}
+
+model CreditPack {
+  id                 String   @id @default(cuid())
+  name               String   @unique
+  credits            Int
+  price              Float
+  packId             String   @unique
+  autoTopUpAvailable Boolean
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+//
+// GENERATION MODELS
+//
+
+model GeneratedImage {
+  id             String           @id @default(cuid())
+  userId         String
+  imageUrl       String
+  images         Json?
+  prompt         String           @default("No prompt")
+  aspectRatio    AspectRatio?     @default(square)
+  contentType    ContentType      @default(nsfw)
+  nsfwFlag       Boolean          @default(false)
+  variant        ImageVariant     @default(nsfw)
+  generationTime DateTime         @default(now())
+  reason         Json?
+  status         GenerationStatus
+  creditUsed     Float            @default(0)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@index([userId])
+}
+
+model GeneratedVideo {
+  id             String           @id @default(cuid())
+  userId         String
+  model          String           @default("")
+  videoUrl       String?
+  prompt         String
+  negativePrompt String?
+  adherence      Float
+  aspectRatio    String
+  duration       Int
+  contentType    ContentType      @default(nsfw)
+  nsfwFlag       Boolean          @default(false)
+  variant        VideoVariant     @default(wan_720p)
+  generationTime DateTime         @default(now())
+  reason         Json?
+  status         GenerationStatus
+  creditUsed     Float            @default(0)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@index([createdAt])
+}
+
+model Upscaled {
+  id              String           @id @default(cuid())
+  userId          String
+  originalImage   String
+  upscaledImage   String
+  scale           Float
+  steps           Int
+  dynamic         Int
+  creativity      Float
+  resemblance     Float
+  promptAdherence Float
+  safetyFilter    Boolean
+  prompt          String?
+  negativePrompt  String?
+  nsfwFlag        Boolean          @default(false)
+  generationTime  DateTime         @default(now())
+  reason          Json?
+  status          GenerationStatus
+  creditUsed      Float            @default(0)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([createdAt])
+}
+
+model ImageAnalysis {
+  id             String           @id @default(cuid())
+  userId         String
+  originalImage  String
+  description    String
+  prompt         String
+  nsfwFlag       Boolean          @default(false)
+  generationTime DateTime         @default(now())
+  reason         Json?
+  status         GenerationStatus
+  creditUsed     Float            @default(0)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@index([createdAt])
+}
+
+model ImageEdit {
+  id             String           @id @default(cuid())
+  userId         String
+  prompt         String
+  originalUrl    String
+  editedUrl      String
+  strength       Float            @default(0.75)
+  steps          Int              @default(30)
+  adherence      Float            @default(10)
+  count          Int              @default(1)
+  safe           Boolean          @default(true)
+  nsfwFlag       Boolean          @default(false)
+  generationTime DateTime         @default(now())
+  reason         Json?
+  status         GenerationStatus
+  creditUsed     Float            @default(0)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@index([createdAt])
+}
+
+model FaceEnhance {
+  id             String           @id @default(cuid())
+  userId         String
+  originalUrl    String
+  editedUrl      String
+  aspectRatio    AspectRatio      @default(portrait_16_9)
+  guidanceScale  Float            @default(3.5)
+  inferenceStep  Float            @default(30)
+  outputFormat   OutputFormat     @default(png)
+  safetyLevel    SafetyLevel      @default(LEVEL_6)
+  nsfwFlag       Boolean          @default(false)
+  generationTime DateTime         @default(now())
+  reason         Json?
+  status         GenerationStatus @default(queued)
+  creditUsed     Float            @default(0)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@index([createdAt])
+}
+
+//
+// SPECIAL FEATURES
+//
+
+model Influencer {
+  id                  String           @id @default(cuid())
+  userId              String
+  introVideoRequestId String           @default("")
+  name                String
+  description         String?
+  gender              Gender           @default(female)
+  mode                Mode             @default(character)
+  step                String?          @default("")
+  triggerWord         String           @default("")
+  trainingFile        String?
+  loraUrl             String?
+  configUrl           String?
+  avatarImageUrl      String           @default("")
+  introVideoUrl       String           @default("")
+  introPrompt         String           @default("")
+  status              GenerationStatus @default(queued)
+  creditUsed          Float            @default(0)
+  isActive            Boolean          @default(true)
+  isPublic            Boolean          @default(false)
+  contentType         ContentType      @default(sfw)
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  lora Lora? @relation("InfluencerLora")
+}
+
+model FaceSwap {
+  id               String           @id @default(cuid())
+  userId           String
+  firstFace        String
+  firstUserGender  String
+  secondFace       String?
+  secondUserGender String?
+  targetImage      String
+  swapedUrl        String?
+  workflowType     String
+  upscale2x        Boolean          @default(false)
+  enableDetailer   Boolean          @default(false)
+  nsfwFlag         Boolean          @default(false)
+  status           GenerationStatus
+  creditUsed       Float            @default(0)
+  generationTime   DateTime         @default(now())
+  reason           Json?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+}
+
+//
+// PAYMENT + TRANSACTIONS
+//
+
+model Transaction {
+  id        String   @id @default(cuid())
+  userId    String
+  phyziroId  String?   @unique
+  amount    Int
+  currency  String
+  status    String
+  type      String // e.g., "subscription", "credit_pack"
+  metadata  Json
+  createdAt DateTime
+}
+
+model DailyUsage {
+  id         String   @id @default(cuid())
+  userId     String
+  date       DateTime
+  creditUsed Float    @default(0)
+  imageCount Int      @default(0)
+
+  @@unique([userId, date])
+  @@index([date])
+}
+
+model ReferralCode {
+  id           String   @id @default(cuid())
+  userId       String   @unique // Clerk user ID
+  referralCode String   @unique // e.g. "ABC123"
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Referral {
+  id             String          @id @default(cuid())
+  refereeId      String     // Clerk user ID who Share code
+  referredUserId String     // Clerk user ID who used code
+  referralCode   String // Code used
+  event          String // e.g. "signup", "first_video"
+  planId         String? // plan_id if subscribe
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  ReferralReward ReferralReward?
+}
+
+model ReferralReward {
+  id             String   @id @default(cuid())
+  referralId     String   @unique
+  referral       Referral @relation(fields: [referralId], references: [id])
+  referrerId     String // user who shared the code
+  refereeId      String // user who used the code
+  referrerReward Int      @default(0) // e.g. money or credit
+  refereeReward  Int      @default(0) // e.g. credit or discount
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+enum OnboardingStep {
+  WELCOME // Step 1: Welcome message
+  TOOL_INTRO // Step 2: Brief intro to all tools
+  BILLING_PROMPT // Step 3: Prompt for billing (or show confirmation if already subscribed)
+
+  LORA_TRAINING_INTRO // Step 4: If free — explain LoRA
+  LORA_TRAINING_START // Step 4: If subscribed — start LoRA creation
+
+  IMAGE_GENERATION_INTRO // Step 5: If free — explain image generation
+  VIDEO_GENERATION_START // Step 5: If subscribed — guide to video generation
+
+  IMAGE_GENERATION_START // Step 6: All users — direct to image generation
+
+  COMPLETE // Final: onboarding complete
+}
+
+model User {
+  id                     String          @id @default(cuid())
+  userId                 String          @unique
+  name                   String?         @default("")
+  email                  String?         @default("")
+  imageUrl               String?         @default("")
+  firstVisit             Boolean         @default(true)
+  onboardingStartedAt    DateTime?
+  onboardingCompletedAt  DateTime?
+  onboardingStep         OnboardingStep? @default(WELCOME)
+  hasCompletedOnboarding Boolean         @default(false)
+  firstSeenAt            DateTime?
+  lastSeenAt             DateTime?
+  lastLoginAt            DateTime?
+  lastActiveAt           DateTime?
+  totalLogins            Int             @default(0)
+  totalSessions          Int             @default(0)
+  lastFeatureUsed        String?         @default("")
+  featuresUsed           String[]
+  referralCode           String?         @default("")
+  referredBy             String?         @default("")
+  utmSource              String?         @default("")
+  utmMedium              String?         @default("")
+  utmCampaign            String?         @default("")
+  posthogId              String?         @unique
+  isActive               Boolean         @default(true)
+  isBanned               Boolean         @default(false)
+  meta                   Json?
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+}
+
+model Admin {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Lora {
+  id            String           @id @default(cuid())
+  name          String
+  description   String?
+  version       String           @default("1.0.0")
+  createdBy     String
+  influencerId  String?          @unique
+  influencer    Influencer?      @relation("InfluencerLora", fields: [influencerId], references: [id])
+  status        GenerationStatus @default(queued)
+  isListed      Boolean          @default(false)
+  price         Float?
+  phyziroPriceId String?
+  purchases     LoraPurchase[]
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+}
+
+model LoraPurchase {
+  id          String   @id @default(cuid())
+  userId      String
+  loraId      String
+  lora        Lora     @relation(fields: [loraId], references: [id])
+  purchasedAt DateTime @default(now())
+
+  @@unique([userId, loraId])
+}

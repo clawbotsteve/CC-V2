@@ -1,0 +1,100 @@
+The Psychology: Free taste → low-friction trial → monthly habit → upgrade for power
+
+---
+
+TIER 0: FREE (forever)
+1 image generation. That's it. No credits, no timer. One single photo to see the magic.
+Watermarked output
+Forces signup (captures email for marketing)
+Goal: "Holy shit that's good" moment → immediately wants more
+
+TIER 1: STARTER TRIAL — $0 for 24 hours
+50 credits for 24 hours (enough for ~40 images, 2 short videos, or 1 avatar training)
+Full tool access — no feature gates
+No watermark
+Requires payment method on file (like Netflix free trial)
+Auto-converts to Starter plan after 24h unless cancelled
+Goal: Let them actually USE the platform, get hooked, have content they don't want to lose
+
+TIER 2: STARTER — $19.99/mo
+200 credits/month
+All tools unlocked
+1 avatar slot
+Standard processing speed
+This is your "impulse buy" tier — under $20 feels cheap
+Good for casual creators posting 2-3x/week
+
+TIER 3: CREATOR — $49.99/mo
+600 credits/month
+All tools unlocked
+3 avatar slots
+Priority processing
+This is your bread and butter — most users land here
+Good for daily creators, small agencies
+
+TIER 4: STUDIO — $149.99/mo
+2,000 credits/month
+All tools unlocked
+10 avatar slots
+Priority processing
+API access (for power users/devs)
+White-label exports (no Tavira branding)
+This is for agencies and serious operators
+
+---
+CREDIT COSTS (what I'd charge):
+
+Cheap tools (1-2 credits) — impulse use:
+Image gen: 1 credit
+Prompt gen/optimizer: 1 credit
+Face enhance: 2 credits
+
+Medium tools (3-5 credits):
+Image editor: 3 credits
+Image upscaler: 3 credits
+Face swap: 4 credits
+Lipsync (text): 5 credits
+
+Expensive tools (10-25 credits) — video/training:
+Video 5s (Kling/Wan): 10 credits
+Video 5s (NSFW): 8 credits
+Video 10s: 20 credits
+Lipsync (audio-to-video): 12 credits
+Avatar to video (5s): 10 credits
+UGC Factory (Veo 3 talking head): 15 credits
+Premium tools (25-80 credits):
+Veo 3 high-quality (4s): 25 credits
+Veo 3 high-quality (8s): 50 credits
+Click to Ad (full pipeline): 40 credits
+Soul ID (character creation): 30 credits
+Avatar/LoRA training: 80 credits
+
+---
+
+CREDIT PACKS (pay-as-you-go top-ups):
+100 credits — $9.99 ($0.10/credit)
+500 credits — $39.99 ($0.08/credit — 20% savings)
+1,500 credits — $99.99 ($0.067/credit — 33% savings)
+These never expire and stack on top of monthly.
+
+---
+
+WHY THIS STRUCTURE:
+
+$19.99 entry instead of $29.95 — breaks the $20 psychological barrier. Way more signups.
+24hr trial with payment method — conversion rates are 60-80% vs 2-5% for "free tier with no card." People forget to cancel, and by then they're hooked.
+3 tiers not 4 (plus free + trial) — less decision paralysis. Starter/Creator/Studio is dead simple.
+Simpler credit costs — round numbers (1, 2, 3, 5, 10, 20, etc.) instead of 11, 22, 51, 101. Users can do math in their head.
+Credit packs as escape valve — when someone runs out mid-month, they buy a pack instead of upgrading. Pure profit.
+Studio at $149.99 with API access — captures the agency market without a custom enterprise tier.
+Same margins — still 120%+ on all tools, just cleaner presentation.
+
+---
+
+Revenue math on 1,000 users:
+40% Free/Trial (churn): $0
+30% Starter ($19.99): $5,997/mo
+20% Creator ($49.99): $9,998/mo
+8% Studio ($149.99): $11,999/mo
+2% credit pack purchases: ~$2,000/mo
+Total: ~$30K/mo on 1,000 paying users

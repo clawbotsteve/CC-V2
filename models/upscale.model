@@ -1,0 +1,24 @@
+fal-ai/clarity-upscaler
+  image_url - string
+  prompt - string
+  upscale_factor - float
+  negative_prompt - string
+  creativity - float
+  resemblance - float
+  guidance_scale - float
+  num_inference_steps - integer
+  seed - integer
+  enable_safety_checker - boolean
+
+  output::
+  image - Image
+  seed - integer
+  timings - Timings
+
+    Image
+      url - string
+      content_type - string
+      file_name - string
+      file_size - integer
+      width - integer
+      height - integer

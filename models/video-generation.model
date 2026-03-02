@@ -1,0 +1,26 @@
+fal-ai/kling-video/v2.1/pro/image-to-video
+  prompt - string
+  image_url - string
+  duration - DurationEnum "5", "10"
+  negative_prompt - string
+  cfg_scale - float
+
+  output::
+  video - File
+
+    File
+      url - string
+
+
+
+fal-ai/wan-pro/image-to-video
+  prompt - string
+  seed - integer
+  enable_safety_checker - boolean
+  image_url - string
+
+  output::
+  video - File
+
+    File
+      url - string

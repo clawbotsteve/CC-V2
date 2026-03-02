@@ -1,0 +1,27 @@
+fal-ai/flux/dev/image-to-image
+  image_url - string
+  strength - float
+  num_inference_steps - integer
+  prompt - string
+  seed - integer
+  guidance_scale - float
+  sync_mode - boolean
+  num_images - integer
+  enable_safety_checker - boolean
+  output_format - string
+  acceleration - string
+
+  output::
+    images - list\<Image>
+    timings - Timings
+    seed - integer
+    has_nsfw_concepts - list\<boolean>
+    prompt - string
+
+      Image
+        url - string
+        content_type - string
+        file_name - string
+        file_size - integer
+        width - integer
+        height - integer

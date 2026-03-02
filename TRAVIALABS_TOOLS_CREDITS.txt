@@ -1,0 +1,168 @@
+TraviaLabs Tools + Generation Credits
+Updated: 2026-03-01
+
+NOTE
+- This list reflects current fallback credit logic in:
+  - constants.ts (CREDIT_COSTS)
+  - lib/get-credit-cost.ts (tool/variant mapping)
+- If your DB has ToolCreditCost overrides, those supersede these values.
+
+==================================================
+1) IMAGE GENERATION
+==================================================
+Base image generation:
+- IMAGE_GENERATION = 1 credit
+
+Nano Banana 2 variants:
+- nano_banana_2_1k = 2 credits
+- nano_banana_2_2k = 3 credits
+- nano_banana_2_4k = 4 credits
+
+Prompt helpers:
+- PROMPT_GENERATION = 1 credit
+- PROMPT_OPTIMIZER = 1 credit
+
+==================================================
+2) VIDEO GENERATION
+==================================================
+Kling:
+- kling_audio_5s = 10 credits
+- kling_audio_10s = 20 credits
+- kling_silent_5s = 8 credits
+- kling_silent_10s = 16 credits
+
+Other video variants:
+- standard_5s = 10 credits
+- standard_10s = 20 credits
+- nsfw_5s = 8 credits
+- nsfw_10s = 20 credits
+- veo_4s = 25 credits
+- veo_8s = 50 credits
+
+==================================================
+3) IMAGE EDIT / ENHANCE
+==================================================
+- IMAGE_EDITOR = 3 credits
+- FACE_SWAP = 4 credits
+- FACE_ENHANCE = 2 credits
+
+==================================================
+4) UPSCALE TOOLS
+==================================================
+SeedVR Image Upscale (fal-ai/seedvr/upscale/image):
+- image_upscale_seedvr = 5 credits
+
+Bytedance Video Upscale (fal-ai/bytedance-upscaler/upscale/video):
+- video_upscale_bytedance_1080p_30fps = 15 credits
+- video_upscale_bytedance_2k_30fps = 30 credits
+- video_upscale_bytedance_4k_30fps = 60 credits
+- video_upscale_bytedance_1080p_60fps = 30 credits
+- video_upscale_bytedance_2k_60fps = 60 credits
+- video_upscale_bytedance_4k_60fps = 120 credits
+
+Legacy fallback (if no variant passed):
+- IMAGE_UPSCALE = 3 credits
+
+==================================================
+5) OTHER TOOL CREDITS IN CONSTANTS
+==================================================
+- LIPSYNC_TEXT = 5
+- LIPSYNC_AUDIO = 12
+- AVATAR_VIDEO_5S = 10
+- UGC_FACTORY = 15
+- CLICK_TO_AD = 40
+- SOUL_ID = 30
+- AVATAR_TRAINING = 80
+
+==================================================
+6) CURRENT USER-FACING TOOL BUCKETS (NAVBAR)
+==================================================
+Image:
+- Nano Banana 2
+- Nano Banana 2 Edit
+- Flux LoRA
+- Flux Pro V1
+
+Video:
+- Kling 2.6
+- Kling Motion Control
+- Bytedance
+- Veo 3.1
+
+Edit:
+- Image Editor
+- Face Enhance
+- Upscale
+- SeedVR Image Upscale
+- Bytedance Video Upscale
+
+==================================================
+7) PER-PLAN "HOW MANY GENERATIONS POSSIBLE" MATRIX
+==================================================
+Plan monthly credits used:
+- Free: 1 single image total (special rule, not a monthly credit pool)
+- Starter: 200 credits/month
+- Creator: 600 credits/month
+- Studio: 2000 credits/month
+
+Approx max generations per month (credits / cost):
+
+Tool Variant                          Cost   Starter(200) Creator(600) Studio(2000)
+-------------------------------------------------------------------------------------
+IMAGE_GENERATION                       1     200          600          2000
+nano_banana_2_1k                       2     100          300          1000
+nano_banana_2_2k                       3     66           200          666
+nano_banana_2_4k                       4     50           150          500
+IMAGE_EDITOR                           3     66           200          666
+FACE_ENHANCE                           2     100          300          1000
+kling_audio_5s                        10     20           60           200
+kling_audio_10s                       20     10           30           100
+kling_silent_5s                        8     25           75           250
+kling_silent_10s                      16     12           37           125
+veo_4s                                25     8            24           80
+veo_8s                                50     4            12           40
+image_upscale_seedvr                   5     40           120          400
+video_upscale_bytedance_1080p_30fps   15     13           40           133
+video_upscale_bytedance_2k_30fps      30     6            20           66
+video_upscale_bytedance_4k_30fps      60     3            10           33
+
+(Counts are floor-rounded.)
+
+==================================================
+8) MONTHLY VS ANNUAL EFFECTIVE OUTPUT COUNTS
+==================================================
+Current pricing UI applies annual discount = 20% off price.
+Assuming credits/month stay the same by tier:
+
+- Monthly outputs: same as matrix above.
+- Annual outputs over 12 months: monthly outputs x 12 (for each tool).
+- Effective output-per-dollar gain with 20% annual discount:
+  -> approximately +25% output per $ vs monthly pricing.
+
+Example (Starter, kling_audio_5s):
+- Monthly: 20 clips/month
+- Annual total: 240 clips/year
+- Per-dollar efficiency: ~25% better than monthly billing
+
+==================================================
+9) GROSS MARGIN ESTIMATE PER MODEL ENDPOINT (FRAMEWORK)
+==================================================
+Exact margin requires provider COGS per generation (internal billing data).
+Use this formula per tool variant:
+
+- Revenue per generation = (plan monthly price / plan monthly credits) * tool credit cost
+- Gross Margin % = (Revenue per generation - Provider Cost per generation) / Revenue per generation
+
+Recommended tracking table (fill provider costs):
+
+Endpoint                                      Credit Cost   Provider Cost   Revenue/Gen   Margin %
+-----------------------------------------------------------------------------------------------
+fal-ai/nano-banana-2 (1k)                     2             [fill]          [calc]        [calc]
+fal-ai/nano-banana-2 (2k)                     3             [fill]          [calc]        [calc]
+fal-ai/nano-banana-2 (4k)                     4             [fill]          [calc]        [calc]
+fal-ai/kling-video/v2.6/pro/image-to-video    10/20         [fill]          [calc]        [calc]
+fal-ai/veo3.1/fast/image-to-video             25/50         [fill]          [calc]        [calc]
+fal-ai/seedvr/upscale/image                   5             [fill]          [calc]        [calc]
+fal-ai/bytedance-upscaler/upscale/video       15..120       [fill]          [calc]        [calc]
+
+If you want, I can generate a second file that auto-calculates margin once you provide provider COGS values per endpoint.

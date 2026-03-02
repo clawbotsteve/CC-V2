@@ -1,0 +1,88 @@
+fal-ai/flux-pro/kontext
+  prompt - string
+  seed - int
+  guidance_scale float
+  sync_mode boolean
+  num_images integer
+  output_format OutputFormatEnum
+  safety_tolerance SafetyToleranceEnum "1", "2", "3", "4", "5", "6"
+  aspect_ratio AspectRatioEnum 21:9, 16:9, 4:3, 3:2, 1:1, 2:3, 3:4, 9:16, 9:21
+  image_url string
+
+
+  output::
+    images list<fal__toolkit__image__image__Image>
+    timings Timings
+    seed integer
+    has_nsfw_concepts list<boolean>
+    prompt string
+
+    fal__toolkit__image__image__Image
+      url string
+      content_type string
+      file_name string
+      file_size int
+      file_data string
+      width int
+      height int
+
+
+fal-ai/flux-pro/v1.1
+  prompt string
+  seed int
+  image_size ImageSize | Enum square_hd, square, portrait_4_3, portrait_16_9, landscape_4_3, landscape_16_9
+  sync_mode boolean
+  num_images integer
+  enable_safety_checker boolean
+  output_format OutputFormatEnum
+  safety_tolerance SafetyToleranceEnum "1", "2", "3", "4", "5", "6"
+
+  "image_size": {
+    "width": 1280,
+    "height": 720
+  }
+
+  output::
+    images list<registry__image__fast_sdxl__models__Image>
+    timings Timings
+    seed int
+    has_nsfw_concepts list<boolean>
+    prompt string
+
+    registry__image__fast_sdxl__models__Image
+      url string
+      width integer
+      height integer
+      content_type string
+
+
+fal-ai/flux-lora
+  prompt string
+  seed int
+  guidance_scale float
+  image_size ImageSize | Enum square_hd, square, portrait_4_3, portrait_16_9, landscape_4_3, landscape_16_9
+  num_inference_steps integer
+  loras list<LoraWeight>
+  sync_mode boolean
+  num_images integer
+  enable_safety_checker boolean
+  output_format OutputFormatEnum
+
+  "image_size": {
+    "width": 1280,
+    "height": 720
+  }
+
+
+  output::
+    images list<Image>
+    timings Timings
+    seed integer
+    has_nsfw_concepts list<boolean>
+    prompt string
+
+    Image
+      url string
+      width integer
+      height integer
+      content_type string

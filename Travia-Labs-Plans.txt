@@ -1,0 +1,113 @@
+Travia Labs Plans (Recommended Access Layout)
+Updated: 2026-03-01
+
+Goal
+- Keep Starter simple and low-risk
+- Make Creator the strongest value tier
+- Reserve highest-cost premium inference (Veo 3.1) for Studio
+
+==================================================
+PLAN 1: STARTER (200 credits/month)
+==================================================
+Include:
+- Nano Banana 2 (all current resolutions)
+- Kling 2.6 (audio on/off)
+- Prompt Generation
+- Prompt Optimizer
+
+Exclude:
+- Kling Motion Control
+- Veo 3.1
+- SeedVR Image Upscale
+- Bytedance Video Upscale
+- (Optional) Face Swap + advanced editor actions if abuse risk is high
+
+Why:
+- Keeps cost-per-user predictable
+- Reduces support load and complexity for new users
+- Protects margin from expensive/abuse-prone endpoints
+
+==================================================
+PLAN 2: CREATORCORE (600 credits/month)
+==================================================
+Include:
+- Everything in Starter
+- Kling Motion Control
+- SeedVR Image Upscale
+- Bytedance Video Upscale
+- Image Editor
+- Face Enhance
+- Face Swap
+- Flux LoRA / Flux Pro V1 paths (if currently enabled)
+
+Exclude:
+- Veo 3.1
+
+Why:
+- Big value jump from Starter
+- Unlocks creator workflows (motion + upscale + edit)
+- Avoids Veo cost volatility
+
+==================================================
+PLAN 3: STUDIO (2000 credits/month)
+==================================================
+Include:
+- Everything in CreatorCore
+- Veo 3.1 (all supported durations)
+- All tools/models currently in production
+
+Why:
+- Premium tier can absorb premium inference costs
+- Clear reason to upgrade from CreatorCore
+
+==================================================
+DOUBLE-CHECK: VALUABLE ITEMS YOU SHOULD INCLUDE
+==================================================
+1) Access gating dimensions (not just model names)
+- Gate by:
+  - ToolType
+  - Model
+  - Variant (critical for expensive variants like Veo and high-end upscale)
+
+2) Variant-level limits for cost control
+- Example:
+  - Starter: allow Kling 5s only (optional), block 10s if needed
+  - CreatorCore: allow Bytedance upscales but cap 4k/60fps if margin is thin
+  - Studio: full variant access
+
+3) Abuse/risk controls
+- Per-day soft caps per tier for high-cost routes
+- Concurrency caps by tier
+- Queue priority by tier (Studio highest)
+
+4) Pricing-page clarity
+- Add explicit “Not included” lines for:
+  - Motion Control (Starter)
+  - Veo 3.1 (Starter + CreatorCore)
+
+5) Credit predictability labels
+- Label expensive tools with “high credit usage” in UI to reduce churn/friction
+
+6) Annual plan consistency
+- Keep features equal between monthly/annual for same tier
+- Only change price/effective value, not tool access matrix
+
+==================================================
+RECOMMENDED FINAL MATRIX (concise)
+==================================================
+Starter
+- YES: Nano Banana 2, Kling 2.6, prompt tools
+- NO: Motion Control, Veo 3.1, all upscale tools
+
+CreatorCore
+- YES: Starter + Motion Control + SeedVR + Bytedance Upscale + full edit suite
+- NO: Veo 3.1
+
+Studio
+- YES: All models and all tools (including Veo 3.1)
+
+==================================================
+Implementation Notes
+==================================================
+- Enforce in backend authorization (source of truth), not just UI visibility.
+- Keep UI labels aligned with backend gate rules to avoid user confusion.

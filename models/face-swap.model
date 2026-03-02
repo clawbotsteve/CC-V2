@@ -1,0 +1,20 @@
+easel-ai/advanced-face-swap
+  face_image_0 - Image
+  gender_0 - UserGenderEnum "male", "female", "non-binary"
+  face_image_1 - Image
+  gender_1 - SecondUserGenderEnum "male", "female", "non-binary"
+  target_image - Image
+  workflow_type - WorkflowTypeEnum "user_hair", "target_hair"
+  upscale - boolean
+  detailer - boolean
+
+  output::
+  image - Image
+
+    Image
+      url - string
+      content_type - string
+      file_name - string
+      file_size - integer
+      width - integer
+      height - integer

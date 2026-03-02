@@ -1,0 +1,14 @@
+fal-ai/video-prompt-generator
+  input_concept - string
+  style - string
+  camera_style - string
+  camera_direction - string
+  pacing - string
+  special_effects - string
+  custom_elements - string
+  image_url - string
+  model - string
+  prompt_length - string
+
+  output::
+    prompt - string
