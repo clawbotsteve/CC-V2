@@ -32,7 +32,7 @@ import { PlanLabel } from "../plan-label";
 export const company = {
   name: "Tavira Labs",
   logo: logo,
-  plan: "Pro",
+  plan: "Creator",
 };
 
 interface AppSidebarProps {

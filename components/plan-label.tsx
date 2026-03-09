@@ -1,28 +1,32 @@
 import { Star, Shield, Crown } from "lucide-react";
 import { JSX } from "react";
 
-type PlanKey = "FREE" | "BASIC" | "PRO" | "ELITE";
+type DisplayPlan = "FREE" | "STARTER" | "CREATOR" | "STUDIO";
+
+// Map DB tier suffixes to display names
+const TIER_DISPLAY_MAP: Record<string, DisplayPlan> = {
+  FREE: "FREE",
+  BASIC: "STARTER",
+  PRO: "CREATOR",
+  ELITE: "STUDIO",
+};
 
 export const PlanLabel = ({ plan }: { plan?: string }) => {
-  const rawPlanKey = plan?.split('_')[1]?.toUpperCase() || 'FREE';
+  const rawKey = plan?.split('_')[1]?.toUpperCase() || 'FREE';
+  const displayPlan = TIER_DISPLAY_MAP[rawKey] || "FREE";
 
-  // Narrow rawPlanKey to PlanKey, fallback to FREE if not in keys
-  const planKey = ["FREE", "BASIC", "PRO", "ELITE"].includes(rawPlanKey)
-    ? (rawPlanKey as PlanKey)
-    : "FREE";
-
-  const planInfo: Record<PlanKey, { icon: JSX.Element; emoji: string }> = {
+  const planInfo: Record<DisplayPlan, { icon: JSX.Element; emoji: string }> = {
     FREE: { icon: <Star className="inline h-4 w-4 mr-1 text-yellow-400" />, emoji: "✨" },
-    BASIC: { icon: <Star className="inline h-4 w-4 mr-1 text-yellow-400" />, emoji: "⭐" },
-    PRO: { icon: <Shield className="inline h-4 w-4 mr-1 text-blue-500" />, emoji: "🛡️" },
-    ELITE: { icon: <Crown className="inline h-4 w-4 mr-1 text-purple-600" />, emoji: "👑" },
+    STARTER: { icon: <Star className="inline h-4 w-4 mr-1 text-yellow-400" />, emoji: "⭐" },
+    CREATOR: { icon: <Shield className="inline h-4 w-4 mr-1 text-blue-500" />, emoji: "🛡️" },
+    STUDIO: { icon: <Crown className="inline h-4 w-4 mr-1 text-purple-600" />, emoji: "👑" },
   };
 
-  const { icon, emoji } = planInfo[planKey];
+  const { icon, emoji } = planInfo[displayPlan];
 
   return (
     <span className="inline-flex items-center">
-      {icon} {planKey}
+      {icon} {displayPlan}
     </span>
   );
 }

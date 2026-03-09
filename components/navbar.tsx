@@ -15,7 +15,7 @@ import NovuInbox from "@/components/ui/inbox/NovuInbox";
 export const company = {
   name: "Tavira Labs",
   logo: logo,
-  plan: "Pro",
+  plan: "Creator",
 };
 
 export default async function Navbar() {

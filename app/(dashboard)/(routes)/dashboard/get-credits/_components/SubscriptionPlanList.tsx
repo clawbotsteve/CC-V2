@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Check, Loader2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PLAN_MAPS, PlanKey } from "@/constants/pricing-constants";
+import { PLAN_MAPS, PlanKey, TIER_KEY_MAP } from "@/constants/pricing-constants";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useUserContext } from "@/components/layout/user-context";
@@ -80,10 +80,7 @@ export const SubscriptionPlanList = () => {
 
       {!isLoading && plans?.filter((p) => p.tier !== "plan_free")?.map((p) => {
         const isCurrent = p.tier === plan;
-        const planKey = p.tier
-          .replace(/_\d{2}$/, "")
-          .replace("plan_", "")
-          .replace(/^\w/, c => c.toUpperCase()) as PlanKey;
+        const planKey = TIER_KEY_MAP[p.tier] as PlanKey;
 
         if (!PLAN_MAPS.hasOwnProperty(planKey)) {
           return null;

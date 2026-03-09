@@ -132,10 +132,10 @@ export default function ImageGenerationStep({
   return (
     <div>
       {/* Step 3: Generate Photos Showcase */}
-      {currentStep === 3 && (
+      {currentStep === 2 && (
         <div className="space-y-8">
           <div className="text-center">
-            <h3 className="text-white text-3xl font-bold mb-4">Step 3: Generate Photos Example</h3>
+            <h3 className="text-white text-3xl font-bold mb-4">Image Generation</h3>
             <p className="text-white/70 text-lg">
               Use prompts to create stunning images with your trained AI influencer
             </p>

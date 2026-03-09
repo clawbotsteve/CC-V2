@@ -12,7 +12,7 @@ export default function FaceEnhancementStep({
       {currentStep === 4 && (
         <div className="space-y-8">
           <div className="text-center">
-            <h3 className="text-white text-3xl font-bold mb-4">Step {currentStep}: Enhance Your Photos</h3>
+            <h3 className="text-white text-3xl font-bold mb-4">Upscale & Enhance</h3>
             <p className="text-white/70 text-lg">Apply AI-powered enhancements to improve quality and realism</p>
           </div>
 

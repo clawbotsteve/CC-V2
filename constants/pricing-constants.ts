@@ -2,12 +2,12 @@ import { BillingPeriod, SubscriptionTier, ToolType } from "@prisma/client";
 
 export type PlanKey =
   | "Free"
-  | "Basic"
-  | "Basic3Month"
-  | "Pro"
-  | "Pro3Month"
-  | "Elite"
-  | "Elite3Month";
+  | "Starter"
+  | "Starter3Month"
+  | "Creator"
+  | "Creator3Month"
+  | "Studio"
+  | "Studio3Month";
 
 export type PlanPack = Omit<
   SubscriptionTier,
@@ -24,21 +24,21 @@ export type PlanPack = Omit<
 };
 
 const phyziroPriceIds = {
-  basic: {
+  starter: {
     monthly: "price_1RibEpRtdu7lUaLOgoGLsBmh",
     quarterly: "price_1Rlw3DRtdu7lUaLO0C418ytH",
     devMonthly: "sub_qbG3GEdLA4BVYNx77x4Gu-",
     devQuarterly: "price_1RlvnKRwZCqRcdsrOEkwWfJz",
     phyziro: "sub_qbG3GEdLA4BVYNx77x4Gu-"
   },
-  pro: {
+  creator: {
     monthly: "price_1RibEWRtdu7lUaLOgIifRtp4",
     quarterly: "price_1Rlw3xRtdu7lUaLOqov3V34X",
     devMonthly: "sub_YK3v1ji4MBCCj42zT72WFF",
     devQuarterly: "price_1RlvoIRwZCqRcdsr1WEwKbmR",
     phyziro: "sub_YK3v1ji4MBCCj42zT72WFF"
   },
-  elite: {
+  studio: {
     monthly: "price_1RibE9Rtdu7lUaLO6uzn3KS1",
     quarterly: "price_1Rlw4kRtdu7lUaLOzWJyRiDH",
     devMonthly: "sub_u4IUIG47Z3eTyTtZpTAjb5",
@@ -61,72 +61,72 @@ export const planPacks: Record<PlanKey, PlanPack> = {
     phyziroPriceId: ""
   },
 
-  Basic: {
-    key: "Basic",
-    name: "Basic Plan",
+  Starter: {
+    key: "Starter",
+    name: "Starter Plan",
     tier: "plan_basic",
-    price: 29.95,
+    price: 19.99,
     period: "monthly" as BillingPeriod,
-    creditsPerMonth: 300,
+    creditsPerMonth: 200,
     maxAvatarCount: 1,
-    devPriceId: phyziroPriceIds.basic.devMonthly,
-    phyziroPriceId: phyziroPriceIds.basic.phyziro,
+    devPriceId: phyziroPriceIds.starter.devMonthly,
+    phyziroPriceId: phyziroPriceIds.starter.phyziro,
   },
-  Basic3Month: {
-    key: "Basic3Month",
-    name: "Basic Plan - 3 Month",
+  Starter3Month: {
+    key: "Starter3Month",
+    name: "Starter Plan - 3 Month",
     tier: "plan_basic_3month",
-    price: 55.95,
+    price: 47.97,
     period: "three_months" as BillingPeriod,
-    creditsPerMonth: 300,
+    creditsPerMonth: 200,
     maxAvatarCount: 1,
-    devPriceId: phyziroPriceIds.basic.devQuarterly,
+    devPriceId: phyziroPriceIds.starter.devQuarterly,
     phyziroPriceId: ""
   },
 
-  Pro: {
-    key: "Pro",
-    name: "Pro Plan",
+  Creator: {
+    key: "Creator",
+    name: "Creator Plan",
     tier: "plan_pro",
-    price: 69.99,
+    price: 49.99,
     period: "monthly" as BillingPeriod,
-    creditsPerMonth: 650,
+    creditsPerMonth: 600,
     maxAvatarCount: 3,
-    devPriceId: phyziroPriceIds.pro.devMonthly,
-    phyziroPriceId: phyziroPriceIds.pro.phyziro
+    devPriceId: phyziroPriceIds.creator.devMonthly,
+    phyziroPriceId: phyziroPriceIds.creator.phyziro
   },
-  Pro3Month: {
-    key: "Pro3Month",
-    name: "Pro Plan - 3 Month",
+  Creator3Month: {
+    key: "Creator3Month",
+    name: "Creator Plan - 3 Month",
     tier: "plan_pro_3month",
-    price: 129.95,
+    price: 119.97,
     period: "three_months" as BillingPeriod,
-    creditsPerMonth: 650,
+    creditsPerMonth: 600,
     maxAvatarCount: 3,
-    devPriceId: phyziroPriceIds.pro.devQuarterly,
+    devPriceId: phyziroPriceIds.creator.devQuarterly,
     phyziroPriceId: ""
   },
 
-  Elite: {
-    key: "Elite",
-    name: "Elite Plan",
+  Studio: {
+    key: "Studio",
+    name: "Studio Plan",
     tier: "plan_elite",
-    price: 129.99,
+    price: 149.99,
     period: "monthly" as BillingPeriod,
-    creditsPerMonth: 1500,
-    maxAvatarCount: 5,
-    devPriceId: phyziroPriceIds.elite.devMonthly,
-    phyziroPriceId: phyziroPriceIds.elite.phyziro
+    creditsPerMonth: 2000,
+    maxAvatarCount: 10,
+    devPriceId: phyziroPriceIds.studio.devMonthly,
+    phyziroPriceId: phyziroPriceIds.studio.phyziro
   },
-  Elite3Month: {
-    key: "Elite3Month",
-    name: "Elite Plan - 3 Month",
+  Studio3Month: {
+    key: "Studio3Month",
+    name: "Studio Plan - 3 Month",
     tier: "plan_elite_3month",
-    price: 229.95,
+    price: 359.97,
     period: "three_months" as BillingPeriod,
-    creditsPerMonth: 1500,
-    maxAvatarCount: 5,
-    devPriceId: phyziroPriceIds.elite.devQuarterly,
+    creditsPerMonth: 2000,
+    maxAvatarCount: 10,
+    devPriceId: phyziroPriceIds.studio.devQuarterly,
     phyziroPriceId: ""
   },
 };
@@ -320,112 +320,93 @@ export const PLAN_MAPS: Record<PlanKey, {
     name: "Free Plan",
     description: "Limited trial access. Perfect for testing the platform.",
     features: [
-      "🎯 1 photo generation per month",
-      "🖼️ Basic image export",
-      "🔓 Platform trial access",
-      "❌ No additional tools",
+      "5 Nano Banana Pro images",
+      "Watermarked output",
+      "No credit card required",
     ],
   },
-  Basic: {
-    name: "Basic Plan",
-    description: "Ideal for casual creators or testing styles.",
+  Starter: {
+    name: "Starter Plan",
+    description: "Get moving fast. Great for casual creators.",
     features: [
-      "🎞️ Video generation",
-      "🖼️ Photo generation",
-      "👤 Influencer/model generation",
-      "🎭 Avatar to video",
-      "💬 Prompt generation",
-      "🛠️ Image editing",
-      "🔍 Image upscaling",
-      "📺 HD video export",
-      "🎨 Image editing tools",
-      "🤖 AI prompt assistance",
-      "📧 Email support",
+      "200 credits/month",
+      "All tools unlocked",
+      "1 AI influencer slot",
+      "HD video export",
+      "Prompt tools included",
     ],
   },
-  Basic3Month: {
-    name: "Basic Plan (3 month)",
-    description: "Ideal for casual creators or testing styles.",
+  Starter3Month: {
+    name: "Starter Plan (3 month)",
+    description: "Get moving fast. Great for casual creators.",
     features: [
-      "🎞️ Video generation",
-      "🖼️ Photo generation",
-      "👤 Influencer/model generation",
-      "🎭 Avatar to video",
-      "💬 Prompt generation",
-      "🛠️ Image editing",
-      "🔍 Image upscaling",
-      "📺 HD video export",
-      "🎨 Image editing tools",
-      "🤖 AI prompt assistance",
-      "📧 Email support",
+      "200 credits/month",
+      "All tools unlocked",
+      "1 AI influencer slot",
+      "HD video export",
+      "Prompt tools included",
     ],
   },
 
-  Pro: {
-    name: "Pro Plan",
-    description: "Designed for active users posting frequently.",
+  Creator: {
+    name: "Creator Plan",
+    description: "Best plan for AI character builders.",
     recommended: true,
     features: [
-      "✅ All Basic Plan features",
-      "⚡ More generation power",
-      "🚀 Optimized for consistent creators",
-      "📺 HD export",
-      "🧠 Advanced AI prompt tools",
-      "🛠️ Full tool access",
-      "⭐ Priority support",
+      "Everything in Starter",
+      "600 credits/month",
+      "3 AI influencer slots",
+      "Motion Control + advanced models",
+      "Full edit suite",
+      "Priority processing",
     ],
   },
-  Pro3Month: {
-    name: "Pro Plan (3 month)",
-    description: "Designed for active users posting frequently.",
+  Creator3Month: {
+    name: "Creator Plan (3 month)",
+    description: "Best plan for AI character builders.",
     recommended: true,
     features: [
-      "✅ All Basic Plan features",
-      "⚡ More generation power",
-      "🚀 Optimized for consistent creators",
-      "📺 HD export",
-      "🧠 Advanced AI prompt tools",
-      "🛠️ Full tool access",
-      "⭐ Priority support",
+      "Everything in Starter",
+      "600 credits/month",
+      "3 AI influencer slots",
+      "Motion Control + advanced models",
+      "Full edit suite",
+      "Priority processing",
     ],
   },
 
-  Elite: {
-    name: "Elite Plan",
-    description: "For high-volume creators or small teams.",
+  Studio: {
+    name: "Studio Plan",
+    description: "For agencies and operators at serious scale.",
     features: [
-      "✅ All Pro Plan features",
-      "⚡ Large-scale content generation",
-      "🎯 FLUX-2 high-performance avatar training",
-      "🚦 Priority processing",
-      "🧪 Platform beta access",
-      "📺 Ultra HD export support",
-      "🌟 First access to new tools",
-      "💎 VIP benefits",
+      "Everything in Creator",
+      "2,000 credits/month",
+      "10 AI influencer slots",
+      "Veo 3.1 access",
+      "Highest concurrency",
+      "Priority rendering",
     ],
   },
-  Elite3Month: {
-    name: "Elite Plan (3 month)",
-    description: "For high-volume creators or small teams.",
+  Studio3Month: {
+    name: "Studio Plan (3 month)",
+    description: "For agencies and operators at serious scale.",
     features: [
-      "✅ All Pro Plan features",
-      "⚡ Large-scale content generation",
-      "🎯 FLUX-2 high-performance avatar training",
-      "🚦 Priority processing",
-      "🧪 Platform beta access",
-      "📺 Ultra HD export support",
-      "🌟 First access to new tools",
-      "💎 VIP benefits",
+      "Everything in Creator",
+      "2,000 credits/month",
+      "10 AI influencer slots",
+      "Veo 3.1 access",
+      "Highest concurrency",
+      "Priority rendering",
     ],
   }
 };
 
 export const TIER_KEY_MAP: Record<string, PlanKey> = {
   plan_free: "Free",
-  plan_basic: "Basic",
-  plan_basic_3month: "Basic3Month",
-  plan_pro: "Pro",
-  plan_pro_3month: "Pro3Month",
-  plan_elite: "Elite",
-  plan_elite_3month: "Elite3Month"
+  plan_basic: "Starter",
+  plan_basic_3month: "Starter3Month",
+  plan_pro: "Creator",
+  plan_pro_3month: "Creator3Month",
+  plan_elite: "Studio",
+  plan_elite_3month: "Studio3Month"
 };

@@ -27,10 +27,10 @@ export default function VideoGenerationStep({
   return (
     <div>
       {/* Step 5: Generate Videos Showcase */}
-      {currentStep === 5 && (
+      {currentStep === 3 && (
         <div className="space-y-8">
           <div className="text-center">
-            <h3 className="text-white text-3xl font-bold mb-4">Step {currentStep}: Generate Videos Example</h3>
+            <h3 className="text-white text-3xl font-bold mb-4">Video Generation</h3>
             <p className="text-white/70 text-lg">Create dynamic video content with your AI influencer</p>
           </div>
 
@@ -38,7 +38,7 @@ export default function VideoGenerationStep({
             {/* Left side - Video prompt showcase */}
             <div className="space-y-6">
               <div className="space-y-4">
-                <h4 className="text-white font-medium">Exxample Video Prompt:</h4>
+                <h4 className="text-white font-medium">Example Video Prompt:</h4>
                 <div className="p-4 rounded-lg border border-white/10 bg-white/5">
                   <p className="text-sm text-white/90 leading-relaxed">{exampleVideoPrompt}</p>
                 </div>

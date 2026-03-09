@@ -87,7 +87,7 @@ export function CreditWarningModal() {
                 </h4>
                 <p className="text-sm text-muted-foreground">
                   {isFreePlan
-                    ? "Plans start at just $29/month"
+                    ? "Plans start at just $19.99/month"
                     : "Review your credit balance below"}
                 </p>
               </div>
