@@ -15,12 +15,11 @@ export function resolveAccessTier(planTier?: string | null): AccessTier {
 export function canUseImageModel(access: AccessTier, model?: string): boolean {
   if (!model) return false;
   const isNanoPro = model === "fal-ai/nano-banana-pro";
-  const isNanoEdit = model === "fal-ai/nano-banana-2/edit";
 
   if (access === "free") return isNanoPro;
   if (access === "starter") return isNanoPro || model === "fal-ai/nano-banana-2";
   if (access === "creator") return model !== "soul-2" && model !== "higgsfield-ai/soul";
-  return true;
+  return true; // studio has access to all models
 }
 
 export function canUseVideoModel(access: AccessTier, model?: string): boolean {

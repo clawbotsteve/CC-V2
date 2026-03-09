@@ -23,15 +23,16 @@ const Onboarding = () => {
   useEffect(() => {
     if (!isSignedIn || !isLoaded) return;
 
+    const cookieDomain = process.env.NODE_ENV === "development" ? undefined : ".taviralabs.ai";
     const cookies = parseCookies();
-    const raw = cookies["referralCode__openclaw"];
-    const affiliateRaw = cookies["affiliate__openclaw"];
+    const raw = cookies["referralCode__tavira"];
+    const affiliateRaw = cookies["affiliate__tavira"];
     let referralCode: string | undefined;
     let affiliateCode: string | undefined;
 
     if (raw) {
       try {
-        const parsed = JSON.parse(raw); // cookie contains: { code, expires }
+        const parsed = JSON.parse(raw);
         const now = Date.now();
 
         if (
@@ -40,23 +41,16 @@ const Onboarding = () => {
         ) {
           referralCode = parsed.code;
         } else {
-          // expired or invalid
-          destroyCookie(null, "referralCode__openclaw", {
+          destroyCookie(null, "referralCode__tavira", {
             path: "/",
-            domain:
-              process.env.NODE_ENV === "development"
-                ? undefined
-                : ".openclaw.ai",
+            domain: cookieDomain,
           });
         }
       } catch (err) {
-        console.warn("⚠️ Failed to parse referralCode cookie:", err);
-        destroyCookie(null, "referralCode__ccai", {
+        console.warn("Failed to parse referralCode cookie:", err);
+        destroyCookie(null, "referralCode__tavira", {
           path: "/",
-          domain:
-            process.env.NODE_ENV === "development"
-              ? undefined
-              : ".coregen.ai",
+          domain: cookieDomain,
         });
       }
     }
@@ -64,7 +58,7 @@ const Onboarding = () => {
     // Check affiliate cookie
     if (affiliateRaw) {
       try {
-        const parsed = JSON.parse(affiliateRaw); // cookie contains: { code, expires }
+        const parsed = JSON.parse(affiliateRaw);
         const now = Date.now();
 
         if (
@@ -73,23 +67,16 @@ const Onboarding = () => {
         ) {
           affiliateCode = parsed.code;
         } else {
-          // expired or invalid
-          Cookies.remove("affiliate__openclaw", {
+          Cookies.remove("affiliate__tavira", {
             path: "/",
-            domain:
-              process.env.NODE_ENV === "development"
-                ? undefined
-                : ".openclaw.ai",
+            domain: cookieDomain,
           });
         }
       } catch (err) {
-        console.warn("⚠️ Failed to parse affiliate cookie:", err);
-        Cookies.remove("affiliate__ccai", {
+        console.warn("Failed to parse affiliate cookie:", err);
+        Cookies.remove("affiliate__tavira", {
           path: "/",
-          domain:
-            process.env.NODE_ENV === "development"
-              ? undefined
-              : ".coregen.ai",
+          domain: cookieDomain,
         });
       }
     }
@@ -98,15 +85,11 @@ const Onboarding = () => {
     fetch("/api/user/onboard", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ referralCode, affiliateCode }), // can be undefined
+      body: JSON.stringify({ referralCode, affiliateCode }),
     }).finally(() => {
-      // Remove cookies after sending (in case they existed)
-      destroyCookie(null, "referralCode__ccai", {
+      destroyCookie(null, "referralCode__tavira", {
         path: "/",
-        domain:
-          process.env.NODE_ENV === "development"
-            ? undefined
-            : ".coregen.ai",
+        domain: cookieDomain,
       });
       // Note: Don't remove affiliate cookie yet - we need it for subscription tracking
     });
@@ -158,10 +141,7 @@ const Onboarding = () => {
         <OnboardingSlideshow onClose={handleCloseOnboarding} />
       )}
     </div>
-  )
-
-
-  return null;
+  );
 };
 
 export default Onboarding;

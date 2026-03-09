@@ -71,8 +71,8 @@ const pricingPlans = [
   {
     name: "Starter",
     hook: "Get moving fast",
-    price: "$19.99",
-    credits: "200 credits/month",
+    price: "$29.95",
+    credits: "300 credits/month",
     featured: false,
     cta: "Start Starter",
     features: ["24h trial (50 credits)", "Nano Banana Pro + Nano Banana 2 + Kling 2.6 + Topaz Upscale", "Prompt tools included", "✕ Motion Control / Veo / premium upscale"],
@@ -82,8 +82,8 @@ const pricingPlans = [
   {
     name: "Creator",
     hook: "Best plan for AI character builders",
-    price: "$49.99",
-    credits: "600 credits/month",
+    price: "$69.99",
+    credits: "650 credits/month",
     featured: true,
     cta: "Build Characters",
     features: ["Everything in Starter", "Motion Control + Nano Banana 2 Edit + all Upscale", "Full edit suite"],
@@ -93,8 +93,8 @@ const pricingPlans = [
   {
     name: "Studio",
     hook: "For agencies and operators",
-    price: "$149.99",
-    credits: "2,000 credits/month",
+    price: "$129.99",
+    credits: "1,500 credits/month",
     featured: false,
     cta: "Scale with Studio",
     features: ["Everything in Creator", "Veo 3.1 access", "API access", "White-label exports"],
@@ -172,7 +172,7 @@ export default function DashboardPage() {
           </h1>
 
           <p className="text-lg text-muted-foreground max-w-[560px] mx-auto mb-9 leading-relaxed">
-            Build AI influncers that post, grow, and generate income - without you lifting a finger
+            Build AI influencers that post, grow, and generate income — without you lifting a finger
           </p>
 
           <div className="flex gap-3 justify-center flex-wrap">

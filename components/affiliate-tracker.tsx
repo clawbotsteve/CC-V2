@@ -4,7 +4,7 @@ import { useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Cookies from "js-cookie";
 
-const AFFILIATE_COOKIE_NAME = "affiliate__ccai";
+const AFFILIATE_COOKIE_NAME = "affiliate__tavira";
 const COOKIE_EXPIRY_DAYS = 90;
 
 function AffiliateTrackerInner() {
@@ -29,7 +29,7 @@ function AffiliateTrackerInner() {
         path: "/",
         sameSite: "lax",
         secure: process.env.NODE_ENV === "production",
-        domain: process.env.NODE_ENV === "development" ? undefined : ".openclaw.ai",
+        domain: process.env.NODE_ENV === "development" ? undefined : ".taviralabs.ai",
       });
 
       console.log(`[AffiliateTracker] Affiliate cookie set: ${affiliateParam}`);

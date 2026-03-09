@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import prismadb from "@/lib/prismadb";
 
 export async function GET() {
-  const falConfigured = Boolean(process.env.FAL_KEY);
+  const falConfigured = Boolean(process.env.FAL_API_KEY);
 
   let dbOk = false;
   let dbError: string | undefined;
