@@ -13,7 +13,7 @@ import Link from "next/link";
 import NovuInbox from "@/components/ui/inbox/NovuInbox";
 
 export const company = {
-  name: "OpenClaw",
+  name: "Tavira Labs",
   logo: logo,
   plan: "Pro",
 };
@@ -57,7 +57,7 @@ export default async function Navbar() {
         <div className="flex items-center gap-2">
           <Link href="/">
             <span className="font-heading font-bold text-xl tracking-tight flex items-center">
-              OpenClaw
+              Tavira Labs
             </span>
           </Link>
         </div>

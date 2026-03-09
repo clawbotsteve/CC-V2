@@ -1,9 +1,10 @@
 export const MAX_FREE_COUNTS = 5
+// Tier IDs must match the DB (seeded from pricing-constants.ts)
 export const PLAN_FREE = "plan_free"
 export const PLAN_STARTER_TRIAL = "plan_starter_trial"
-export const PLAN_STARTER = "plan_starter"
-export const PLAN_CREATOR = "plan_creator"
-export const PLAN_STUDIO = "plan_studio"
+export const PLAN_STARTER = "plan_basic"          // DB: plan_basic → displayed as "Starter"
+export const PLAN_CREATOR = "plan_pro"             // DB: plan_pro → displayed as "Creator"
+export const PLAN_STUDIO = "plan_elite"            // DB: plan_elite → displayed as "Studio"
 
 export const ReferralCredit = 50
 
@@ -36,11 +37,11 @@ export const PLANS = [
   {
     id: PLAN_STARTER,
     name: "Starter",
-    price: 19.99,
-    credits: 200,
+    price: 29.95,
+    credits: 300,
     description: "Casual creators posting 2-3x/week.",
     features: [
-      "🪙 200 Credits / Month",
+      "🪙 300 Credits / Month",
       "🔓 All Tools Unlocked",
       "👤 1 Avatar Slot",
       "⚡ Standard Processing",
@@ -49,12 +50,12 @@ export const PLANS = [
   {
     id: PLAN_CREATOR,
     name: "Creator",
-    price: 49.99,
-    credits: 600,
+    price: 69.99,
+    credits: 650,
     recommended: true,
     description: "Daily creators & small agencies.",
     features: [
-      "🪙 600 Credits / Month",
+      "🪙 650 Credits / Month",
       "🔓 All Tools Unlocked",
       "👥 3 Avatar Slots",
       "🚀 Priority Processing",
@@ -63,13 +64,13 @@ export const PLANS = [
   {
     id: PLAN_STUDIO,
     name: "Studio",
-    price: 149.99,
-    credits: 2000,
+    price: 129.99,
+    credits: 1500,
     description: "Agencies and power users.",
     features: [
-      "🪙 2,000 Credits / Month",
+      "🪙 1,500 Credits / Month",
       "🔓 All Tools Unlocked",
-      "yw 10 Avatar Slots",
+      "👥 5 Avatar Slots",
       "🚀 Priority Processing",
       "🔌 API Access",
       "🏷️ White-label Exports",
@@ -120,20 +121,21 @@ export const CREDIT_COSTS = {
 // production
 const isDev = process.env.NODE_ENV === "development";
 
-// Plan IDs - Mapped to Stripe Price IDs
-// TODO: Replace with actual Stripe Price IDs once created
+// Plan IDs - Mapped to Phyziro/Stripe Price IDs
+// Maps Phyziro price ID → internal tier string
 export const planToPriceId: Record<string, string> = isDev
   ? {
-    "price_starter_trial_dev": PLAN_STARTER_TRIAL,
-    "price_starter_dev": PLAN_STARTER,
-    "price_creator_dev": PLAN_CREATOR,
-    "price_studio_dev": PLAN_STUDIO,
+    "sub_qbG3GEdLA4BVYNx77x4Gu-": PLAN_STARTER,    // Basic dev
+    "sub_YK3v1ji4MBCCj42zT72WFF": PLAN_CREATOR,     // Pro dev
+    "sub_u4IUIG47Z3eTyTtZpTAjb5": PLAN_STUDIO,      // Elite dev
   }
   : {
-    "price_starter_trial_prod": PLAN_STARTER_TRIAL,
-    "price_starter_prod": PLAN_STARTER,
-    "price_creator_prod": PLAN_CREATOR,
-    "price_studio_prod": PLAN_STUDIO,
+    "price_1RibEpRtdu7lUaLOgoGLsBmh": PLAN_STARTER,  // Basic monthly prod
+    "price_1Rlw3DRtdu7lUaLO0C418ytH": PLAN_STARTER,  // Basic quarterly prod
+    "price_1RibEWRtdu7lUaLOgIifRtp4": PLAN_CREATOR,   // Pro monthly prod
+    "price_1Rlw3xRtdu7lUaLOqov3V34X": PLAN_CREATOR,   // Pro quarterly prod
+    "price_1RibE9Rtdu7lUaLO6uzn3KS1": PLAN_STUDIO,    // Elite monthly prod
+    "price_1Rlw4kRtdu7lUaLOzWJyRiDH": PLAN_STUDIO,    // Elite quarterly prod
   };
 
 // Credit Packs
@@ -158,12 +160,12 @@ export const creditPackDetails: Record<string, { name: string; credits: number; 
 export const avatarImagePrompt = "A confident and charismatic digital persona standing in front of a soft gradient background, wearing modern smart-casual attire, looking directly at the camera with a warm and welcoming expression. Clean studio lighting, portrait orientation, detailed facial features, cinematic depth of field. Perfect for a professional AI-generated self-introduction video."
 
 export const systemPromptTemplate = `
-You are {{name}}, an AI influencer powered by OpenClaw — a platform designed to help creators automate content, grow their brand, and save time.
+You are {{name}}, an AI influencer powered by Tavira Labs — a platform designed to help creators automate content, grow their brand, and save time.
 
 Speak confidently and warmly, like a real human introducing themselves to a new audience.
 Use natural language, express personality, and keep the tone friendly and engaging.
 
-Mention OpenClaw briefly. Your speech should feel like a 15-second social media intro video.
+Mention Tavira Labs briefly. Your speech should feel like a 15-second social media intro video.
 `.trim();
 
 export const userPromptTemplate = `
@@ -172,7 +174,7 @@ Write a short self-introduction script (under 60 words) for an AI influencer nam
 Description: "{{description}}"
 
 Base it on their personality. Make it sound human, expressive, and ideal for a short talking-head video.
-Mention OpenClaw once, naturally.
+Mention Tavira Labs once, naturally.
 `.trim();
 
 export const avatarVideoPrompt = "A realistic, portrait-style image of an expressive digital influencer speaking directly into the camera with confidence and charisma. The subject is well-lit with soft cinematic lighting, positioned in a modern, creative workspace with subtle background blur. The expression should reflect warmth, clarity, and purpose — as if delivering a self-introduction for social media or a creator platform. High quality, studio setup, natural body language, depth of field, vertical video composition."

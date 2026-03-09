@@ -10,7 +10,7 @@ config({ path: resolve(__dirname, "../.env.local") });
 config({ path: resolve(__dirname, "../.env") });
 
 const prisma = new PrismaClient();
-const PLAN_STARTER = "plan_starter";
+const PLAN_STARTER = "plan_basic"; // DB tier name for Starter plan
 const TEST_EMAIL = "testuser@mail.com";
 const TEST_CREDITS = 10000;
 
