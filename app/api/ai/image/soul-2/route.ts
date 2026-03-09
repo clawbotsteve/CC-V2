@@ -1,7 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Soul2Input } from "@/types/image";
+import { PLATFORM_SAFETY_NEGATIVE_PROMPT } from "@/constants/constants";
 
 const DEFAULT_BASE_URL = "https://platform.higgsfield.ai";
+
+/**
+ * Blocked terms list derived from the platform safety negative prompt.
+ * If any of these appear in the user's prompt, the request is rejected.
+ */
+const BLOCKED_TERMS = PLATFORM_SAFETY_NEGATIVE_PROMPT
+  .split(",")
+  .map((t) => t.trim().toLowerCase())
+  .filter(Boolean);
+
+function containsBlockedContent(prompt: string): boolean {
+  const lower = prompt.toLowerCase();
+  return BLOCKED_TERMS.some((term) => lower.includes(term));
+}
 
 function pickRequestId(data: any): string | undefined {
   return data?.request_id || data?.requestId || data?.id || data?.data?.request_id;
@@ -15,6 +30,14 @@ export async function POST(req: NextRequest) {
 
     if (!apiKey) {
       return NextResponse.json({ error: "Missing HIGGSFIELD_API_KEY" }, { status: 500 });
+    }
+
+    // Enforce platform safety: reject prompts that contain blocked content
+    if (containsBlockedContent(body.prompt)) {
+      return NextResponse.json(
+        { error: "Your prompt contains content that violates our safety policy. Please revise and try again." },
+        { status: 400 }
+      );
     }
 
     const payload = {

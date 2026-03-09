@@ -97,6 +97,9 @@ export async function POST(req: Request) {
 
     const data: VideoGenerationInput = await req.json();
 
+    // Platform safety enforcement: always enable safety checker, override user input
+    data.enable_safety_checker = true;
+
     const subscription = await prismadb.userSubscription.findUnique({
       where: { userId },
       include: { plan: true },

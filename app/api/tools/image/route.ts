@@ -113,6 +113,9 @@ export async function POST(req: Request) {
 
     const body: ImageGenerationInput = { ...data };
 
+    // Platform safety enforcement: always enable safety checker, override user input
+    body.enable_safety_checker = true;
+
     let canUse = true;
     let creditCost = 1;
     try {
