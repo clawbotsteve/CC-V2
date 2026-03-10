@@ -1,0 +1,279 @@
+CCV2 MASTER STATUS + LAUNCH PLAN
+Last updated: 2026-03-07 (America/Phoenix)
+
+==================================================
+1) WHAT WE HAVE BEEN WORKING ON (CURRENT STATE)
+==================================================
+
+A) Core product stability (major fixes completed)
+- Repaired repeated runtime/build breakages from image-generation Vibe cleanup fallout.
+- Restored stable image-generation flow with full settings/results layout.
+- Removed leftover undefined references causing crashes (e.g., VIBE_PRESETS / selectedVibeName paths).
+- Repaired parser/type issues and re-ran TypeScript validation until green.
+
+B) Model + routing updates
+- Video stack updated to prioritized order and Kling endpoint handling.
+- Kling 2.6 path wired and validated.
+- WAN removed where requested.
+- Added/kept Nano Banana model behavior updates:
+  - Nano Banana Pro available
+  - Nano Banana 2 preserved for Starter (not removed)
+  - Nano Banana 2 Edit available where intended
+
+C) Plan gating + credits
+- Implemented server-side plan checks for image/video/upscale endpoints using shared plan logic.
+- Added/adjusted free/starter/creator/studio access behavior.
+- Free-tier support for limited Nano Banana Pro flow and corresponding credit logic.
+- Added Topaz image upscale model for lower-cost/starter-friendly use.
+- Updated fallback credit logic for relevant model variants.
+
+D) Character generation / influencer training
+- Diagnosed stuck queued behavior.
+- Added provider polling fallback and failure handling improvements.
+- Added Fal-storage upload handling for training data path.
+- Confirmed character training reached completed state after fix.
+
+E) Pricing + UI consistency
+- Updated pricing messaging and annual discount display consistency.
+- Synced key plan messaging with dashboard pricing section where needed.
+
+F) GitHub + deployment groundwork
+- New GitHub repo created: https://github.com/clawbotsteve/CC-V2
+- Branches pushed:
+  - main
+  - staging
+- Railway project connected to CC-V2 repo.
+- Staging environment created.
+- Postgres attached.
+- Build failure debugging performed (DATABASE_URL / migration-in-build issues).
+- Build script adjusted to remove migrations from build step:
+  - build now: prisma generate && next build
+
+G) Important in-progress local changes (noted)
+- Current local git status previously showed edits in:
+  - app/(landing)/page.tsx
+  - middleware.ts
+- These were tied to landing/auth behavior experiments:
+  - dashboard-first landing requirement
+  - auth behavior on protected routes
+
+
+==================================================
+2) KEY FILES WITH MOST OF THE LAUNCH LOGIC
+==================================================
+
+Core app + auth entry behavior
+- app/(landing)/page.tsx
+- middleware.ts
+
+Image generation
+- app/(dashboard)/(routes)/tools/image-generation/page.tsx
+- app/(dashboard)/(routes)/tools/image-generation/_components/ImageSettingsPanel.tsx
+- app/api/tools/image/route.ts
+- app/api/ai/image/nano-banna-pro/route.ts
+- app/api/ai/image/nano-banana-2/route.ts
+- types/image.ts
+
+Video generation
+- app/(dashboard)/(routes)/tools/video-generation/page.tsx
+- app/(dashboard)/(routes)/tools/video-generation/_components/VideoSettingsPanel.tsx
+- app/api/tools/video/route.ts
+- app/api/ai/video/route.ts
+- types/video.ts
+
+Upscale
+- app/(dashboard)/(routes)/tools/image-upscale/page.tsx
+- app/(dashboard)/(routes)/tools/image-upscale/_components/Settings.tsx
+- app/api/tools/upscale/route.ts
+- app/api/ai/image-upscale/route.ts
+- types/upscale.ts
+
+Plan access + credits
+- lib/plan-access.ts
+- lib/get-credit-cost.ts
+- constants.ts
+- constants/pricing-constants.ts
+- app/pricing/page.tsx
+- app/(dashboard)/(routes)/dashboard/page.tsx
+
+User plan assignment + user info
+- app/api/user/info/route.ts
+- app/api/user/info/_lib/get-or-assign-plans.ts
+- lib/get-plan-id-by-tier.ts
+
+Influencer/character
+- app/(dashboard)/(routes)/tools/influencers/*
+- app/api/ai/train/route.ts
+- app/api/influencers/status/[jobId]/route.ts
+
+Deployment
+- package.json
+- prisma/schema.prisma
+
+
+==================================================
+3) IN-DEPTH GO-LIVE PLAN (END-TO-END)
+==================================================
+
+PHASE 0 — Freeze + branch discipline
+1. Stop feature creep for launch window.
+2. Keep fixes small and test after each change.
+3. Ensure both branches are intentional:
+   - staging = pre-prod validation
+   - main = production release
+
+PHASE 1 — Local launch hardening (must pass)
+1. Start clean local dev:
+   - kill stale Next processes
+   - run dev on :3000
+2. Type safety:
+   - npm run tsc (must pass)
+3. Route behavior checks:
+   - / (must follow final desired behavior)
+   - /dashboard
+   - /tools/image-generation
+   - /tools/video-generation
+   - /tools/image-upscale
+   - /tools/influencers
+4. Auth gating checks:
+   - signed-out user can access intended public pages only
+   - protected pages force auth where intended
+5. Core function tests (signed-in):
+   - image generate (Nano Banana Pro + Nano Banana 2 + Edit)
+   - video generate (Kling)
+   - upscale (Topaz + premium models by plan)
+   - character training end-to-end
+
+PHASE 2 — Pricing, plans, and credit verification
+1. Free / Starter / Creator / Studio access matrix re-test.
+2. Ensure pricing text matches backend enforcement.
+3. Confirm credit deduction variants are correct per tool/model.
+4. Validate upgrade prompts and plan-required errors are clear.
+
+PHASE 3 — GitHub release readiness
+1. Commit only validated changes.
+2. Push to staging.
+3. Validate staging deploy + smoke test.
+4. Merge/cherry-pick to main only after staging green.
+5. Tag launch commit.
+
+PHASE 4 — Railway staging + production configuration
+For EACH environment (staging and production):
+1. Service source branch correct:
+   - staging env service -> staging branch
+   - production env service -> main branch
+2. PostgreSQL attached.
+3. Required variables set:
+   - DATABASE_URL
+   - NODE_ENV=production
+   - NEXT_PUBLIC_APP_URL
+   - APP_URL
+   - FAL_API_KEY
+   - CLERK_SECRET_KEY
+   - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+   - billing keys + webhook secrets
+4. Deploy succeeds.
+5. Run migrations separately (not inside build):
+   - npx prisma migrate deploy
+6. Verify service health and logs.
+
+PHASE 5 — Payment + webhook validation
+1. Check payment plan IDs map to DB subscription tiers.
+2. Validate checkout paths:
+   - free -> starter
+   - starter -> creator
+   - creator -> studio
+3. Validate webhook events update entitlements.
+4. Validate cancellation/downgrade behavior.
+
+PHASE 6 — Production smoke test (final gate)
+Run with fresh test accounts:
+1. Free user flow
+2. Starter user flow
+3. Creator user flow
+4. Studio user flow
+5. Character training flow
+6. Error monitoring for 5xx and failed provider jobs
+
+PHASE 7 — Launch
+1. Confirm no active blockers.
+2. Publish to production.
+3. Monitor first 60–120 minutes:
+   - auth errors
+   - payment webhook failures
+   - model job failures
+   - credit mismatch reports
+4. Keep rollback plan ready.
+
+
+==================================================
+4) PRECISE BUTTON/BEHAVIOR QA CHECKLIST
+==================================================
+
+A) Global nav + routing
+- Dashboard nav works
+- Tools nav works
+- Pricing nav works
+- No dead links
+
+B) Image tool buttons
+- Generate button submits once (no duplicate firing)
+- Optimize prompt button behavior correct
+- Model selector options all visible and correct
+- Resolution/aspect selectors update cost display
+
+C) Video tool buttons
+- Generate button submits
+- Model selector includes intended order
+- Audio/motion toggles behave as expected
+
+D) Upscale tool buttons
+- Topaz option visible and selectable
+- Starter can run allowed model
+- Higher-cost models enforce plan gates
+
+E) Influencer tool buttons
+- Create Influencer opens dialog
+- Upload/training submit works
+- Refresh updates status
+- Failed jobs clearly show fail state (not forever queued)
+
+F) Pricing/upgrade buttons
+- CTA buttons route to checkout correctly
+- Current plan button state accurate
+- Plan-restricted actions trigger correct upsell/error
+
+
+==================================================
+5) DEPLOYMENT TROUBLESHOOTING NOTES
+==================================================
+
+Common Railway failures observed:
+1. DATABASE_URL missing
+- Fix: set service variable from Postgres reference
+
+2. Build fails because migrations in build step
+- Fix: keep build script as:
+  prisma generate && next build
+- run migrations as a separate deploy/release step
+
+3. DB connectivity (P1001) during build
+- Ensure environment variable points to correct env’s Postgres
+- Ensure service + DB in same environment and healthy
+
+
+==================================================
+6) NEXT ACTIONS (RECOMMENDED ORDER)
+==================================================
+
+1. Finalize and commit current local landing/middleware behavior.
+2. Re-test localhost end-to-end quickly.
+3. Push to staging and verify staging Railway is green.
+4. Validate payment + webhook flow on staging.
+5. Promote to main and re-verify production.
+6. Launch with monitoring window.
+
+
+==================================================
+END OF FILE
+==================================================
