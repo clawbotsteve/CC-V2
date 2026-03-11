@@ -56,10 +56,15 @@ export async function POST(req: Request) {
     params.set("metadata[priceId]", priceId);
     if (email) params.set("customer_email", email);
 
+    const stripeSecret = process.env.STRIPE_SECRET_KEY || process.env.STRIPE_API_KEY;
+    if (!stripeSecret) {
+      return NextResponse.json({ error: "Missing Stripe secret key in env" }, { status: 400 });
+    }
+
     const stripeRes = await fetch("https://api.stripe.com/v1/checkout/sessions", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`,
+        Authorization: `Bearer ${stripeSecret}`,
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: params.toString(),
