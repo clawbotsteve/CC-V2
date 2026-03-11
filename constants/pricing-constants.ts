@@ -27,22 +27,22 @@ const phyziroPriceIds = {
   starter: {
     monthly: "price_1RibEpRtdu7lUaLOgoGLsBmh",
     quarterly: "price_1Rlw3DRtdu7lUaLO0C418ytH",
-    devMonthly: "price_1RibEpRtdu7lUaLOgoGLsBmh",
-    devQuarterly: "price_1Rlw3DRtdu7lUaLO0C418ytH",
+    devMonthly: "plan_basic",
+    devQuarterly: "plan_basic_3month",
     phyziro: "sub_qbG3GEdLA4BVYNx77x4Gu-"
   },
   creator: {
     monthly: "price_1RibEWRtdu7lUaLOgIifRtp4",
     quarterly: "price_1Rlw3xRtdu7lUaLOqov3V34X",
-    devMonthly: "price_1RibEWRtdu7lUaLOgIifRtp4",
-    devQuarterly: "price_1Rlw3xRtdu7lUaLOqov3V34X",
+    devMonthly: "plan_pro",
+    devQuarterly: "plan_pro_3month",
     phyziro: "sub_YK3v1ji4MBCCj42zT72WFF"
   },
   studio: {
     monthly: "price_1RibE9Rtdu7lUaLO6uzn3KS1",
     quarterly: "price_1Rlw4kRtdu7lUaLOzWJyRiDH",
-    devMonthly: "price_1RibE9Rtdu7lUaLO6uzn3KS1",
-    devQuarterly: "price_1Rlw4kRtdu7lUaLOzWJyRiDH",
+    devMonthly: "plan_elite",
+    devQuarterly: "plan_elite_3month",
     phyziro: "sub_u4IUIG47Z3eTyTtZpTAjb5"
   },
 };
