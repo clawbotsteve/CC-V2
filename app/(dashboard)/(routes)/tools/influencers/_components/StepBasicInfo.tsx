@@ -4,7 +4,7 @@ import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Sparkles, Info, Lock, Globe, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Sparkles, Info, Lock, Globe, ShieldCheck } from "lucide-react";
 
 import {
   Form,
@@ -32,7 +32,7 @@ import { PLAN_STUDIO } from "@/constants";
 const modes = ["character", "style"] as const;
 const genders = ["male", "female"] as const;
 const models = [InfluencerModel.FLUX_1, InfluencerModel.FLUX_2] as const;
-const contentTypes: ContentType[] = ["sfw", "nsfw"];
+const contentTypes: ContentType[] = ["sfw"];
 const stepOptions = [1000, 2000, 4000, 6000, 8000, 10000] as const;
 const stepSchema = z.union([
   z.literal(1000),
@@ -85,14 +85,20 @@ export default function StepBasicInfo({ data, update }: Props) {
   }, [form, update]);
 
   const mode = form.watch("mode");
-  const gender = form.watch("gender");
   const model = form.watch("model");
+  const contentType = form.watch("contentType");
   const { plan } = useUserContext();
+
+  React.useEffect(() => {
+    if (contentType !== "sfw") {
+      form.setValue("contentType", "sfw", { shouldDirty: true, shouldValidate: true });
+    }
+  }, [contentType, form]);
 
   return (
     <TooltipProvider>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(() => { })} className="space-y-6">
+        <form onSubmit={form.handleSubmit(() => { })} className="space-y-4">
           {/* Name */}
           <FormField
             control={form.control}
@@ -145,7 +151,7 @@ export default function StepBasicInfo({ data, update }: Props) {
                   <Textarea
                     placeholder="A friendly South Asian AI influencer"
                     {...field}
-                    className="border-2 border-muted bg-muted/50 hover:bg-accent focus:border-blue-500 focus:bg-blue-100/60 focus:dark:bg-blue-900/20 focus:text-blue-800 focus:dark:text-blue-300 transition-all min-h-[100px]"
+                    className="border-2 border-muted bg-muted/50 hover:bg-accent focus:border-blue-500 focus:bg-blue-100/60 focus:dark:bg-blue-900/20 focus:text-blue-800 focus:dark:text-blue-300 transition-all min-h-[72px]"
                   />
                 </FormControl>
                 <FormMessage />
@@ -382,31 +388,27 @@ export default function StepBasicInfo({ data, update }: Props) {
           )}
 
           {/* Visibility & Content Settings */}
-          <div className="border-t border-border pt-6 mt-6">
-            <h3 className="text-sm font-semibold text-foreground/90 mb-4 flex items-center gap-2">
+          <div className="border-t border-border pt-4 mt-4">
+            <h3 className="text-sm font-semibold text-foreground/90 mb-3 flex items-center gap-2">
               <Lock className="h-4 w-4 text-indigo-500" />
               Privacy & Content Settings
             </h3>
 
-            {/* Content Type (NSFW/SFW) */}
+            {/* Content Type (SFW only) */}
             <FormField
               control={form.control}
               name="contentType"
               render={({ field }) => (
-                <FormItem className="mb-6">
+                <FormItem className="mb-3">
                   <FormLabel className="flex items-center gap-2 text-sm font-semibold text-foreground/90">
-                    {field.value === "sfw" ? (
-                      <ShieldCheck className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <ShieldAlert className="h-4 w-4 text-red-500" />
-                    )}
+                    <ShieldCheck className="h-4 w-4 text-green-500" />
                     Content Type
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Info className="w-4 h-4 text-muted-foreground cursor-help" />
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Label your content as Safe for Work (SFW) or Not Safe for Work (NSFW).</p>
+                        <p>Content is currently limited to Safe for Work (SFW).</p>
                       </TooltipContent>
                     </Tooltip>
                   </FormLabel>
@@ -417,15 +419,9 @@ export default function StepBasicInfo({ data, update }: Props) {
                         type="button"
                         variant={field.value === type ? "default" : "outline"}
                         onClick={() => field.onChange(type)}
-                        className={`uppercase ${field.value === type
-                            ? type === "sfw"
-                              ? "bg-green-600 hover:bg-green-700"
-                              : "bg-red-600 hover:bg-red-700"
-                            : ""
-                          }`}
+                        className="uppercase bg-green-600 hover:bg-green-700"
                       >
-                        {type === "sfw" && <ShieldCheck className="h-4 w-4 mr-1" />}
-                        {type === "nsfw" && <ShieldAlert className="h-4 w-4 mr-1" />}
+                        <ShieldCheck className="h-4 w-4 mr-1" />
                         {type}
                       </Button>
                     ))}
@@ -440,7 +436,7 @@ export default function StepBasicInfo({ data, update }: Props) {
               control={form.control}
               name="isPublic"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border border-border p-4 bg-muted/30">
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border border-border p-3 bg-muted/30">
                   <div className="space-y-0.5">
                     <FormLabel className="flex items-center gap-2 text-sm font-semibold text-foreground/90">
                       {field.value ? (
