@@ -76,6 +76,13 @@ export async function POST(req: Request) {
     }
 
     const appUrl = cleanAppUrl();
+
+    // Dashboard pricing cards should route users to the canonical /pricing page first.
+    const referer = req.headers.get("referer") || "";
+    if (referer.includes("/dashboard")) {
+      return NextResponse.json({ url: `${appUrl}/pricing` });
+    }
+
     const params = new URLSearchParams();
     params.set("mode", "subscription");
     params.set("success_url", `${appUrl}/settings?checkout=success`);
