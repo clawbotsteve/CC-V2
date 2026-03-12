@@ -9,12 +9,24 @@ function resolveStripePriceId(subscriptionId: string): string {
   if (subscriptionId?.startsWith("price_")) return subscriptionId;
 
   const envMap: Record<string, string | undefined> = {
+    // Legacy/internal keys
     plan_basic: process.env.STRIPE_PRICE_PLAN_BASIC,
     plan_basic_3month: process.env.STRIPE_PRICE_PLAN_BASIC_3MONTH,
     plan_pro: process.env.STRIPE_PRICE_PLAN_PRO,
     plan_pro_3month: process.env.STRIPE_PRICE_PLAN_PRO_3MONTH,
     plan_elite: process.env.STRIPE_PRICE_PLAN_ELITE,
     plan_elite_3month: process.env.STRIPE_PRICE_PLAN_ELITE_3MONTH,
+
+    // Friendly plan keys (preferred)
+    starter: process.env.STRIPE_PRICE_STARTER || process.env.STRIPE_PRICE_PLAN_BASIC,
+    starter_quarterly:
+      process.env.STRIPE_PRICE_STARTER_QUARTERLY || process.env.STRIPE_PRICE_PLAN_BASIC_3MONTH,
+    creator: process.env.STRIPE_PRICE_CREATOR || process.env.STRIPE_PRICE_PLAN_PRO,
+    creator_quarterly:
+      process.env.STRIPE_PRICE_CREATOR_QUARTERLY || process.env.STRIPE_PRICE_PLAN_PRO_3MONTH,
+    studio: process.env.STRIPE_PRICE_STUDIO || process.env.STRIPE_PRICE_PLAN_ELITE,
+    studio_quarterly:
+      process.env.STRIPE_PRICE_STUDIO_QUARTERLY || process.env.STRIPE_PRICE_PLAN_ELITE_3MONTH,
   };
 
   return envMap[subscriptionId] || subscriptionId;
