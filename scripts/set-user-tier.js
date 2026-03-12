@@ -20,10 +20,12 @@ const TIER_ALIASES = {
   try {
     const candidates = TIER_ALIASES[tierArg.toLowerCase()] || [tierArg];
 
-    let plan = await prisma.subscriptionTier.findFirst({
-      where: { tier: { in: candidates } },
-      orderBy: { price: 'asc' },
-    });
+    // Safer lookup across mixed schemas/environments.
+    let plan = null;
+    for (const t of candidates) {
+      plan = await prisma.subscriptionTier.findFirst({ where: { tier: t } });
+      if (plan) break;
+    }
 
     if (!plan) {
       const defaults = {
@@ -32,25 +34,47 @@ const TIER_ALIASES = {
         plan_free: { name: 'Free Plan', price: 0, creditsPerMonth: 5, maxAvatarCount: 0 },
         plan_studio: { name: 'Studio Plan', price: 149.99, creditsPerMonth: 2000, maxAvatarCount: 10 },
       };
-      const tierToCreate = candidates[0];
-      const d = defaults[tierToCreate];
+
+      // Canonical tier creation target (creator/starter/free/studio)
+      const canonical =
+        candidates.includes('plan_creator') ? 'plan_creator' :
+        candidates.includes('plan_starter') ? 'plan_starter' :
+        candidates.includes('plan_free') ? 'plan_free' :
+        candidates.includes('plan_studio') ? 'plan_studio' :
+        candidates[0];
+
+      const d = defaults[canonical];
       if (!d) throw new Error(`No tier found or default template for: ${tierArg}`);
 
-      plan = await prisma.subscriptionTier.create({
-        data: {
-          name: d.name,
-          tier: tierToCreate,
-          price: d.price,
-          period: 'monthly',
-          creditsPerMonth: d.creditsPerMonth,
-          speed: 'standard',
-          support: 'community_email',
-          maxAvatarCount: d.maxAvatarCount,
-          devPriceId: '',
-          phyziroPriceId: '',
-          status: 'active',
-        },
-      });
+      const existingCanonical = await prisma.subscriptionTier.findFirst({ where: { tier: canonical } });
+      if (existingCanonical) {
+        plan = await prisma.subscriptionTier.update({
+          where: { id: existingCanonical.id },
+          data: {
+            name: d.name,
+            price: d.price,
+            creditsPerMonth: d.creditsPerMonth,
+            maxAvatarCount: d.maxAvatarCount,
+            status: 'active',
+          },
+        });
+      } else {
+        plan = await prisma.subscriptionTier.create({
+          data: {
+            name: d.name,
+            tier: canonical,
+            price: d.price,
+            period: 'monthly',
+            creditsPerMonth: d.creditsPerMonth,
+            speed: 'standard',
+            support: 'community_email',
+            maxAvatarCount: d.maxAvatarCount,
+            devPriceId: '',
+            phyziroPriceId: '',
+            status: 'active',
+          },
+        });
+      }
     }
 
     await prisma.userSubscription.upsert({
