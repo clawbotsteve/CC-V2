@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
+import prismadb from "@/lib/prismadb";
 
 function cleanAppUrl() {
   return (process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/$/, "");
 }
 
-function resolveStripePriceId(subscriptionId: string): string {
+async function resolveStripePriceId(subscriptionId: string): Promise<string> {
   if (subscriptionId?.startsWith("price_")) return subscriptionId;
 
   const envMap: Record<string, string | undefined> = {
@@ -32,7 +33,22 @@ function resolveStripePriceId(subscriptionId: string): string {
       process.env.STRIPE_PRICE_STUDIO_QUARTERLY || process.env.STRIPE_PRICE_PLAN_ELITE_3MONTH,
   };
 
-  return envMap[subscriptionId] || subscriptionId;
+  if (envMap[subscriptionId]) return envMap[subscriptionId]!;
+
+  // Backward compatibility: some payloads send legacy subscription/product ids.
+  const tier = await prismadb.subscriptionTier.findFirst({
+    where: {
+      OR: [{ devPriceId: subscriptionId }, { phyziroPriceId: subscriptionId }, { tier: subscriptionId }],
+    },
+    select: { tier: true },
+  });
+
+  if (tier?.tier) {
+    const fromTier = envMap[tier.tier];
+    if (fromTier) return fromTier;
+  }
+
+  return subscriptionId;
 }
 
 export async function POST(req: Request) {
@@ -51,7 +67,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid user" }, { status: 403 });
     }
 
-    const priceId = resolveStripePriceId(subscriptionId);
+    const priceId = await resolveStripePriceId(subscriptionId);
     if (!priceId?.startsWith("price_")) {
       return NextResponse.json(
         { error: "Invalid Stripe price id. Configure STRIPE_PRICE_* envs or pass a Stripe price_ id." },
