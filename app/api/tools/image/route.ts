@@ -98,6 +98,11 @@ export async function POST(req: Request) {
     const today = startOfDay(new Date());
     const data: ImageGenerationInput = await req.json();
 
+    // Safety fallback: production requests without explicit model should default to Nano Banana Pro.
+    if (!data.model) {
+      data.model = ImageGenerationModel.NanoBannaPro;
+    }
+
     const subscription = await prismadb.userSubscription.findUnique({
       where: { userId },
       include: { plan: true },
