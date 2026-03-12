@@ -10,12 +10,15 @@ function resolveStripePriceId(subscriptionId: string): string {
 
   const envMap: Record<string, string | undefined> = {
     // Legacy/internal keys
-    plan_basic: process.env.STRIPE_PRICE_PLAN_BASIC,
-    plan_basic_3month: process.env.STRIPE_PRICE_PLAN_BASIC_3MONTH,
-    plan_pro: process.env.STRIPE_PRICE_PLAN_PRO,
-    plan_pro_3month: process.env.STRIPE_PRICE_PLAN_PRO_3MONTH,
-    plan_elite: process.env.STRIPE_PRICE_PLAN_ELITE,
-    plan_elite_3month: process.env.STRIPE_PRICE_PLAN_ELITE_3MONTH,
+    plan_basic: process.env.STRIPE_PRICE_PLAN_BASIC || process.env.STRIPE_PRICE_STARTER,
+    plan_basic_3month:
+      process.env.STRIPE_PRICE_PLAN_BASIC_3MONTH || process.env.STRIPE_PRICE_STARTER_QUARTERLY,
+    plan_pro: process.env.STRIPE_PRICE_PLAN_PRO || process.env.STRIPE_PRICE_CREATOR,
+    plan_pro_3month:
+      process.env.STRIPE_PRICE_PLAN_PRO_3MONTH || process.env.STRIPE_PRICE_CREATOR_QUARTERLY,
+    plan_elite: process.env.STRIPE_PRICE_PLAN_ELITE || process.env.STRIPE_PRICE_STUDIO,
+    plan_elite_3month:
+      process.env.STRIPE_PRICE_PLAN_ELITE_3MONTH || process.env.STRIPE_PRICE_STUDIO_QUARTERLY,
 
     // Friendly plan keys (preferred)
     starter: process.env.STRIPE_PRICE_STARTER || process.env.STRIPE_PRICE_PLAN_BASIC,
