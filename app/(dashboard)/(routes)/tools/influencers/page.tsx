@@ -132,6 +132,7 @@ export default function InfluencersPage() {
 
   // Polling refs
   const pollingRefs = useRef<Record<string, NodeJS.Timeout>>({});
+  const failureNotifiedRef = useRef<Set<string>>(new Set());
 
   const fetchInfluencers = useCallback(async () => {
     if (!userId) return;
@@ -173,6 +174,12 @@ export default function InfluencersPage() {
           clearInterval(pollingRefs.current[influencerId]);
           delete pollingRefs.current[influencerId];
           refetch?.();
+
+          if (data.status === "failed" && !failureNotifiedRef.current.has(influencerId)) {
+            const message = data?.error || "Training failed. Please try a different dataset and retry.";
+            toast.error(message);
+            failureNotifiedRef.current.add(influencerId);
+          }
         }
 
         setInfluencers((prev) =>

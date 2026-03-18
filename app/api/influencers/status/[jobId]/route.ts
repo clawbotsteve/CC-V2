@@ -16,6 +16,17 @@ function mapFalStatusToDb(status?: string): "queued" | "processing" | "completed
   return "queued";
 }
 
+function isProviderNotFoundLike(message: string): boolean {
+  const m = message.toLowerCase();
+  return (
+    m.includes("not found") ||
+    m.includes("request not found") ||
+    m.includes("no request") ||
+    m.includes("invalid request") ||
+    m.includes("request_id")
+  );
+}
+
 function extractLoraUrl(payload: any): string | null {
   return (
     payload?.diffusers_lora_file?.url ||
@@ -57,7 +68,7 @@ export async function GET(
 
     const influencer = await prismadb.influencer.findFirst({
       where: { id: jobId, userId: user.userId },
-      select: { id: true, status: true, loraUrl: true, configUrl: true },
+      select: { id: true, status: true, loraUrl: true, configUrl: true, createdAt: true },
     });
 
     if (!influencer) {
@@ -116,12 +127,18 @@ export async function GET(
     }
 
     // If provider is clearly rejecting the job payload, fail fast (instead of infinite queued).
-    if (providerErrors.some((m) => m.toLowerCase().includes("images_data_url") || m.toLowerCase().includes("validation"))) {
+    const hasValidationError = providerErrors.some((m) => m.toLowerCase().includes("images_data_url") || m.toLowerCase().includes("validation"));
+    const hasNotFoundLikeError = providerErrors.length > 0 && providerErrors.every((m) => isProviderNotFoundLike(m));
+    const queuedForMs = Date.now() - new Date(influencer.createdAt).getTime();
+    const isStaleQueue = queuedForMs > 2 * 60 * 1000; // 2 minutes
+
+    if (hasValidationError || (hasNotFoundLikeError && isStaleQueue)) {
+      const failReason = hasValidationError ? providerErrors[0] : "Training job could not be found by provider";
       await prismadb.influencer.update({ where: { id: jobId }, data: { status: "failed" } });
-      return NextResponse.json({ status: "failed", error: providerErrors[0] }, { status: 200 });
+      return NextResponse.json({ status: "failed", error: failReason }, { status: 200 });
     }
 
-    return NextResponse.json({ status: influencer.status }, { status: 200 });
+    return NextResponse.json({ status: influencer.status, error: providerErrors[0] }, { status: 200 });
   } catch (error) {
     console.error("Failed to fetch influencer status", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
