@@ -65,6 +65,7 @@ export default function GenerateImagePage() {
       callbacks: {
         refetch: fetchImages,
       },
+      preserveFields: ["model"],
     });
 
     if (newGen) {

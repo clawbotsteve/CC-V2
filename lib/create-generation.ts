@@ -33,6 +33,9 @@ export interface CreateGenerationParams<Options extends Record<string, any>, Pay
   /** Default values for resetting the options state after submission. */
   defaultOptions: Options;
 
+  /** Fields that should be preserved from current options after successful submit reset. */
+  preserveFields?: Array<keyof Options>;
+
   /** ID of the current user submitting the generation. */
   userId: string;
 
@@ -71,6 +74,7 @@ export const createGeneration = async <
   buildPayload,
   uploadRefs,
   callbacks,
+  preserveFields,
 }: CreateGenerationParams<Options, Payload>): Promise<GenerationResult<Options> | null> => {
   try {
     if ("prompt" in options && typeof options.prompt === "string" && !options.prompt.trim()) {
@@ -195,7 +199,14 @@ export const createGeneration = async <
       });
     }
 
-    setOptions(defaultOptions);
+    const nextOptions: Options = { ...defaultOptions };
+    if (preserveFields?.length) {
+      preserveFields.forEach((field) => {
+        (nextOptions as any)[field] = (options as any)[field];
+      });
+    }
+
+    setOptions(nextOptions);
     callbacks?.closeSettings?.();
     callbacks?.refetch?.();
 
