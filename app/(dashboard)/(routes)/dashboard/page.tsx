@@ -304,7 +304,7 @@ export default function DashboardPage() {
 
       <section className="max-w-[1280px] mx-auto px-6 pb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {["/cc-content/Soul2.0-image-1.png", "/cc-content/Soul2.0-image-2.png", "/cc-content/Soul2.0-image-3.png"].map((src, idx) => (
+          {["/cc-content/model-6.jpeg", "/cc-content/model-7.jpeg", "/cc-content/model-8.png"].map((src, idx) => (
             <div key={src} className="rounded-2xl border border-[#8b7bff]/30 bg-[linear-gradient(135deg,rgba(99,102,241,0.18),rgba(139,123,255,0.08))] p-3">
               <div className="relative h-64 w-full rounded-xl overflow-hidden border border-white/10 bg-black/30">
                 <Image src={src} alt={`Soul 2.0 sample ${idx + 1}`} fill className="object-contain" />
