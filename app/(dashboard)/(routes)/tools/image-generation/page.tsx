@@ -38,6 +38,7 @@ export default function GenerateImagePage() {
 
   const [form, setForm] = useState<ImageGenerationInput>(defaultImageGenerationForm);
   const pollingRefs = useRef<Record<string, NodeJS.Timeout>>({});
+  const appliedQueryRef = useRef<string | null>(null);
 
   const selectedCreditVariant =
     form.model === ImageGenerationModel.NanoBanana2 || form.model === ImageGenerationModel.NanoBannaPro
@@ -138,6 +139,10 @@ export default function GenerateImagePage() {
   useEffect(() => {
     const modelParam = searchParams.get("model");
     const promptParam = searchParams.get("prompt");
+    const querySignature = `${modelParam ?? ""}|${promptParam ?? ""}`;
+
+    // Apply query params once per unique query string to avoid resetting user-selected model on rerenders.
+    if (appliedQueryRef.current === querySignature) return;
 
     const modelMap: Record<string, ImageGenerationModel> = {
       "nano-banana-pro": ImageGenerationModel.NanoBannaPro,
@@ -149,6 +154,8 @@ export default function GenerateImagePage() {
 
     const selectedModel = modelParam ? modelMap[modelParam] : undefined;
     if (!selectedModel && !promptParam) return;
+
+    appliedQueryRef.current = querySignature;
 
     setForm((prev) => ({
       ...prev,
