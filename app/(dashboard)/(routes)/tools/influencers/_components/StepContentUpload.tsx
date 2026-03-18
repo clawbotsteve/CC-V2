@@ -15,7 +15,7 @@ import {
   FileUploadItemProgress,
 } from "@/components/ui/file-upload";
 import { Button } from "@/components/ui/button";
-import { ImageIcon, X } from "lucide-react";
+import { CheckCircle2, ImageIcon, X, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { uploadFiles } from "@/lib/utils";
 import JSZip from "jszip";
@@ -288,6 +288,30 @@ const StepContentUpload = React.forwardRef<StepContentUploadHandle, Props>(
               </FileUpload>
 
               <FormMessage />
+
+              <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+                <div className="rounded-lg border border-emerald-500/25 bg-emerald-500/10 p-3">
+                  <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-emerald-400">
+                    <CheckCircle2 className="h-4 w-4" /> Do
+                  </p>
+                  <ul className="space-y-1 text-xs text-muted-foreground">
+                    <li>• Upload 10–20+ photos of one person</li>
+                    <li>• Use clear face shots from multiple angles</li>
+                    <li>• Include varied lighting/backgrounds/outfits</li>
+                  </ul>
+                </div>
+
+                <div className="rounded-lg border border-rose-500/25 bg-rose-500/10 p-3">
+                  <p className="mb-2 flex items-center gap-2 text-sm font-semibold text-rose-400">
+                    <XCircle className="h-4 w-4" /> Don’t
+                  </p>
+                  <ul className="space-y-1 text-xs text-muted-foreground">
+                    <li>• Mix multiple people in one dataset</li>
+                    <li>• Upload duplicates, heavy filters, or blurry shots</li>
+                    <li>• Use photos with covered faces (masks/sunglasses)</li>
+                  </ul>
+                </div>
+              </div>
             </FormItem>
           </form>
         </Form>
