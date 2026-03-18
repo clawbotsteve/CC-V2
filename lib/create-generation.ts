@@ -200,11 +200,17 @@ export const createGeneration = async <
     }
 
     const nextOptions: Options = { ...defaultOptions };
-    if (preserveFields?.length) {
-      preserveFields.forEach((field) => {
-        (nextOptions as any)[field] = (options as any)[field];
-      });
+
+    const fieldsToPreserve = new Set<keyof Options>(preserveFields ?? []);
+
+    // By default, preserve model selection for model-driven tools unless explicitly reset by caller.
+    if (Object.prototype.hasOwnProperty.call(options, "model")) {
+      fieldsToPreserve.add("model" as keyof Options);
     }
+
+    fieldsToPreserve.forEach((field) => {
+      (nextOptions as any)[field] = (options as any)[field];
+    });
 
     setOptions(nextOptions);
     callbacks?.closeSettings?.();
