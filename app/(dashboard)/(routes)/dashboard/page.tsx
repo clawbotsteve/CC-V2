@@ -147,6 +147,7 @@ const planStyles: Record<string, { card: string; glow: string; save: string }> =
 
 export default function DashboardPage() {
   const toolsScrollRef = useRef<HTMLDivElement | null>(null);
+  const [pricingBilling, setPricingBilling] = useState<"monthly" | "threeMonths">("monthly");
 
   const scrollToolsRight = () => {
     toolsScrollRef.current?.scrollBy({ left: 260, behavior: "smooth" });
@@ -397,17 +398,33 @@ export default function DashboardPage() {
         <div className="text-center mb-8">
           <h2 className="font-display text-2xl font-bold tracking-tight mb-2">Simple, transparent pricing</h2>
           <p className="text-muted-foreground text-[15px]">Start free. Scale as you create.</p>
-          <div className="mt-5 inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-sm">
-            <span className="text-zinc-400">Monthly</span>
-            <span className="inline-flex h-6 w-11 items-center rounded-full bg-zinc-700 px-1">
-              <span className="h-4 w-4 rounded-full bg-white" />
-            </span>
-            <span className="font-semibold text-white">3-Months</span>
+          <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-2 py-1.5 text-sm">
+            <button
+              type="button"
+              onClick={() => setPricingBilling("monthly")}
+              className={`rounded-full px-3 py-1 transition-colors ${pricingBilling === "monthly" ? "bg-white/20 text-white" : "text-zinc-400 hover:text-zinc-200"}`}
+            >
+              Monthly
+            </button>
+            <button
+              type="button"
+              onClick={() => setPricingBilling("threeMonths")}
+              className={`rounded-full px-3 py-1 transition-colors ${pricingBilling === "threeMonths" ? "bg-white/20 text-white" : "text-zinc-400 hover:text-zinc-200"}`}
+            >
+              3-Months
+            </button>
             <span className="rounded-full bg-pink-500 px-2 py-0.5 text-[11px] font-bold text-white">20% OFF</span>
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {pricingPlans.map((plan) => (
+          {pricingPlans.map((plan) => {
+            const basePrice = Number.parseFloat(plan.price.replace("$", ""));
+            const displayPrice =
+              pricingBilling === "threeMonths" && plan.name !== "Free"
+                ? `$${(basePrice * 0.8).toFixed(2)}`
+                : plan.price;
+
+            return (
             <div
               key={plan.name}
               className={`relative border rounded-[20px] p-8 transition-all hover:-translate-y-1 ${plan.featured ? 'border-lime-300/70' : 'border-white/15 hover:border-white/30'}`}
@@ -424,7 +441,7 @@ export default function DashboardPage() {
               )}
               <div className="font-display text-xl font-bold mb-1 mt-4">{plan.name}</div>
               <div className="text-xs font-semibold uppercase tracking-wider text-[#d8ccff] mb-2">{plan.hook}</div>
-              <div className="font-display text-4xl font-extrabold tracking-tight mb-1">{plan.price}<span className="text-base font-normal text-muted-foreground">/mo</span></div>
+              <div className="font-display text-4xl font-extrabold tracking-tight mb-1">{displayPrice}<span className="text-base font-normal text-muted-foreground">/mo</span></div>
               <div className="text-sm font-semibold text-lime-300 mb-6">{plan.credits}</div>
               <ul className="space-y-2.5 mb-6">
                 {plan.features.map((f) => (
@@ -463,7 +480,8 @@ export default function DashboardPage() {
                 {plan.cta}
               </Link>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="mt-10 rounded-2xl border border-white/10 bg-[#0f1018] p-4 md:p-6">
