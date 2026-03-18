@@ -149,7 +149,7 @@ export default function PricingPage() {
 
       <div className="mx-auto w-fit rounded-full border border-white/10 bg-white/5 p-1 flex items-center gap-2">
         <button className={`px-3 py-1.5 text-sm rounded-full ${billing === "monthly" ? "bg-white/20 text-white" : "text-muted-foreground"}`} onClick={() => setBilling("monthly")}>Monthly</button>
-        <button className={`px-3 py-1.5 text-sm rounded-full ${billing === "annual" ? "bg-white/20 text-white" : "text-muted-foreground"}`} onClick={() => setBilling("annual")}>Annual</button>
+        <button className={`px-3 py-1.5 text-sm rounded-full ${billing === "annual" ? "bg-white/20 text-white" : "text-muted-foreground"}`} onClick={() => setBilling("annual")}>3-Months</button>
         <span className="text-xs font-semibold rounded-full bg-pink-500/20 text-pink-200 px-2 py-0.5">20% OFF</span>
       </div>
 

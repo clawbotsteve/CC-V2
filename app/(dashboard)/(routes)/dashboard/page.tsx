@@ -402,7 +402,7 @@ export default function DashboardPage() {
             <span className="inline-flex h-6 w-11 items-center rounded-full bg-zinc-700 px-1">
               <span className="h-4 w-4 rounded-full bg-white" />
             </span>
-            <span className="font-semibold text-white">Annual</span>
+            <span className="font-semibold text-white">3-Months</span>
             <span className="rounded-full bg-pink-500 px-2 py-0.5 text-[11px] font-bold text-white">20% OFF</span>
           </div>
         </div>
@@ -457,7 +457,7 @@ export default function DashboardPage() {
               </div>
 
               <Link
-                href="/settings"
+                href="/pricing"
                 className={`block w-full text-center py-3 rounded-[10px] text-sm font-semibold transition-all ${plan.featured ? 'text-black bg-lime-300 hover:bg-lime-200' : 'text-white border border-white/25 bg-white/5 hover:bg-white/10'}`}
               >
                 {plan.cta}
