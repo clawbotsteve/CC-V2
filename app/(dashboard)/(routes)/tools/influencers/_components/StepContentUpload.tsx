@@ -14,6 +14,14 @@ import {
   FileUploadItemDelete,
   FileUploadItemProgress,
 } from "@/components/ui/file-upload";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, ImageIcon, X, XCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -51,6 +59,10 @@ const StepContentUpload = React.forwardRef<StepContentUploadHandle, Props>(
     }>({
       error: "",
     });
+    const [agreementOpen, setAgreementOpen] = React.useState(false);
+    const [agreementChecked, setAgreementChecked] = React.useState(false);
+    const [hasAcceptedAgreement, setHasAcceptedAgreement] = React.useState(false);
+    const browseButtonRef = React.useRef<HTMLButtonElement>(null);
 
     const accept = "image/*";
     const maxFileSize = 5 * 1024 * 1024; // 5 MB
@@ -189,6 +201,8 @@ const StepContentUpload = React.forwardRef<StepContentUploadHandle, Props>(
       reset() {
         console.log("[DEBUG] StepContentUpload.reset called");
         setFiles([]);
+        setHasAcceptedAgreement(false);
+        setAgreementChecked(false);
       },
     }));
 
@@ -220,6 +234,23 @@ const StepContentUpload = React.forwardRef<StepContentUploadHandle, Props>(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [files]);
 
+    const handleBrowseClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (hasAcceptedAgreement) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setAgreementOpen(true);
+    };
+
+    const handleAgreementContinue = () => {
+      setHasAcceptedAgreement(true);
+      setAgreementOpen(false);
+
+      // Re-trigger browse after acceptance so user can continue seamlessly.
+      requestAnimationFrame(() => {
+        browseButtonRef.current?.click();
+      });
+    };
+
     return (
       <>
         <Form {...form}>
@@ -250,10 +281,12 @@ const StepContentUpload = React.forwardRef<StepContentUploadHandle, Props>(
                   </div>
                   <FileUploadTrigger asChild>
                     <Button
+                      ref={browseButtonRef}
                       variant="outline"
                       size="sm"
                       className="mt-2 w-fit"
                       disabled={uploading}
+                      onClick={handleBrowseClick}
                     >
                       Browse files
                     </Button>
@@ -315,6 +348,55 @@ const StepContentUpload = React.forwardRef<StepContentUploadHandle, Props>(
             </FormItem>
           </form>
         </Form>
+
+        <Dialog open={agreementOpen} onOpenChange={setAgreementOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Training Upload Agreement</DialogTitle>
+              <DialogDescription>
+                Before uploading training photos, please confirm the requirements below.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3 text-sm">
+              <div>
+                <p className="font-medium">1) I have permission to upload these images</p>
+                <p className="text-muted-foreground text-xs">I own the images or have consent from everyone clearly visible.</p>
+              </div>
+              <div>
+                <p className="font-medium">2) I’m uploading one person per training set</p>
+                <p className="text-muted-foreground text-xs">Each training set should represent a single person for quality and compliance.</p>
+              </div>
+              <div>
+                <p className="font-medium">3) I understand content and safety rules apply</p>
+                <p className="text-muted-foreground text-xs">Uploads that violate TraviaLabs Terms or Safety Policy may be rejected or removed.</p>
+              </div>
+              <div>
+                <p className="font-medium">4) I understand training uses credits</p>
+                <p className="text-muted-foreground text-xs">Training consumes compute/credits and may take time to complete.</p>
+              </div>
+            </div>
+
+            <label className="flex items-start gap-2 rounded-md border border-border p-3 text-sm">
+              <input
+                type="checkbox"
+                checked={agreementChecked}
+                onChange={(e) => setAgreementChecked(e.target.checked)}
+                className="mt-0.5"
+              />
+              <span>I&apos;ve read and agree with the above.</span>
+            </label>
+
+            <DialogFooter className="gap-2 sm:justify-end">
+              <Button variant="outline" onClick={() => setAgreementOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleAgreementContinue} disabled={!agreementChecked}>
+                Continue to Upload
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* File Size Error Modal */}
         <FileSizeErrorModal
