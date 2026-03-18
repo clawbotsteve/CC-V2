@@ -51,43 +51,10 @@ export default function VideoSettingsPanel({
             <SelectValue placeholder="Select a model" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={VideoModel.Kling}>
-              <div className="flex items-center justify-between w-full">
-                Kling 2.6
-                <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full ml-4 font-medium border border-primary/30">
-                  SFW
-                </span>
-              </div>
-            </SelectItem>
-            <SelectItem value={VideoModel.KlingMotionControl}>
-              <div className="flex items-center justify-between w-full">
-                Kling Motion Control
-                <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full ml-4 font-medium border border-primary/30">
-                  SFW
-                </span>
-              </div>
-            </SelectItem>
-            <SelectItem value={VideoModel.Bytedance}>
-              <div className="flex items-center justify-between w-full">
-                Bytedance
-                <span className="text-[10px] bg-destructive/20 text-destructive px-2 py-0.5 rounded-full ml-4 font-medium border border-destructive/30">
-                  NSFW
-                </span>
-              </div>
-            </SelectItem>
-            <SelectItem value={VideoModel.Veo}>
-              <div className="flex items-center justify-between w-full">
-                <span>Veo 3.1</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] bg-accent text-accent-foreground px-2 py-0.5 rounded-full font-medium border border-border">
-                    Image-to-Video
-                  </span>
-                  <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full font-medium border border-primary/30">
-                    SFW
-                  </span>
-                </div>
-              </div>
-            </SelectItem>
+            <SelectItem value={VideoModel.Kling}>Kling 2.6</SelectItem>
+            <SelectItem value={VideoModel.KlingMotionControl}>Kling Motion Control</SelectItem>
+            <SelectItem value={VideoModel.Bytedance}>Bytedance</SelectItem>
+            <SelectItem value={VideoModel.Veo}>Veo 3.1</SelectItem>
           </SelectContent>
         </Select>
       </div>
