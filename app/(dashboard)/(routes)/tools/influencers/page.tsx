@@ -350,6 +350,12 @@ export default function InfluencersPage() {
               <div className="flex items-center justify-between"><span>Avatars used</span><span className="font-medium text-foreground">{avatarCreated || 0}</span></div>
               <div className="flex items-center justify-between"><span>Max avatars</span><span className="font-medium text-foreground">{typeof maxAvatar === "number" ? maxAvatar : "∞"}</span></div>
             </div>
+
+            {influencers.some((inf) => inf.status === "queued" || inf.status === "processing") && (
+              <p className="mt-3 rounded-md border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
+                Training can take 3–5 minutes. Please keep this tab open while your character is generating.
+              </p>
+            )}
           </aside>
 
           <div>
