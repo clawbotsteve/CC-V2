@@ -52,13 +52,14 @@ export async function getFalJobResult(endpoint: string, requestId: string) {
 
 function contentTypeFromPath(path: string): string {
   const p = path.toLowerCase();
+  if (p.endsWith(".zip")) return "application/zip";
   if (p.endsWith(".png")) return "image/png";
   if (p.endsWith(".webp")) return "image/webp";
   if (p.endsWith(".gif")) return "image/gif";
   if (p.endsWith(".mp4")) return "video/mp4";
   if (p.endsWith(".webm")) return "video/webm";
   if (p.endsWith(".mov")) return "video/quicktime";
-  return "image/jpeg";
+  return "application/octet-stream";
 }
 
 export async function uploadImageUrlToFalStorage(url: string): Promise<string> {
