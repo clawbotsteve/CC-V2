@@ -356,33 +356,35 @@ export default function InfluencerCreateDialog({
         </div>
 
         {/* Navigation Buttons */}
-        <DialogFooter className="flex !justify-start gap-3 mt-4 sm:!justify-start">
-          {currentStep > 0 && (
-            <Button variant="outline" onClick={back} disabled={loading}>
-              Back
-            </Button>
-          )}
+        <DialogFooter className="mt-4 sm:!justify-center">
+          <div className="w-full max-w-4xl mx-auto flex justify-start gap-3">
+            {currentStep > 0 && (
+              <Button variant="outline" onClick={back} disabled={loading}>
+                Back
+              </Button>
+            )}
 
-          {currentStep < steps.length - 1 && (
-            <Button onClick={next} disabled={loading}>
-              Next
-            </Button>
-          )}
+            {currentStep < steps.length - 1 && (
+              <Button onClick={next} disabled={loading}>
+                Next
+              </Button>
+            )}
 
-          {currentStep === steps.length - 1 && (
-            <Button
-              onClick={createInfluencer}
-              disabled={
-                loading || plan === "plan_free" || ((availableCredit ?? 0) < 65)
-              }
-            >
-              <CreditCost
-                creditCosts={creditCosts}
-                toolType={ToolType.AVATAR_TRAINING}
-              />
-              {loading ? "Creating..." : "Create Influencer"}
-            </Button>
-          )}
+            {currentStep === steps.length - 1 && (
+              <Button
+                onClick={createInfluencer}
+                disabled={
+                  loading || plan === "plan_free" || ((availableCredit ?? 0) < 65)
+                }
+              >
+                <CreditCost
+                  creditCosts={creditCosts}
+                  toolType={ToolType.AVATAR_TRAINING}
+                />
+                {loading ? "Creating..." : "Create Influencer"}
+              </Button>
+            )}
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
