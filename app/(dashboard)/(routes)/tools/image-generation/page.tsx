@@ -58,7 +58,7 @@ export default function GenerateImagePage() {
     const newGen = await createGeneration({
       options: form,
       setOptions: setForm,
-      defaultOptions: defaultImageGenerationForm,
+      defaultOptions: { ...defaultImageGenerationForm, model: form.model },
       userId,
       apiEndpoint: endpoint,
       buildPayload: createImageJob,
