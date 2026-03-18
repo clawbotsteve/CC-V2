@@ -98,7 +98,7 @@ export default function StepBasicInfo({ data, update }: Props) {
   return (
     <TooltipProvider>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(() => { })} className="space-y-4">
+        <form onSubmit={form.handleSubmit(() => { })} className="space-y-3">
           {/* Name */}
           <FormField
             control={form.control}

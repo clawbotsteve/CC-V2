@@ -233,8 +233,8 @@ export default function InfluencerCreateDialog({
         </DialogHeader>
 
         {/* Stepper */}
-        <div 
-          className="grid items-start justify-start w-full gap-4 max-md:hidden mb-6" 
+        <div
+          className="grid items-start justify-start w-full max-w-4xl mx-auto gap-3 max-md:hidden mb-4 px-2"
           style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0px, 1fr))` }}
         >
           {steps.map((step, i) => {
@@ -318,11 +318,11 @@ export default function InfluencerCreateDialog({
         </div>
 
         {/* Step Content */}
-        <div className="flex-1 overflow-y-auto pr-2">
-          <div style={{ display: currentStep === 0 ? "block" : "none" }}>
+        <div className="flex-1 overflow-y-auto px-2">
+          <div className="w-full max-w-4xl mx-auto" style={{ display: currentStep === 0 ? "block" : "none" }}>
             <StepBasicInfo data={form} update={(e) => updateForm(setForm, e)} />
           </div>
-          <div style={{ display: currentStep === 1 ? "block" : "none" }}>
+          <div className="w-full max-w-4xl mx-auto" style={{ display: currentStep === 1 ? "block" : "none" }}>
             <StepContentUpload
               ref={contentUploadRef}
               data={form}
@@ -350,7 +350,7 @@ export default function InfluencerCreateDialog({
               </div>
             )}
           </div>
-          <div style={{ display: currentStep === 2 ? "block" : "none" }}>
+          <div className="w-full max-w-4xl mx-auto" style={{ display: currentStep === 2 ? "block" : "none" }}>
             {renderReview()}
           </div>
         </div>
