@@ -104,6 +104,7 @@ const navLinks = [
     },
   },
   { label: "Apps", href: "/tools" },
+  { label: "Community", href: "https://whop.com/joined/tavira-ai-academy/", external: true },
 ];
 
 const mobileNavItems = [
@@ -156,20 +157,29 @@ export default function TopNavbar() {
           {/* Center nav links (desktop) */}
           <div className="hidden md:flex items-center gap-1">
             {navLinks.map((item) => {
-              const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
+              const isExternal = Boolean((item as any).external);
+              const isActive = !isExternal && (pathname === item.href || pathname?.startsWith(item.href + "/"));
+              const linkClass = `rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all inline-flex items-center gap-1 ${
+                isActive
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+              }`;
+
               return (
                 <div key={item.href} className="relative group">
-                  <Link
-                    href={item.href}
-                    className={`rounded-lg px-3.5 py-1.5 text-sm font-medium transition-all inline-flex items-center gap-1 ${
-                      isActive
-                        ? "text-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-white/5"
-                    }`}
-                  >
-                    {item.label}
-                    {item.panel && <ChevronDown className="h-3.5 w-3.5 opacity-70" />}
-                  </Link>
+                  {isExternal ? (
+                    <a href={item.href} target="_blank" rel="noopener noreferrer" className={linkClass}>
+                      {item.label}
+                    </a>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      className={linkClass}
+                    >
+                      {item.label}
+                      {item.panel && <ChevronDown className="h-3.5 w-3.5 opacity-70" />}
+                    </Link>
+                  )}
 
                   {item.panel && (
                     <div className="pointer-events-none absolute left-0 top-full pt-3 opacity-0 translate-y-1 transition-all duration-150 group-hover:pointer-events-auto group-hover:opacity-100 group-hover:translate-y-0">
