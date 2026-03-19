@@ -3,9 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { GlowingEffect } from "@/components/ui/glowing-effect";
 import { motion } from "framer-motion";
 import { useRef } from "react";
+import { HeroSection } from "@/components/blocks/hero-section-1";
 import {
   Sparkles,
   Video,
@@ -156,7 +156,11 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen">
-      {/* ===== HERO ===== */}
+      {/* ===== HERO (TEST V2) ===== */}
+      <HeroSection />
+
+      {/* Legacy hero kept for quick revert */}
+      {false && (
       <section className="relative overflow-hidden py-20 md:py-24 text-center px-6">
         {/* Glow */}
         <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[800px] h-[600px] pointer-events-none" style={{ background: 'radial-gradient(ellipse, rgba(99,102,241,0.15) 0%, rgba(167,139,250,0.08) 40%, transparent 70%)' }} />
@@ -180,10 +184,9 @@ export default function DashboardPage() {
           <div className="flex gap-3 justify-center flex-wrap">
             <Link
               href="/tools/image-generation"
-              className="relative overflow-hidden inline-flex items-center gap-3 rounded-xl border-[3px] border-black bg-[#6d57ff] px-5 py-2.5 text-[16px] tracking-[0.07em] text-white transition-all hover:-translate-y-0.5 hover:brightness-110"
+              className="inline-flex items-center gap-3 rounded-xl border-[3px] border-black bg-[#6d57ff] px-5 py-2.5 text-[16px] tracking-[0.07em] text-white transition-all hover:-translate-y-0.5 hover:brightness-110"
               style={{ boxShadow: "0 8px 28px rgba(109,87,255,0.35)", fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }}
             >
-              <GlowingEffect disabled={false} proximity={80} spread={36} borderWidth={2} />
               <span className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-[#5b43ff] text-2xl font-bold leading-none">
                 ›
               </span>
@@ -207,6 +210,7 @@ export default function DashboardPage() {
           </div>
         </motion.div>
       </section>
+      )}
 
       {/* ===== CONTENT EXAMPLES ===== */}
       <section className="max-w-[1280px] mx-auto px-6 pb-24 pt-8">
@@ -217,7 +221,6 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           {contentExamples.map((item) => (
             <motion.div key={item.title} whileHover={{ y: -4 }} className="relative rounded-2xl overflow-hidden border border-border hover:border-[#6366f1] transition-all" style={{ aspectRatio: '4/5' }}>
-              <GlowingEffect disabled={false} proximity={72} spread={32} borderWidth={2} />
               <div className="relative h-full w-full">
                 {item.type === "image" ? (
                   <Image src={item.src} alt={item.title} fill className="object-cover" />
@@ -274,7 +277,6 @@ export default function DashboardPage() {
                 {tools.map((tool) => (
                   <Link key={tool.name} href={tool.href}>
                     <motion.div whileHover={{ y: -2 }} className={`group relative h-[260px] ${("cardClass" in tool ? (tool as any).cardClass : undefined) || "w-[220px]"} overflow-hidden rounded-2xl border border-white/10 bg-[#111118] transition-all hover:border-[#6366f1]`}>
-                      <GlowingEffect disabled={false} proximity={70} spread={28} borderWidth={2} />
                       {tool.preview ? (
                         tool.previewType === "image" ? (
                           <Image src={tool.preview} alt={tool.name} fill className={tool.name === "Soul 2.0" ? "object-contain bg-black/20" : "object-cover"} />
@@ -309,8 +311,7 @@ export default function DashboardPage() {
       <section className="max-w-[1280px] mx-auto px-6 pb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {["/cc-content/model-6.jpeg", "/cc-content/model-7.jpeg", "/cc-content/model-8.png"].map((src, idx) => (
-            <div key={src} className="relative rounded-2xl border border-[#8b7bff]/30 bg-[linear-gradient(135deg,rgba(99,102,241,0.18),rgba(139,123,255,0.08))] p-3">
-              <GlowingEffect disabled={false} proximity={68} spread={30} borderWidth={2} />
+            <div key={src} className="rounded-2xl border border-[#8b7bff]/30 bg-[linear-gradient(135deg,rgba(99,102,241,0.18),rgba(139,123,255,0.08))] p-3">
               <div className="relative h-64 w-full rounded-xl overflow-hidden border border-white/10 bg-black/30">
                 <Image src={src} alt={`Soul 2.0 sample ${idx + 1}`} fill className="object-contain" />
               </div>
