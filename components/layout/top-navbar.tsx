@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useUser, SignOutButton } from "@clerk/nextjs";
 import {
   Menu,
@@ -35,7 +35,7 @@ import {
 import { UserAvatarProfile } from "@/components/user-avatar-profile";
 import { PlanLabel } from "@/components/plan-label";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { type MouseEvent, useState } from "react";
 
 const navLinks = [
   { label: "Explore", href: "/dashboard", active: true },
@@ -175,6 +175,7 @@ export default function TopNavbar() {
                     <Link
                       href={item.href}
                       className={linkClass}
+                      onClick={handleTabGate(item.href, (item as any).requiresOnboarding)}
                     >
                       {item.label}
                       {item.panel && <ChevronDown className="h-3.5 w-3.5 opacity-70" />}

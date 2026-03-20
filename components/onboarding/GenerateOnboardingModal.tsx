@@ -8,6 +8,7 @@ type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onComplete: () => void;
+  onContinueFree?: () => void;
 };
 
 const slides = [
@@ -59,7 +60,7 @@ const slides = [
   },
 ] as const;
 
-export function GenerateOnboardingModal({ open, onOpenChange, onComplete }: Props) {
+export function GenerateOnboardingModal({ open, onOpenChange, onComplete, onContinueFree }: Props) {
   const [step, setStep] = useState(0);
   const current = slides[step];
   const isLast = step === slides.length - 1;
@@ -71,6 +72,7 @@ export function GenerateOnboardingModal({ open, onOpenChange, onComplete }: Prop
       localStorage.setItem("onboarding_v2_seen", "1");
     }
     onOpenChange(false);
+    onContinueFree?.();
   };
 
   const complete = () => {
