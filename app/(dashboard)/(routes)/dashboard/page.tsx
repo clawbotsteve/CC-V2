@@ -324,7 +324,7 @@ export default function DashboardPage() {
               <div className="relative bg-black/40" style={{ aspectRatio: "4 / 5" }}>
                 <video className="h-full w-full object-cover" src={src} autoPlay muted loop controls preload="metadata" playsInline />
               </div>
-              <p className="px-2 py-1.5 text-xs text-zinc-400">Video sample {idx + 4}</p>
+              <></>
             </div>
           ))}
         </div>
