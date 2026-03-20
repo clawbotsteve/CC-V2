@@ -175,7 +175,15 @@ export default function TopNavbar() {
                     <Link
                       href={item.href}
                       className={linkClass}
-                      onClick={handleTabGate(item.href, (item as any).requiresOnboarding)}
+                      onClick={(e) => {
+                        if (!(item as any).requiresOnboarding) return;
+                        if (typeof window === "undefined") return;
+                        const seen = localStorage.getItem("onboarding_v2_seen") === "1";
+                        if (seen) return;
+                        e.preventDefault();
+                        setPendingHref(item.href);
+                        setOnboardingOpen(true);
+                      }}
                     >
                       {item.label}
                       {item.panel && <ChevronDown className="h-3.5 w-3.5 opacity-70" />}
