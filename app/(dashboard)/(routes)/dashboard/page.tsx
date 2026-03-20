@@ -369,6 +369,36 @@ export default function DashboardPage() {
         </div>
       </section>
 
+      {/* ===== ADDITIONAL VIDEO SHOWCASE ===== */}
+      <section className="max-w-[1280px] mx-auto px-6 pb-8">
+        <div className="mb-5">
+          <h3 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-white">More generated video examples</h3>
+          <p className="mt-2 text-sm text-zinc-400">Recent outputs from the TraviaLabs workflow.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[
+            "/cc-content/video-4.mp4",
+            "/cc-content/video-5.mp4",
+            "/cc-content/video-6.mp4",
+            "/cc-content/video-7.mp4",
+            "/cc-content/video-8.mp4",
+          ].map((src, idx) => (
+            <div key={src} className="rounded-2xl border border-white/10 bg-[#111118] p-2">
+              <div className="relative overflow-hidden rounded-xl border border-white/10 bg-black/40" style={{ aspectRatio: "9 / 16" }}>
+                <video
+                  className="h-full w-full object-cover"
+                  src={src}
+                  controls
+                  preload="metadata"
+                  playsInline
+                />
+              </div>
+              <p className="px-1 pt-2 text-xs text-zinc-400">Video sample {idx + 4}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* ===== CREATOR WORKFLOWS ===== */}
       <section className="max-w-[1280px] mx-auto px-6 py-16">
         <div className="mb-8 text-center">
