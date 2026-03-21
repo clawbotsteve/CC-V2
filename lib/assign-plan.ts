@@ -3,9 +3,14 @@ import { SubscriptionStatus } from "@prisma/client";
 
 export type AssignPlanOptions = {
   status?: SubscriptionStatus;
+  // Legacy names kept for compatibility.
   phyziroPriceId?: string | null;
   phyziroSubscriptionId?: string | null;
   phyziroCurrentPeriodEnd?: Date | null;
+  // Stripe-native names.
+  stripePriceId?: string | null;
+  stripeSubscriptionId?: string | null;
+  stripeCurrentPeriodEnd?: Date | null;
 };
 
 export async function assignPlan(userId: string, planId: string, options: AssignPlanOptions = {}) {
@@ -14,7 +19,14 @@ export async function assignPlan(userId: string, planId: string, options: Assign
     phyziroPriceId,
     phyziroSubscriptionId,
     phyziroCurrentPeriodEnd,
+    stripePriceId,
+    stripeSubscriptionId,
+    stripeCurrentPeriodEnd,
   } = options;
+
+  const resolvedPriceId = stripePriceId ?? phyziroPriceId;
+  const resolvedSubscriptionId = stripeSubscriptionId ?? phyziroSubscriptionId;
+  const resolvedCurrentPeriodEnd = stripeCurrentPeriodEnd ?? phyziroCurrentPeriodEnd;
 
   // Fetch the subscription tier
   const plan = await prismadb.subscriptionTier.findUnique({
@@ -32,17 +44,23 @@ export async function assignPlan(userId: string, planId: string, options: Assign
     subscriptionUpdateData.status = status;
     subscriptionCreateData.status = status;
   }
-  if (phyziroPriceId !== undefined) {
-    subscriptionUpdateData.phyziroPriceId = phyziroPriceId;
-    subscriptionCreateData.phyziroPriceId = phyziroPriceId;
+  if (resolvedPriceId !== undefined) {
+    subscriptionUpdateData.phyziroPriceId = resolvedPriceId;
+    subscriptionCreateData.phyziroPriceId = resolvedPriceId;
+    subscriptionUpdateData.stripePriceId = resolvedPriceId;
+    subscriptionCreateData.stripePriceId = resolvedPriceId;
   }
-  if (phyziroSubscriptionId !== undefined) {
-    subscriptionUpdateData.phyziroSubscriptionId = phyziroSubscriptionId;
-    subscriptionCreateData.phyziroSubscriptionId = phyziroSubscriptionId;
+  if (resolvedSubscriptionId !== undefined) {
+    subscriptionUpdateData.phyziroSubscriptionId = resolvedSubscriptionId;
+    subscriptionCreateData.phyziroSubscriptionId = resolvedSubscriptionId;
+    subscriptionUpdateData.stripeSubscriptionId = resolvedSubscriptionId;
+    subscriptionCreateData.stripeSubscriptionId = resolvedSubscriptionId;
   }
-  if (phyziroCurrentPeriodEnd !== undefined) {
-    subscriptionUpdateData.phyziroCurrentPeriodEnd = phyziroCurrentPeriodEnd;
-    subscriptionCreateData.phyziroCurrentPeriodEnd = phyziroCurrentPeriodEnd;
+  if (resolvedCurrentPeriodEnd !== undefined) {
+    subscriptionUpdateData.phyziroCurrentPeriodEnd = resolvedCurrentPeriodEnd;
+    subscriptionCreateData.phyziroCurrentPeriodEnd = resolvedCurrentPeriodEnd;
+    subscriptionUpdateData.stripeCurrentPeriodEnd = resolvedCurrentPeriodEnd;
+    subscriptionCreateData.stripeCurrentPeriodEnd = resolvedCurrentPeriodEnd;
   }
 
   // Upsert UserSubscription

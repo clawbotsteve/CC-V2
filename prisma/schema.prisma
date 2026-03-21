@@ -139,12 +139,16 @@ model UserSubscription {
   phyziroPriceId         String?            @map("phyziro_price_id")
   phyziroCurrentPeriodEnd DateTime?         @map("phyziro_current_period_end")
   phyziroSubscriptionId  String?            @map("phyziro_subscription_id")
+  stripePriceId          String?            @map("stripe_price_id")
+  stripeCurrentPeriodEnd DateTime?          @map("stripe_current_period_end")
+  stripeSubscriptionId   String?            @map("stripe_subscription_id")
   status                 SubscriptionStatus @default(active)
   createdAt              DateTime           @default(now())
   updatedAt              DateTime           @updatedAt
 
   @@index([userId])
   @@index([planId])
+  @@index([stripeSubscriptionId])
 }
 
 enum PlanStatus {

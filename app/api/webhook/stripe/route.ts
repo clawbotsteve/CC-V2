@@ -184,9 +184,9 @@ export async function POST(req: Request) {
         } else {
           await assignPlan(userId, plan.id, {
             status: "active",
-            phyziroPriceId: priceId ?? null,
-            phyziroSubscriptionId: subscriptionId ?? null,
-            phyziroCurrentPeriodEnd: periodEnd ?? null,
+            stripePriceId: priceId ?? null,
+            stripeSubscriptionId: subscriptionId ?? null,
+            stripeCurrentPeriodEnd: periodEnd ?? null,
           });
         }
       }
@@ -213,9 +213,9 @@ export async function POST(req: Request) {
         if (plan) {
           await assignPlan(userId, plan.id, {
             status: "active",
-            phyziroPriceId: priceId ?? null,
-            phyziroSubscriptionId: subscriptionId ?? null,
-            phyziroCurrentPeriodEnd: currentPeriodEnd ?? null,
+            stripePriceId: priceId ?? null,
+            stripeSubscriptionId: subscriptionId ?? null,
+            stripeCurrentPeriodEnd: currentPeriodEnd ?? null,
           });
         } else {
           console.error("[STRIPE WEBHOOK] subscription event could not resolve plan", {
