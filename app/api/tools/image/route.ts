@@ -171,7 +171,7 @@ export async function POST(req: Request) {
     let requestId: string | undefined;
 
     if (data.model === ImageGenerationModel.NanoBannaPro || data.model === ImageGenerationModel.NanoBanana2Base) {
-      const normalizedAspect = normalizeAspect(body.aspect_ratio as any);
+      const normalizedAspect = normalizeAspect(body.aspect_ratio as any) || imageSizeToAspect(body.image_size as any);
       if (!normalizedAspect) {
         return NextResponse.json({ error: "Aspect ratio is required for Nano Banana 2." }, { status: 400 });
       }
@@ -219,7 +219,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Nano Banana 2 requires at least 1 input photo." }, { status: 400 });
       }
 
-      const normalizedAspect = normalizeAspect(body.aspect_ratio as any);
+      const normalizedAspect = normalizeAspect(body.aspect_ratio as any) || imageSizeToAspect(body.image_size as any);
       if (!normalizedAspect) {
         return NextResponse.json({ error: "Aspect ratio is required for Nano Banana 2 Edit." }, { status: 400 });
       }
