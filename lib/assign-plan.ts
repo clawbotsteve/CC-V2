@@ -25,17 +25,17 @@ export async function assignPlan(userId: string, planId: string) {
     where: { userId },
   });
 
-  const shouldAddCredit = !existingApiLimit || existingApiLimit.availableCredit <= 0;
   const monthlyRemainingCredits = existingApiLimit?.monthlyRemainingCredits || 0;
   const availableCredit = existingApiLimit?.availableCredit || 0;
 
-  const remainingCredit = Math.max(availableCredit - monthlyRemainingCredits, 0);
+  // Preserve any non-monthly leftover credits (e.g., packs), then add the new monthly allotment.
+  const carryOverCredits = Math.max(availableCredit - monthlyRemainingCredits, 0);
 
-  // Upsert UserApiLimit with conditional credit update
+  // Upsert UserApiLimit and always refresh monthly credits for the assigned plan.
   await prismadb.userApiLimit.upsert({
     where: { userId },
     update: {
-      availableCredit: shouldAddCredit ? plan.creditsPerMonth : remainingCredit,
+      availableCredit: carryOverCredits + plan.creditsPerMonth,
       monthlyRemainingCredits: plan.creditsPerMonth,
       availableAvatarSlot: plan.maxAvatarCount,
     },
