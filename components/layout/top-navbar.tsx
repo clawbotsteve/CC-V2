@@ -142,6 +142,8 @@ export default function TopNavbar() {
   const { user, isSignedIn } = useUser();
   const { availableCredit, meta } = useUserContext();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
   const creditPercent = Math.max(0, Math.min(100, Number(availableCredit ?? 0)));
 
   return (
