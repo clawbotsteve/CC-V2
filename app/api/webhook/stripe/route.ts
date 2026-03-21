@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
 import prismadb from "@/lib/prismadb";
+import { assignPlan } from "@/lib/assign-plan";
 
 function verifyStripeSignature(rawBody: string, signatureHeader: string, secret: string) {
   const items = Object.fromEntries(
@@ -181,12 +182,11 @@ export async function POST(req: Request) {
             checkoutSessionId: object?.id,
           });
         } else {
-          await applyPlanToUser({
-            userId,
-            planId: plan.id,
-            stripePriceId: priceId,
-            stripeSubscriptionId: subscriptionId,
-            stripeCurrentPeriodEnd: periodEnd,
+          await assignPlan(userId, plan.id, {
+            status: "active",
+            phyziroPriceId: priceId ?? null,
+            phyziroSubscriptionId: subscriptionId ?? null,
+            phyziroCurrentPeriodEnd: periodEnd ?? null,
           });
         }
       }
@@ -211,12 +211,11 @@ export async function POST(req: Request) {
       if (userId) {
         const plan = await resolvePlanByPriceId(priceId);
         if (plan) {
-          await applyPlanToUser({
-            userId,
-            planId: plan.id,
-            stripePriceId: priceId,
-            stripeSubscriptionId: subscriptionId,
-            stripeCurrentPeriodEnd: currentPeriodEnd,
+          await assignPlan(userId, plan.id, {
+            status: "active",
+            phyziroPriceId: priceId ?? null,
+            phyziroSubscriptionId: subscriptionId ?? null,
+            phyziroCurrentPeriodEnd: currentPeriodEnd ?? null,
           });
         } else {
           console.error("[STRIPE WEBHOOK] subscription event could not resolve plan", {
@@ -237,9 +236,11 @@ export async function POST(req: Request) {
         });
         if (existing) {
           const freePlanId = await getFreePlanId();
-          await applyPlanToUser({
-            userId: existing.userId,
-            planId: freePlanId,
+          await assignPlan(existing.userId, freePlanId, {
+            status: "canceled",
+            phyziroPriceId: null,
+            phyziroSubscriptionId: null,
+            phyziroCurrentPeriodEnd: null,
           });
         }
       }

@@ -1,6 +1,21 @@
 import prismadb from "@/lib/prismadb";
+import { SubscriptionStatus } from "@prisma/client";
 
-export async function assignPlan(userId: string, planId: string) {
+export type AssignPlanOptions = {
+  status?: SubscriptionStatus;
+  phyziroPriceId?: string | null;
+  phyziroSubscriptionId?: string | null;
+  phyziroCurrentPeriodEnd?: Date | null;
+};
+
+export async function assignPlan(userId: string, planId: string, options: AssignPlanOptions = {}) {
+  const {
+    status,
+    phyziroPriceId,
+    phyziroSubscriptionId,
+    phyziroCurrentPeriodEnd,
+  } = options;
+
   // Fetch the subscription tier
   const plan = await prismadb.subscriptionTier.findUnique({
     where: { id: planId },
@@ -10,17 +25,33 @@ export async function assignPlan(userId: string, planId: string) {
     throw new Error("Invalid plan ID");
   }
 
+  const subscriptionUpdateData: any = { planId };
+  const subscriptionCreateData: any = { userId, planId };
+
+  if (status !== undefined) {
+    subscriptionUpdateData.status = status;
+    subscriptionCreateData.status = status;
+  }
+  if (phyziroPriceId !== undefined) {
+    subscriptionUpdateData.phyziroPriceId = phyziroPriceId;
+    subscriptionCreateData.phyziroPriceId = phyziroPriceId;
+  }
+  if (phyziroSubscriptionId !== undefined) {
+    subscriptionUpdateData.phyziroSubscriptionId = phyziroSubscriptionId;
+    subscriptionCreateData.phyziroSubscriptionId = phyziroSubscriptionId;
+  }
+  if (phyziroCurrentPeriodEnd !== undefined) {
+    subscriptionUpdateData.phyziroCurrentPeriodEnd = phyziroCurrentPeriodEnd;
+    subscriptionCreateData.phyziroCurrentPeriodEnd = phyziroCurrentPeriodEnd;
+  }
+
   // Upsert UserSubscription
   await prismadb.userSubscription.upsert({
     where: { userId },
-    update: { planId },
-    create: {
-      userId,
-      planId,
-    },
+    update: subscriptionUpdateData,
+    create: subscriptionCreateData,
   });
 
-  // Check current availableCredit first
   const existingApiLimit = await prismadb.userApiLimit.findUnique({
     where: { userId },
   });
@@ -28,10 +59,9 @@ export async function assignPlan(userId: string, planId: string) {
   const monthlyRemainingCredits = existingApiLimit?.monthlyRemainingCredits || 0;
   const availableCredit = existingApiLimit?.availableCredit || 0;
 
-  // Preserve any non-monthly leftover credits (e.g., packs), then add the new monthly allotment.
+  // Preserve non-monthly leftover credits (e.g., purchased packs), then add refreshed monthly credits.
   const carryOverCredits = Math.max(availableCredit - monthlyRemainingCredits, 0);
 
-  // Upsert UserApiLimit and always refresh monthly credits for the assigned plan.
   await prismadb.userApiLimit.upsert({
     where: { userId },
     update: {
@@ -44,6 +74,8 @@ export async function assignPlan(userId: string, planId: string) {
       availableCredit: plan.creditsPerMonth,
       monthlyRemainingCredits: plan.creditsPerMonth,
       availableAvatarSlot: plan.maxAvatarCount,
+      avatarSlotUsed: 0,
+      creditUsed: 0,
     },
   });
 
