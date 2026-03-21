@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
 import prismadb from "@/lib/prismadb";
 import { auth } from "@clerk/nextjs/server";
-import { absoluteUrl } from "@/lib/utils";
-import axios from "axios";
+import { getWebhookUrl } from "@/lib/utils";
 import { startOfDay } from "date-fns";
 import { ImageGenerationInput, ImageGenerationModel, LoraInput, NanoBannaProInput, NanoBanana2Input, Soul2Input, V1Input } from "@/types/image";
 import { checkAvailableCredit } from "@/lib/check-available-credit";
 import { ToolType } from "@prisma/client";
-import { getFalJobResult } from "@/lib/fal-client";
-import { aspectToImageSize, normalizeAspect } from "@/lib/aspect-ratio";
+import { getFalJobResult, submitFalJob, uploadImageUrlToFalStorage } from "@/lib/fal-client";
+import { aspectToImageSize, imageSizeToAspect, normalizeAspect } from "@/lib/aspect-ratio";
 import { canUseImageModel, requiredPlanForImageModel, resolveAccessTier } from "@/lib/plan-access";
+import { PLATFORM_SAFETY_NEGATIVE_PROMPT } from "@/constants/constants";
 
 function getImageCreditVariant(input: ImageGenerationInput): string {
   if (input.model === ImageGenerationModel.NanoBanana2 || input.model === ImageGenerationModel.NanoBannaPro || input.model === ImageGenerationModel.NanoBanana2Base) {
@@ -167,7 +167,8 @@ export async function POST(req: Request) {
 
 
 
-    let falResponse;
+    const webhookUrl = getWebhookUrl("/api/webhook/image");
+    let requestId: string | undefined;
 
     if (data.model === ImageGenerationModel.NanoBannaPro || data.model === ImageGenerationModel.NanoBanana2Base) {
       const normalizedAspect = normalizeAspect(body.aspect_ratio as any);
@@ -175,6 +176,14 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Aspect ratio is required for Nano Banana 2." }, { status: 400 });
       }
       const normalizedImageSize = aspectToImageSize(normalizedAspect);
+      const normalizedResolution =
+        body.output_resolution === "4k"
+          ? "4K"
+          : body.output_resolution === "2k"
+            ? "2K"
+            : body.output_resolution === "1k"
+              ? "1K"
+              : undefined;
 
       const data_ai: NanoBannaProInput = {
         prompt: body.prompt,
@@ -187,9 +196,23 @@ export async function POST(req: Request) {
         image_size: normalizedImageSize,
       };
 
-      falResponse = await axios.post(absoluteUrl("/api/ai/image/nano-banna-pro"), data_ai, {
-        headers: { "Content-Type": "application/json" },
+      const resp = await submitFalJob(ImageGenerationModel.NanoBannaPro, {
+        input: {
+          prompt: data_ai.prompt,
+          seed: data_ai.seed,
+          num_images: data_ai.num_images || 1,
+          output_format: data_ai.output_format || "png",
+          output_resolution: normalizedResolution,
+          resolution: normalizedResolution,
+          aspect_ratio: normalizedAspect,
+          aspectRatio: normalizedAspect,
+          image_size: normalizedImageSize,
+          imageSize: normalizedImageSize,
+        },
+        webhookUrl,
       });
+
+      requestId = resp?.request_id;
     } else if (data.model === ImageGenerationModel.NanoBanana2) {
       const inputImages = body.image_urls?.filter(Boolean) ?? (body.image_url ? [body.image_url] : []);
       if (inputImages.length === 0) {
@@ -201,6 +224,14 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Aspect ratio is required for Nano Banana 2 Edit." }, { status: 400 });
       }
       const normalizedImageSize = aspectToImageSize(normalizedAspect);
+      const normalizedResolution =
+        body.output_resolution === "4k"
+          ? "4K"
+          : body.output_resolution === "2k"
+            ? "2K"
+            : body.output_resolution === "1k"
+              ? "1K"
+              : undefined;
 
       const data_ai: NanoBanana2Input = {
         prompt: body.prompt,
@@ -213,9 +244,28 @@ export async function POST(req: Request) {
         image_urls: inputImages.slice(0, 5),
       };
 
-      falResponse = await axios.post(absoluteUrl("/api/ai/image/nano-banana-2"), data_ai, {
-        headers: { "Content-Type": "application/json" },
+      const falHostedImageUrls = await Promise.all(
+        (data_ai.image_urls ?? []).map(async (url) => uploadImageUrlToFalStorage(url))
+      );
+
+      const resp = await submitFalJob(ImageGenerationModel.NanoBanana2, {
+        input: {
+          prompt: data_ai.prompt,
+          seed: data_ai.seed,
+          num_images: data_ai.num_images || 1,
+          output_format: data_ai.output_format || "png",
+          output_resolution: normalizedResolution,
+          resolution: normalizedResolution,
+          aspect_ratio: normalizedAspect,
+          aspectRatio: normalizedAspect,
+          image_size: normalizedImageSize,
+          imageSize: normalizedImageSize,
+          image_urls: falHostedImageUrls,
+        },
+        webhookUrl,
       });
+
+      requestId = resp?.request_id;
     } else if (data.model === ImageGenerationModel.Soul2) {
       const data_ai: Soul2Input = {
         prompt: body.prompt,
@@ -225,9 +275,65 @@ export async function POST(req: Request) {
         aspect_ratio: body.aspect_ratio,
       };
 
-      falResponse = await axios.post(absoluteUrl("/api/ai/image/soul-2"), data_ai, {
-        headers: { "Content-Type": "application/json" },
-      });
+      const apiKey = process.env.HIGGSFIELD_API_KEY;
+      const baseUrl = (process.env.HIGGSFIELD_BASE_URL || "https://platform.higgsfield.ai").replace(/\/$/, "");
+
+      if (!apiKey) {
+        return NextResponse.json({ error: "Missing HIGGSFIELD_API_KEY" }, { status: 500 });
+      }
+
+      const payload = {
+        prompt: data_ai.prompt,
+        num_images: data_ai.num_images ?? 1,
+        seed: data_ai.seed,
+        output_format: data_ai.output_format ?? "png",
+        aspect_ratio: data_ai.aspect_ratio,
+      };
+
+      const candidatePaths = [
+        "/higgsfield-ai/soul/reference",
+        "/v1/higgsfield-ai/soul/reference",
+      ];
+
+      const authHeaderVariants: HeadersInit[] = [
+        { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+        { "Content-Type": "application/json", "x-api-key": apiKey },
+        { "Content-Type": "application/json", Authorization: apiKey },
+      ];
+
+      let lastStatus = 500;
+      let lastData: any = null;
+
+      for (const path of candidatePaths) {
+        for (const headers of authHeaderVariants) {
+          const response = await fetch(`${baseUrl}${path}`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify(payload),
+          });
+
+          const json = await response.json().catch(() => ({}));
+          lastStatus = response.status;
+          lastData = json;
+
+          if (!response.ok) continue;
+
+          requestId = json?.request_id || json?.requestId || json?.id || json?.data?.request_id;
+          if (!requestId) {
+            return NextResponse.json({ error: "Missing request id from Soul 2.0 response", details: json }, { status: 500 });
+          }
+          break;
+        }
+        if (requestId) break;
+        if (lastStatus !== 401) break;
+      }
+
+      if (!requestId) {
+        return NextResponse.json(
+          { error: lastData?.error || lastData?.message || "Soul 2.0 request failed", details: lastData },
+          { status: lastStatus || 500 }
+        );
+      }
     } else if (data.model === ImageGenerationModel.Lora) {
       const data_ai: LoraInput = {
         prompt: body.prompt,
@@ -242,9 +348,22 @@ export async function POST(req: Request) {
         enable_safety_checker: body.enable_safety_checker!,
       };
 
-      falResponse = await axios.post(absoluteUrl("/api/ai/image/lora"), data_ai, {
-        headers: { "Content-Type": "application/json" },
+      const resp = await submitFalJob(ImageGenerationModel.Lora, {
+        input: {
+          enable_safety_checker: data_ai.enable_safety_checker,
+          guidance_scale: data_ai.guidance_scale,
+          image_size: data_ai.image_size,
+          loras: data_ai.loras,
+          num_images: data_ai.num_images,
+          num_inference_steps: data_ai.num_inference_steps,
+          output_format: data_ai.output_format,
+          prompt: data_ai.prompt,
+          seed: data_ai.seed,
+        },
+        webhookUrl,
       });
+
+      requestId = resp?.request_id;
     } else {
       const data_ai: V1Input = {
         prompt: body.prompt,
@@ -257,13 +376,22 @@ export async function POST(req: Request) {
         safety_tolerance: body.safety_tolerance!,
       };
 
-      falResponse = await axios.post(absoluteUrl("/api/ai/image/v1"), data_ai, {
-        headers: { "Content-Type": "application/json" },
+      const resp = await submitFalJob(ImageGenerationModel.V1, {
+        input: {
+          prompt: data_ai.prompt,
+          image_size: data_ai.image_size,
+          seed: data_ai.seed,
+          num_images: data_ai.num_images,
+          enable_safety_checker: data_ai.enable_safety_checker,
+          safety_tolerance: data_ai.enable_safety_checker ? data_ai.safety_tolerance : "6",
+          output_format: data_ai.output_format,
+        },
+        webhookUrl,
       });
+
+      requestId = resp?.request_id;
     }
 
-
-    const { requestId } = falResponse && falResponse.data;
     if (!requestId) {
       console.error("[IMAGE TOOLS] POST - Missing requestId in response");
       return NextResponse.json({ error: "Missing requestId" }, { status: 500 });
