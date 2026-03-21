@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { clerkClient } from '@clerk/nextjs/server'
 import prismadb from '@/lib/prismadb'
 import { INTERNAL_DASHBOARD_TOKEN } from '@/constants/constants'
 
@@ -62,6 +63,46 @@ export async function POST(req: NextRequest) {
         createdAt: true,
       },
     })
+
+    // Backfill missing emails from Clerk
+    const usersNeedingEmail = users.filter((u) => !u.email)
+    if (usersNeedingEmail.length > 0) {
+      try {
+        const clerk = await clerkClient()
+        const clerkUpdates = await Promise.allSettled(
+          usersNeedingEmail.map(async (u) => {
+            const clerkUser = await clerk.users.getUser(u.userId)
+            const email = clerkUser.emailAddresses?.[0]?.emailAddress || ''
+            const name = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ')
+            if (email) {
+              // Backfill the database so we don't need to hit Clerk again
+              await prismadb.user.update({
+                where: { userId: u.userId },
+                data: { email, name: name || undefined },
+              })
+            }
+            return { userId: u.userId, email, name }
+          })
+        )
+        // Apply fetched emails to the current response
+        const emailMap = new Map<string, { email: string; name: string }>()
+        for (const result of clerkUpdates) {
+          if (result.status === 'fulfilled' && result.value.email) {
+            emailMap.set(result.value.userId, result.value)
+          }
+        }
+        for (const user of users) {
+          const clerkData = emailMap.get(user.userId)
+          if (clerkData) {
+            ;(user as any).email = clerkData.email
+            ;(user as any).name = clerkData.name || user.name
+          }
+        }
+      } catch (clerkError) {
+        console.error('[DASHBOARD_USERS] Clerk email backfill failed:', clerkError)
+        // Continue without emails rather than failing the entire request
+      }
+    }
 
     // Batch fetch subscriptions and credits for these users
     const userIds = users.map((u) => u.userId)
