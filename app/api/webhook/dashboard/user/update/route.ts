@@ -7,6 +7,7 @@ interface RequestBody {
   userId: string;
   creditIncrease?: number;
   loraIncrease?: number;
+  adminUserId?: string;
 }
 
 export async function POST(req: NextRequest) {
@@ -52,6 +53,16 @@ export async function POST(req: NextRequest) {
     where: { userId },
     data: updateData,
   });
+
+  // Audit log
+  await prismadb.adminAuditLog.create({
+    data: {
+      adminUserId: body.adminUserId ?? 'system',
+      action: 'credit_adjustment',
+      targetUserId: userId,
+      details: { creditIncrease, loraIncrease, newAvailable: updatedLimit.availableCredit },
+    },
+  })
 
   return NextResponse.json({ message: "User limits updated", updatedLimit });
 }

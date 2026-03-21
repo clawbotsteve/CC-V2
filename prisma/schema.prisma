@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 //
@@ -53,6 +54,7 @@ enum ToolType {
   PROMPT_OPTIMIZER
   AVATAR_TO_VIDEO
   AVATAR_TRAINING
+  BATCH_GENERATOR
 }
 
 enum AspectRatio {
@@ -499,6 +501,113 @@ model Admin {
   userId    String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model AdminAuditLog {
+  id           String   @id @default(cuid())
+  adminUserId  String
+  action       String // plan_change | credit_adjustment | ban_user | unban_user | set_credits
+  targetUserId String
+  details      Json     @default("{}")
+  createdAt    DateTime @default(now())
+
+  @@index([adminUserId])
+  @@index([targetUserId])
+  @@index([action])
+  @@index([createdAt(sort: Desc)])
+}
+
+//
+// BATCH GENERATOR
+//
+
+enum BatchMode {
+  image
+  video
+}
+
+enum BatchRunStatus {
+  draft
+  queued
+  running
+  completed
+  failed
+  partially_completed
+}
+
+enum BatchItemStatus {
+  queued
+  running
+  completed
+  failed
+}
+
+enum ReferenceRole {
+  main
+  logo
+  outfit
+  product
+  scene
+}
+
+model BatchRun {
+  id             String         @id @default(cuid())
+  userId         String
+  name           String
+  mode           BatchMode
+  status         BatchRunStatus @default(draft)
+  model          String         // e.g. "fal-ai/nano-banana-pro" or "kling"
+  aspectRatio    String         // e.g. "1:1", "16:9"
+  resolution     String?        // image only, e.g. "1024x1024"
+  duration       Int?           // video only, seconds
+  generateAudio  Boolean        @default(false)
+  batchSize      Int
+  promptTone     String?        // e.g. "professional"
+  promptRealism  String?        // e.g. "photorealistic"
+  promptSellStyle String?       // e.g. "aspirational"
+  creditCost     Float          @default(0)
+  completedAt    DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  items      BatchItem[]
+  references BatchReference[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+}
+
+model BatchItem {
+  id          String          @id @default(cuid())
+  runId       String
+  run         BatchRun        @relation(fields: [runId], references: [id], onDelete: Cascade)
+  promptLabel String          // e.g. "P01"
+  promptText  String
+  seed        Int?
+  status      BatchItemStatus @default(queued)
+  outputUrl   String?
+  error       String?
+  retryCount  Int             @default(0)
+  creditUsed  Float           @default(0)
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@index([runId])
+  @@index([status])
+}
+
+model BatchReference {
+  id        String        @id @default(cuid())
+  runId     String
+  run       BatchRun      @relation(fields: [runId], references: [id], onDelete: Cascade)
+  role      ReferenceRole
+  fileUrl   String        // uploaded file URL (Supabase storage)
+  createdAt DateTime      @default(now())
+
+  @@index([runId])
 }
 
 model Lora {

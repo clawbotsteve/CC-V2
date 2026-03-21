@@ -7,6 +7,7 @@ import { INTERNAL_DASHBOARD_TOKEN } from '@/constants/constants';
 interface RequestBody {
   userId: string;
   planTier: string;
+  adminUserId?: string;
 }
 
 export async function POST(req: NextRequest) {
@@ -42,10 +43,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No plan provided provided" }, { status: 400 });
   }
 
+  const oldPlanId = userSubscription.planId;
   const planId = await getPlanIdByTier(planTier);
   const updatedPlan = await assignPlan(userId, planId)
 
   if (updatedPlan.success) {
+    // Audit log
+    await prismadb.adminAuditLog.create({
+      data: {
+        adminUserId: body.adminUserId ?? 'system',
+        action: 'plan_change',
+        targetUserId: userId,
+        details: { oldPlanId, newPlanTier: planTier, newPlanId: planId },
+      },
+    })
+
     return NextResponse.json({ message: "User plan updated", updatedPlan });
   }
 }
