@@ -322,7 +322,7 @@ export default function DashboardPage() {
           ].map((src, idx) => (
             <div key={src} className="rounded-2xl overflow-hidden border border-white/10 bg-[#111118]">
               <div className="relative bg-black/40" style={{ aspectRatio: "4 / 5" }}>
-                <video className="h-full w-full object-cover" src={src} autoPlay muted loop controls preload="metadata" playsInline />
+                <video className="h-full w-full object-cover" src={src} autoPlay muted loop playsInline disablePictureInPicture controlsList="nodownload noplaybackrate noremoteplayback" />
               </div>
               <></>
             </div>
@@ -412,9 +412,12 @@ export default function DashboardPage() {
                 <video
                   className="h-full w-full object-cover"
                   src={src}
-                  controls
-                  preload="metadata"
+                  autoPlay
+                  muted
+                  loop
                   playsInline
+                  disablePictureInPicture
+                  controlsList="nodownload noplaybackrate noremoteplayback"
                 />
               </div>
               <p className="px-1 pt-2 text-xs text-zinc-400">Video sample {idx + 4}</p>
