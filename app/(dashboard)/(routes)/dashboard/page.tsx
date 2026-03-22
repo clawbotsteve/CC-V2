@@ -330,7 +330,7 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      <section className="max-w-[1280px] mx-auto px-6 pb-6">
+      {false && <section className="max-w-[1280px] mx-auto px-6 pb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {["/cc-content/model-6.jpeg", "/cc-content/model-7.jpeg", "/cc-content/model-8.png"].map((src, idx) => (
             <div key={src} className="relative rounded-2xl border border-[#8b7bff]/30 bg-[linear-gradient(135deg,rgba(99,102,241,0.18),rgba(139,123,255,0.08))] p-3">
@@ -341,7 +341,7 @@ export default function DashboardPage() {
             </div>
           ))}
         </div>
-      </section>
+      </section>}
 
       {/* ===== BATCH GENERATION OFFER (ROUGH) ===== */}
       <section className="max-w-[1280px] mx-auto px-6 py-16">
