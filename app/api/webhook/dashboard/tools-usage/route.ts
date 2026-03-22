@@ -17,16 +17,36 @@ export async function POST(req: NextRequest) {
 
     const since = new Date()
     since.setDate(since.getDate() - daysBack)
+    const periodFilter = { createdAt: { gte: since } }
 
-    // ── 1. Total counts & credits per tool type (all time) ──
+    // ── Label maps ──
+    const IMAGE_MODEL_LABELS: Record<string, string> = {
+      'fal-ai/nano-banana-pro': 'Nano Banana Pro',
+      'fal-ai/nano-banana-2': 'Nano Banana 2',
+      'fal-ai/nano-banana-2/edit': 'Nano Banana 2 Edit',
+      'fal-ai/flux-lora': 'Flux LoRA',
+      'fal-ai/flux-pro/v1.1': 'Flux Pro V1.1',
+      'higgsfield-ai/soul/reference': 'Soul2',
+    }
+
+    const VIDEO_MODEL_LABELS: Record<string, string> = {
+      kling: 'Kling 2.6',
+      'kling-motion-control': 'Kling Motion Control',
+      bytedance: 'Bytedance',
+      veo: 'Veo 3.1',
+      wan: 'Wan 720p',
+    }
+
+    const UPSCALE_MODEL_LABELS: Record<string, string> = {
+      'fal-ai/topaz/upscale/image': 'Topaz Image Upscale',
+      'fal-ai/seedvr/upscale/image': 'SeedVR Image Upscale',
+      'fal-ai/bytedance-upscaler/upscale/video': 'Bytedance Video Upscale',
+    }
+
+    // ── 1. Aggregate totals (all time) ──
     const [
-      imageCount,
-      videoCount,
-      upscaleCount,
-      faceSwapCount,
-      faceEnhanceCount,
-      imageEditCount,
-      imageAnalysisCount,
+      imageCount, videoCount, upscaleCount,
+      faceSwapCount, faceEnhanceCount, imageEditCount, imageAnalysisCount,
     ] = await Promise.all([
       prismadb.generatedImage.count(),
       prismadb.generatedVideo.count(),
@@ -37,15 +57,10 @@ export async function POST(req: NextRequest) {
       prismadb.imageAnalysis.count(),
     ])
 
-    // ── 2. Credits spent per tool type (all time) ──
+    // ── 2. Credits spent (all time) ──
     const [
-      imageCredits,
-      videoCredits,
-      upscaleCredits,
-      faceSwapCredits,
-      faceEnhanceCredits,
-      imageEditCredits,
-      imageAnalysisCredits,
+      imageCredits, videoCredits, upscaleCredits,
+      faceSwapCredits, faceEnhanceCredits, imageEditCredits, imageAnalysisCredits,
     ] = await Promise.all([
       prismadb.generatedImage.aggregate({ _sum: { creditUsed: true } }),
       prismadb.generatedVideo.aggregate({ _sum: { creditUsed: true } }),
@@ -56,16 +71,10 @@ export async function POST(req: NextRequest) {
       prismadb.imageAnalysis.aggregate({ _sum: { creditUsed: true } }),
     ])
 
-    // ── 3. Counts in the selected period ──
-    const periodFilter = { createdAt: { gte: since } }
+    // ── 3. Period counts ──
     const [
-      imagePeriod,
-      videoPeriod,
-      upscalePeriod,
-      faceSwapPeriod,
-      faceEnhancePeriod,
-      imageEditPeriod,
-      imageAnalysisPeriod,
+      imagePeriod, videoPeriod, upscalePeriod,
+      faceSwapPeriod, faceEnhancePeriod, imageEditPeriod, imageAnalysisPeriod,
     ] = await Promise.all([
       prismadb.generatedImage.count({ where: periodFilter }),
       prismadb.generatedVideo.count({ where: periodFilter }),
@@ -76,76 +85,57 @@ export async function POST(req: NextRequest) {
       prismadb.imageAnalysis.count({ where: periodFilter }),
     ])
 
-    // ── 4. Video breakdown by model ──
-    const videosByModel = await prismadb.generatedVideo.groupBy({
-      by: ['model'],
-      _count: { id: true },
-      _sum: { creditUsed: true },
-    })
-
-    const videosByModelPeriod = await prismadb.generatedVideo.groupBy({
-      by: ['model'],
-      where: periodFilter,
-      _count: { id: true },
-      _sum: { creditUsed: true },
-    })
-
-    // ── 5. Success/failure rates per tool ──
-    const [
-      imageStatuses,
-      videoStatuses,
-      upscaleStatuses,
-      faceSwapStatuses,
-      faceEnhanceStatuses,
-      imageEditStatuses,
-      imageAnalysisStatuses,
-    ] = await Promise.all([
-      prismadb.generatedImage.groupBy({ by: ['status'], _count: { id: true } }),
-      prismadb.generatedVideo.groupBy({ by: ['status'], _count: { id: true } }),
-      prismadb.upscaled.groupBy({ by: ['status'], _count: { id: true } }),
-      prismadb.faceSwap.groupBy({ by: ['status'], _count: { id: true } }),
-      prismadb.faceEnhance.groupBy({ by: ['status'], _count: { id: true } }),
-      prismadb.imageEdit.groupBy({ by: ['status'], _count: { id: true } }),
-      prismadb.imageAnalysis.groupBy({ by: ['status'], _count: { id: true } }),
+    // ── 4. Video breakdown by model (all time + period) ──
+    const [videosByModel, videosByModelPeriod] = await Promise.all([
+      prismadb.generatedVideo.groupBy({
+        by: ['model'],
+        _count: { id: true },
+        _sum: { creditUsed: true },
+      }),
+      prismadb.generatedVideo.groupBy({
+        by: ['model'],
+        where: periodFilter,
+        _count: { id: true },
+        _sum: { creditUsed: true },
+      }),
     ])
 
-    // ── 6. Daily trend data for the period ──
+    // ── 5. Upscale breakdown by model (via reason JSON) ──
+    const [upscaleByModel, upscaleByModelPeriod] = await Promise.all([
+      prismadb.$queryRawUnsafe<{ model: string; count: number; credits: number }[]>(
+        `SELECT reason->>'model' as model, COUNT(*)::int as count, COALESCE(SUM("creditUsed"), 0)::float as credits FROM "Upscaled" WHERE reason->>'model' IS NOT NULL GROUP BY reason->>'model'`
+      ),
+      prismadb.$queryRawUnsafe<{ model: string; count: number; credits: number }[]>(
+        `SELECT reason->>'model' as model, COUNT(*)::int as count, COALESCE(SUM("creditUsed"), 0)::float as credits FROM "Upscaled" WHERE reason->>'model' IS NOT NULL AND "createdAt" >= $1 GROUP BY reason->>'model'`,
+        since
+      ),
+    ])
+
+    // ── 6. Daily trend data ──
     const [
-      imageTrend,
-      videoTrend,
-      upscaleTrend,
-      faceSwapTrend,
-      faceEnhanceTrend,
-      imageEditTrend,
-      imageAnalysisTrend,
+      imageTrend, videoTrend, upscaleTrend,
+      faceSwapTrend, faceEnhanceTrend, imageEditTrend, imageAnalysisTrend,
     ] = await Promise.all([
       prismadb.$queryRawUnsafe<{ date: string; count: number }[]>(
-        `SELECT DATE("createdAt") as date, COUNT(*)::int as count FROM "GeneratedImage" WHERE "createdAt" >= $1 GROUP BY DATE("createdAt") ORDER BY date`,
-        since
+        `SELECT DATE("createdAt") as date, COUNT(*)::int as count FROM "GeneratedImage" WHERE "createdAt" >= $1 GROUP BY DATE("createdAt") ORDER BY date`, since
       ),
       prismadb.$queryRawUnsafe<{ date: string; count: number }[]>(
-        `SELECT DATE("createdAt") as date, COUNT(*)::int as count FROM "GeneratedVideo" WHERE "createdAt" >= $1 GROUP BY DATE("createdAt") ORDER BY date`,
-        since
+        `SELECT DATE("createdAt") as date, COUNT(*)::int as count FROM "GeneratedVideo" WHERE "createdAt" >= $1 GROUP BY DATE("createdAt") ORDER BY date`, since
       ),
       prismadb.$queryRawUnsafe<{ date: string; count: number }[]>(
-        `SELECT DATE("createdAt") as date, COUNT(*)::int as count FROM "Upscaled" WHERE "createdAt" >= $1 GROUP BY DATE("createdAt") ORDER BY date`,
-        since
+        `SELECT DATE("createdAt") as date, COUNT(*)::int as count FROM "Upscaled" WHERE "createdAt" >= $1 GROUP BY DATE("createdAt") ORDER BY date`, since
       ),
       prismadb.$queryRawUnsafe<{ date: string; count: number }[]>(
-        `SELECT DATE("createdAt") as date, COUNT(*)::int as count FROM "FaceSwap" WHERE "createdAt" >= $1 GROUP BY DATE("createdAt") ORDER BY date`,
-        since
+        `SELECT DATE("createdAt") as date, COUNT(*)::int as count FROM "FaceSwap" WHERE "createdAt" >= $1 GROUP BY DATE("createdAt") ORDER BY date`, since
       ),
       prismadb.$queryRawUnsafe<{ date: string; count: number }[]>(
-        `SELECT DATE("createdAt") as date, COUNT(*)::int as count FROM "FaceEnhance" WHERE "createdAt" >= $1 GROUP BY DATE("createdAt") ORDER BY date`,
-        since
+        `SELECT DATE("createdAt") as date, COUNT(*)::int as count FROM "FaceEnhance" WHERE "createdAt" >= $1 GROUP BY DATE("createdAt") ORDER BY date`, since
       ),
       prismadb.$queryRawUnsafe<{ date: string; count: number }[]>(
-        `SELECT DATE("createdAt") as date, COUNT(*)::int as count FROM "ImageEdit" WHERE "createdAt" >= $1 GROUP BY DATE("createdAt") ORDER BY date`,
-        since
+        `SELECT DATE("createdAt") as date, COUNT(*)::int as count FROM "ImageEdit" WHERE "createdAt" >= $1 GROUP BY DATE("createdAt") ORDER BY date`, since
       ),
       prismadb.$queryRawUnsafe<{ date: string; count: number }[]>(
-        `SELECT DATE("createdAt") as date, COUNT(*)::int as count FROM "ImageAnalysis" WHERE "createdAt" >= $1 GROUP BY DATE("createdAt") ORDER BY date`,
-        since
+        `SELECT DATE("createdAt") as date, COUNT(*)::int as count FROM "ImageAnalysis" WHERE "createdAt" >= $1 GROUP BY DATE("createdAt") ORDER BY date`, since
       ),
     ])
 
@@ -157,13 +147,13 @@ export async function POST(req: NextRequest) {
       since
     )
 
-    // ── 8. Tool credit costs (configuration) ──
+    // ── 8. Tool credit costs ──
     const toolCreditCosts = await prismadb.toolCreditCost.findMany({
       include: { tier: { select: { name: true, tier: true } } },
       orderBy: [{ tool: 'asc' }, { variant: 'asc' }],
     })
 
-    // ── 9. Top users per tool (top 5 by generation count) ──
+    // ── 9. Top users ──
     const [topImageUsers, topVideoUsers] = await Promise.all([
       prismadb.$queryRawUnsafe<{ userId: string; count: number }[]>(
         `SELECT "userId", COUNT(*)::int as count FROM "GeneratedImage" GROUP BY "userId" ORDER BY count DESC LIMIT 5`
@@ -173,18 +163,101 @@ export async function POST(req: NextRequest) {
       ),
     ])
 
-    // ── Build response ──
-    const formatStatuses = (statuses: { status: string; _count: { id: number } }[]) =>
-      Object.fromEntries(statuses.map((s) => [s.status, s._count.id]))
+    // ── Build per-model video rows ──
+    const videoModelMap = new Map(videosByModel.map((v) => [v.model, v]))
+    const videoModelPeriodMap = new Map(videosByModelPeriod.map((v) => [v.model, v]))
 
-    const VIDEO_MODEL_LABELS: Record<string, string> = {
-      kling: 'Kling 2.6',
-      'kling-motion-control': 'Kling Motion Control',
-      bytedance: 'Bytedance',
-      veo: 'Veo 3.1',
-      wan: 'Wan 720p',
-      '': 'Unknown',
-    }
+    const videoModelRows = Object.entries(VIDEO_MODEL_LABELS).map(([modelKey, label]) => {
+      const all = videoModelMap.get(modelKey)
+      const period = videoModelPeriodMap.get(modelKey)
+      return {
+        name: label,
+        type: 'Video',
+        modelId: modelKey,
+        totalCount: all?._count?.id ?? 0,
+        periodCount: period?._count?.id ?? 0,
+        creditsSpent: all?._sum?.creditUsed ?? 0,
+      }
+    })
+
+    // ── Build per-model upscale rows ──
+    const upscaleModelMap = new Map(upscaleByModel.map((u) => [u.model, u]))
+    const upscaleModelPeriodMap = new Map(upscaleByModelPeriod.map((u) => [u.model, u]))
+
+    const upscaleModelRows = Object.entries(UPSCALE_MODEL_LABELS).map(([modelKey, label]) => {
+      const all = upscaleModelMap.get(modelKey)
+      const period = upscaleModelPeriodMap.get(modelKey)
+      return {
+        name: label,
+        type: 'Upscale',
+        modelId: modelKey,
+        totalCount: all?.count ?? 0,
+        periodCount: period?.count ?? 0,
+        creditsSpent: all?.credits ?? 0,
+      }
+    })
+
+    // ── Image model rows (no per-model tracking in DB, show aggregate per known model) ──
+    const imageModelRows = Object.entries(IMAGE_MODEL_LABELS).map(([modelKey, label]) => ({
+      name: label,
+      type: 'Image',
+      modelId: modelKey,
+      totalCount: null as number | null, // not tracked per model
+      periodCount: null as number | null,
+      creditsSpent: null as number | null,
+    }))
+
+    // ── Build flat tools array with ALL individual models ──
+    const tools = [
+      // Image models (individual — counts are null since DB doesn't track per model)
+      ...imageModelRows,
+      // Image generation aggregate row
+      {
+        name: 'All Image Models (aggregate)',
+        type: 'Image',
+        modelId: '_aggregate',
+        totalCount: imageCount,
+        periodCount: imagePeriod,
+        creditsSpent: imageCredits._sum.creditUsed ?? 0,
+      },
+      // Video models (individual with real per-model data)
+      ...videoModelRows,
+      // Upscale models (individual with real per-model data)
+      ...upscaleModelRows,
+      // Other tools
+      {
+        name: 'Face Swap',
+        type: 'Tool',
+        modelId: 'face-swap',
+        totalCount: faceSwapCount,
+        periodCount: faceSwapPeriod,
+        creditsSpent: faceSwapCredits._sum.creditUsed ?? 0,
+      },
+      {
+        name: 'Face Enhance',
+        type: 'Tool',
+        modelId: 'face-enhance',
+        totalCount: faceEnhanceCount,
+        periodCount: faceEnhancePeriod,
+        creditsSpent: faceEnhanceCredits._sum.creditUsed ?? 0,
+      },
+      {
+        name: 'Image Edit',
+        type: 'Tool',
+        modelId: 'image-edit',
+        totalCount: imageEditCount,
+        periodCount: imageEditPeriod,
+        creditsSpent: imageEditCredits._sum.creditUsed ?? 0,
+      },
+      {
+        name: 'Image Analysis',
+        type: 'Tool',
+        modelId: 'image-analysis',
+        totalCount: imageAnalysisCount,
+        periodCount: imageAnalysisPeriod,
+        creditsSpent: imageAnalysisCredits._sum.creditUsed ?? 0,
+      },
+    ]
 
     return NextResponse.json({
       summary: {
@@ -201,76 +274,7 @@ export async function POST(req: NextRequest) {
         periodGenerations:
           imagePeriod + videoPeriod + upscalePeriod + faceSwapPeriod + faceEnhancePeriod + imageEditPeriod + imageAnalysisPeriod,
       },
-      tools: [
-        {
-          name: 'Image Generation',
-          type: 'IMAGE_GENERATOR',
-          totalCount: imageCount,
-          periodCount: imagePeriod,
-          creditsSpent: imageCredits._sum.creditUsed ?? 0,
-          statuses: formatStatuses(imageStatuses as any),
-        },
-        {
-          name: 'Video Generation',
-          type: 'VIDEO_GENERATOR',
-          totalCount: videoCount,
-          periodCount: videoPeriod,
-          creditsSpent: videoCredits._sum.creditUsed ?? 0,
-          statuses: formatStatuses(videoStatuses as any),
-          models: videosByModel.map((v) => ({
-            model: v.model,
-            label: VIDEO_MODEL_LABELS[v.model] || v.model,
-            count: v._count.id,
-            creditsSpent: v._sum.creditUsed ?? 0,
-          })),
-          modelsPeriod: videosByModelPeriod.map((v) => ({
-            model: v.model,
-            label: VIDEO_MODEL_LABELS[v.model] || v.model,
-            count: v._count.id,
-            creditsSpent: v._sum.creditUsed ?? 0,
-          })),
-        },
-        {
-          name: 'Image Upscale',
-          type: 'IMAGE_UPSCALER',
-          totalCount: upscaleCount,
-          periodCount: upscalePeriod,
-          creditsSpent: upscaleCredits._sum.creditUsed ?? 0,
-          statuses: formatStatuses(upscaleStatuses as any),
-        },
-        {
-          name: 'Face Swap',
-          type: 'FACE_SWAP',
-          totalCount: faceSwapCount,
-          periodCount: faceSwapPeriod,
-          creditsSpent: faceSwapCredits._sum.creditUsed ?? 0,
-          statuses: formatStatuses(faceSwapStatuses as any),
-        },
-        {
-          name: 'Face Enhance',
-          type: 'FACE_ENHANCE',
-          totalCount: faceEnhanceCount,
-          periodCount: faceEnhancePeriod,
-          creditsSpent: faceEnhanceCredits._sum.creditUsed ?? 0,
-          statuses: formatStatuses(faceEnhanceStatuses as any),
-        },
-        {
-          name: 'Image Edit',
-          type: 'IMAGE_EDITOR',
-          totalCount: imageEditCount,
-          periodCount: imageEditPeriod,
-          creditsSpent: imageEditCredits._sum.creditUsed ?? 0,
-          statuses: formatStatuses(imageEditStatuses as any),
-        },
-        {
-          name: 'Image Analysis',
-          type: 'IMAGE_ANALYSIS',
-          totalCount: imageAnalysisCount,
-          periodCount: imageAnalysisPeriod,
-          creditsSpent: imageAnalysisCredits._sum.creditUsed ?? 0,
-          statuses: formatStatuses(imageAnalysisStatuses as any),
-        },
-      ],
+      tools,
       trends: {
         image: imageTrend,
         video: videoTrend,
