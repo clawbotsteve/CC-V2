@@ -1,6 +1,16 @@
 "use client";
 
-import { Referral } from "../page";
+interface Referral {
+  id: string;
+  referredUserId: string;
+  createdAt: string;
+  planId: string | null;
+  commission: number | null;
+  referredUser: {
+    name: string | null;
+    createdAt: string;
+  };
+}
 
 interface ReferredUsersTableProps {
   referrals: Referral[];
