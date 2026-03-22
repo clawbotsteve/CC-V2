@@ -11,14 +11,14 @@ import { Button } from "@/components/ui/button";
 import { useCreditWarningModal } from "@/hooks/use-credit-warning";
 import { Rocket, Zap, CreditCard, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
 import { useProModal } from "@/hooks/use-pro-modal";
+import { useBuyCreditsModal } from "@/hooks/use-buy-credits-modal";
 import { useState } from "react";
 
 export function CreditWarningModal() {
   const { isOpen, reason, requiredCredit, availableCredit, onClose } = useCreditWarningModal();
   const proModal = useProModal();
-  const router = useRouter();
+  const buyCreditsModal = useBuyCreditsModal();
 
   const [isLoading, setIsLoading] = useState(false);
   const isFreePlan = reason === "free";
@@ -32,10 +32,10 @@ export function CreditWarningModal() {
 
       if (isFreePlan) {
         proModal.onOpen();
-        setIsLoading(false); // Stop loading since we're not navigating away
+        setIsLoading(false);
       } else {
-        router.push("/dashboard/get-credits");
-        // No need to reset loading because navigation will happen
+        buyCreditsModal.onOpen();
+        setIsLoading(false);
       }
     }, 400);
   };

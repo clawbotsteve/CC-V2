@@ -6,6 +6,7 @@ import React from "react";
 import { ActiveThemeProvider } from "./active-theme";
 import { UserProvider } from "./user-context";
 import { CreditWarningModal } from "../modal/CreditWarningModal";
+import { BuyCreditsModal } from "../buy-credits-modal";
 import SubscriptionExpiryChecker from "../subscription-expiry-checker";
 import Onboarding from "../onboarding";
 
@@ -56,6 +57,7 @@ export default function Providers({
             {children}
 
             <CreditWarningModal />
+            <BuyCreditsModal />
           </UserProvider>
         </ClerkProvider>
       </ActiveThemeProvider>

@@ -4,19 +4,23 @@ import { useState } from "react";
 import { X, ArrowRight, Coins } from "lucide-react";
 import { CREDIT_PACKS } from "@/constants";
 import { useUserContext } from "@/components/layout/user-context";
+import { useBuyCreditsModal } from "@/hooks/use-buy-credits-modal";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 interface BuyCreditsModalProps {
-  open: boolean;
-  onClose: () => void;
+  open?: boolean;
+  onClose?: () => void;
 }
 
 const PRESET_AMOUNTS = CREDIT_PACKS.map((p) => p.credits);
 
-export function BuyCreditsModal({ open, onClose }: BuyCreditsModalProps) {
+export function BuyCreditsModal({ open: openProp, onClose: onCloseProp }: BuyCreditsModalProps) {
   const { plan } = useUserContext();
-  const [selectedPack, setSelectedPack] = useState(CREDIT_PACKS[0]);
+  const store = useBuyCreditsModal();
+  const open = openProp ?? store.isOpen;
+  const onClose = onCloseProp ?? store.onClose;
+  const [selectedPack, setSelectedPack] = useState<(typeof CREDIT_PACKS)[number]>(CREDIT_PACKS[0]);
   const [customAmount, setCustomAmount] = useState("");
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<"credits" | "dollars">("credits");

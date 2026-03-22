@@ -194,6 +194,7 @@ export async function POST(req: Request) {
               status: "completed",
               type: "credit_pack",
               metadata: { packId, credits: creditsToGrant, source: "stripe" },
+              createdAt: new Date(),
             },
           });
 

@@ -12,9 +12,8 @@ interface Props {
     id: string;
     price: number;
     credits: number;
-    popular?: boolean;
-    title: string;
-    note: string;
+    name: string;
+    pricePerCredit: number;
   };
 }
 
@@ -49,13 +48,13 @@ export const CreditPackCard = ({ pack }: Props) => {
     <div
       className={cn(
         "relative rounded-2xl p-6 transition-all duration-300 border bg-muted/50",
-        pack.popular &&
+        pack.id === "pack-1000" &&
         "bg-gradient-to-b from-primary/10 via-background to-background border-primary shadow-xl"
       )}
     >
-      {pack.popular && (
+      {pack.id === "pack-1000" && (
         <div className="absolute top-3 right-3 text-xs font-semibold bg-primary text-primary-foreground px-3 py-1 rounded-full">
-          Most Popular
+          Best Value
         </div>
       )}
 
@@ -71,7 +70,7 @@ export const CreditPackCard = ({ pack }: Props) => {
         onClick={() => purchaseCredits(pack.id)}
         className={cn(
           "mt-6 w-full text-center py-2 rounded-lg font-semibold transition",
-          pack.popular
+          pack.id === "pack-1000"
             ? "bg-primary text-primary-foreground hover:bg-primary/90"
             : "bg-background text-foreground border hover:bg-accent"
         )}
