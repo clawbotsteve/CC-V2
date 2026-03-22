@@ -10,56 +10,64 @@ export async function POST() {
   }
 
   try {
-    // Get user's affiliate code
-    const affiliateCode = await prismadb.referralCode.findUnique({
+    const affiliate = await prismadb.affiliate.findUnique({
       where: { userId },
     });
 
-    if (!affiliateCode) {
+    if (!affiliate) {
       return NextResponse.json(
         { error: "No affiliate account found" },
         { status: 404 }
       );
     }
 
-    // Get all unpaid referrals (subscription events)
-    const unpaidReferrals = await prismadb.referral.findMany({
-      where: {
-        refereeId: userId,
-        referralCode: affiliateCode.referralCode,
-        event: "subscription",
-        ReferralReward: {
-          isNot: null,
-        },
-      },
-      include: {
-        ReferralReward: true,
-      },
-    });
-
-    // Calculate total payout amount (each referral = $5)
-    const totalAmount = unpaidReferrals.length * 5;
-
-    if (totalAmount === 0) {
+    if (!affiliate.payoutMethod || !affiliate.payoutEmail) {
       return NextResponse.json(
-        { error: "No earnings available for payout" },
+        { error: "Please set up a payout method first" },
         { status: 400 }
       );
     }
 
-    // TODO: Implement actual payout processing
-    // For now, just return success
-    // In production, this would:
-    // 1. Create a payout record
-    // 2. Mark referrals as paid
-    // 3. Process payment via payment provider
-    // 4. Send notification
+    if (affiliate.pendingBalance < affiliate.minimumPayout) {
+      return NextResponse.json(
+        {
+          error: `Minimum payout is $${affiliate.minimumPayout.toFixed(2)}. Your balance is $${affiliate.pendingBalance.toFixed(2)}.`,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Check for existing pending payout
+    const existingPending = await prismadb.affiliatePayout.findFirst({
+      where: {
+        affiliateId: affiliate.id,
+        status: "pending",
+      },
+    });
+
+    if (existingPending) {
+      return NextResponse.json(
+        { error: "You already have a pending payout request" },
+        { status: 400 }
+      );
+    }
+
+    // Create payout record
+    const payout = await prismadb.affiliatePayout.create({
+      data: {
+        affiliateId: affiliate.id,
+        amount: affiliate.pendingBalance,
+        payoutMethod: affiliate.payoutMethod,
+        payoutEmail: affiliate.payoutEmail,
+        status: "pending",
+      },
+    });
 
     return NextResponse.json({
       success: true,
       message: "Payout request submitted successfully",
-      amount: totalAmount,
-      referralsCount: unpaidReferrals.length,
+      payoutId: payout.id,
+      amount: payout.amount,
     });
   } catch (error) {
     console.error("[Affiliate:Payout] Error:", error);
@@ -69,4 +77,3 @@ export async function POST() {
     );
   }
 }
-

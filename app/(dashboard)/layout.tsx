@@ -1,5 +1,6 @@
 // app/(dashboard)/layout.tsx
 import TopNavbar from "@/components/layout/top-navbar";
+import { AffiliateCapture } from "@/components/affiliate/affiliate-capture";
 
 export default async function DashboardLayout({
   children,
@@ -9,6 +10,7 @@ export default async function DashboardLayout({
   return (
     <div className="h-screen overflow-y-auto">
       <TopNavbar />
+      <AffiliateCapture />
       <main className="pt-16">
         <div className="max-w-[1400px] mx-auto px-4 py-6">
           {children}

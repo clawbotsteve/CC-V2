@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, Users, TrendingUp, Calendar } from "lucide-react";
+import { DollarSign, Users, TrendingUp, Calendar, Wallet } from "lucide-react";
 
 interface AffiliateStats {
   monthlyEarnings: number;
   lifetimeEarnings: number;
   monthlyReferrals: number;
   lifetimeReferrals: number;
+  pendingBalance: number;
 }
 
 export function AffiliateStatsCards() {
@@ -17,6 +18,7 @@ export function AffiliateStatsCards() {
     lifetimeEarnings: 0,
     monthlyReferrals: 0,
     lifetimeReferrals: 0,
+    pendingBalance: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -24,8 +26,11 @@ export function AffiliateStatsCards() {
     const fetchStats = async () => {
       try {
         const res = await fetch("/api/affiliate/stats");
+        if (!res.ok) return;
         const data = await res.json();
-        setStats(data);
+        if (data.monthlyEarnings !== undefined) {
+          setStats(data);
+        }
       } catch (err) {
         console.error("Failed to fetch affiliate stats:", err);
       } finally {
@@ -37,8 +42,8 @@ export function AffiliateStatsCards() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[...Array(4)].map((_, i) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        {[...Array(5)].map((_, i) => (
           <Card key={i}>
             <CardHeader>
               <CardTitle className="text-sm font-medium">Loading...</CardTitle>
@@ -53,14 +58,14 @@ export function AffiliateStatsCards() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Monthly Earnings</CardTitle>
           <Calendar className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">${stats.monthlyEarnings.toFixed(2)}</div>
+          <div className="text-2xl font-bold">${(stats.monthlyEarnings ?? 0).toFixed(2)}</div>
           <p className="text-xs text-muted-foreground">This month</p>
         </CardContent>
       </Card>
@@ -71,8 +76,19 @@ export function AffiliateStatsCards() {
           <DollarSign className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">${stats.lifetimeEarnings.toFixed(2)}</div>
+          <div className="text-2xl font-bold">${(stats.lifetimeEarnings ?? 0).toFixed(2)}</div>
           <p className="text-xs text-muted-foreground">All time</p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Pending Balance</CardTitle>
+          <Wallet className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">${(stats.pendingBalance ?? 0).toFixed(2)}</div>
+          <p className="text-xs text-muted-foreground">Available for payout</p>
         </CardContent>
       </Card>
 
@@ -82,7 +98,7 @@ export function AffiliateStatsCards() {
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats.monthlyReferrals}</div>
+          <div className="text-2xl font-bold">{stats.monthlyReferrals ?? 0}</div>
           <p className="text-xs text-muted-foreground">This month</p>
         </CardContent>
       </Card>
@@ -93,11 +109,10 @@ export function AffiliateStatsCards() {
           <Users className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{stats.lifetimeReferrals}</div>
+          <div className="text-2xl font-bold">{stats.lifetimeReferrals ?? 0}</div>
           <p className="text-xs text-muted-foreground">All time</p>
         </CardContent>
       </Card>
     </div>
   );
 }
-

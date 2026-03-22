@@ -27,6 +27,9 @@ const isMaintenanceRoute = createRouteMatcher([
 
 const isDev = process.env.NODE_ENV === 'development'
 
+const AFFILIATE_COOKIE_NAME = 'affiliate_code';
+const AFFILIATE_COOKIE_MAX_AGE = 90 * 24 * 60 * 60; // 90 days in seconds
+
 export default clerkMiddleware(async (auth, req) => {
   const isMaintenance = process.env.MAINTENANCE_MODE === 'true';
 
@@ -51,19 +54,32 @@ export default clerkMiddleware(async (auth, req) => {
   // 🔓 Always allow auth routes (sign-in, sign-up)
   if (isAuthRoute(req)) return;
 
+  // Capture affiliate code from query param into a 90-day cookie
+  const affiliateParam = req.nextUrl.searchParams.get('affiliate');
+  let response: NextResponse | undefined;
+
+  if (affiliateParam && !req.cookies.get(AFFILIATE_COOKIE_NAME)) {
+    response = NextResponse.next();
+    response.cookies.set(AFFILIATE_COOKIE_NAME, affiliateParam, {
+      maxAge: AFFILIATE_COOKIE_MAX_AGE,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+    });
+  }
+
   // 🔒 Auth for protected routes
   if (isProtectedRoute(req)) {
     const { userId } = await auth();
     if (!userId) {
-      // Always redirect to local /sign-in, not external URL
-      // The sign-in page will handle embedding external URLs
       const signInUrl = new URL('/sign-in', req.url);
       return NextResponse.redirect(signInUrl);
     }
   }
-}, { 
-  // Disable satellite mode to prevent automatic redirects to external URLs
-  // We handle external URL embedding manually in the sign-in page
+
+  return response;
+}, {
   isSatellite: false
 });
 

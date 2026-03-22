@@ -452,6 +452,42 @@ model ReferralReward {
   updatedAt      DateTime @updatedAt
 }
 
+model Affiliate {
+  id              String            @id @default(cuid())
+  userId          String            @unique
+  affiliateCode   String            @unique
+  commissionType  String            @default("percentage") // "percentage" or "flat"
+  commissionRate  Float             @default(15.0) // 15% default or flat dollar amount
+  status          String            @default("active") // active, paused, banned
+  payoutMethod    String?           // paypal, stripe, bank_transfer
+  payoutEmail     String?
+  totalEarnings   Float             @default(0) // lifetime earnings in dollars
+  totalPaidOut    Float             @default(0)
+  pendingBalance  Float             @default(0)
+  minimumPayout   Float             @default(50.0)
+  notes           String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  payouts         AffiliatePayout[]
+}
+
+model AffiliatePayout {
+  id           String    @id @default(cuid())
+  affiliateId  String
+  affiliate    Affiliate @relation(fields: [affiliateId], references: [id])
+  amount       Float
+  status       String    @default("pending") // pending, processing, completed, failed
+  payoutMethod String
+  payoutEmail  String
+  processedAt  DateTime?
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([affiliateId])
+  @@index([status])
+}
+
 enum OnboardingStep {
   WELCOME // Step 1: Welcome message
   TOOL_INTRO // Step 2: Brief intro to all tools
