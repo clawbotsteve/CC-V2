@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import axios from "axios";
-import { CheckCircle2, Clock3, Plus, Sparkles, UserRound, XCircle } from "lucide-react";
+import { CheckCircle2, Clock3, Plus, Sparkles, Upload, UserRound, X, XCircle } from "lucide-react";
+import { uploadFiles } from "@/lib/utils";
 
 type SubmissionStatus = "pending" | "approved" | "rejected";
 
@@ -37,18 +38,17 @@ const statusConfig = {
 export default function SettingsPage() {
   const [fullName, setFullName] = useState("");
   const [notes, setNotes] = useState("");
-  const [mediaUrlsInput, setMediaUrlsInput] = useState("");
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [consentAccepted, setConsentAccepted] = useState(false);
   const [rightsConfirmed, setRightsConfirmed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submissions, setSubmissions] = useState<CreatorSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"all" | "submissions" | "image" | "video" | "projects">("all");
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const mediaCount = useMemo(
-    () => mediaUrlsInput.split(/\r?\n/).map((s) => s.trim()).filter(Boolean).length,
-    [mediaUrlsInput]
-  );
+  const mediaCount = useMemo(() => selectedFiles.length, [selectedFiles]);
 
   const loadSubmissions = async () => {
     setLoading(true);
@@ -71,19 +71,38 @@ export default function SettingsPage() {
     e.preventDefault();
     setSubmitting(true);
     try {
+      if (selectedFiles.length < 1) {
+        setError("Please add at least one photo");
+        return;
+      }
+
+      const uploadResult = await uploadFiles({
+        files: selectedFiles,
+        maxFiles: 12,
+        allowedTypes: ["image/jpeg", "image/png", "image/webp"],
+      });
+
+      if ("error" in uploadResult) {
+        setError(uploadResult.error || "Upload failed");
+        return;
+      }
+
+      const mediaUrls = (uploadResult.files || []).map((f) => f.url);
+
       await axios.post("/api/submissions", {
         fullName,
         notes,
-        mediaUrls: mediaUrlsInput,
+        mediaUrls,
         consentAccepted,
         rightsConfirmed,
       });
 
       setFullName("");
       setNotes("");
-      setMediaUrlsInput("");
+      setSelectedFiles([]);
       setConsentAccepted(false);
       setRightsConfirmed(false);
+      setError(null);
       await loadSubmissions();
     } catch (err: any) {
       setError(err?.response?.data?.error || "Failed to submit");
@@ -91,6 +110,14 @@ export default function SettingsPage() {
       setSubmitting(false);
     }
   };
+
+  const filteredSubmissions = submissions.filter((s) => {
+    if (activeTab === "all" || activeTab === "submissions") return true;
+    if (activeTab === "image") return (s.mediaUrls?.length || 0) > 0;
+    if (activeTab === "video") return false;
+    if (activeTab === "projects") return false;
+    return true;
+  });
 
   return (
     <div className="mx-auto w-full max-w-[1100px] px-6 py-10 space-y-8">
@@ -106,11 +133,26 @@ export default function SettingsPage() {
                 Submit creator media for Tavira review. Approved submissions can be used for image and video generation workflows.
               </p>
               <div className="mt-4 flex flex-wrap gap-2 text-xs">
-                <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1">All</span>
-                <span className="rounded-full border border-white/10 px-3 py-1 text-zinc-300">Submissions</span>
-                <span className="rounded-full border border-white/10 px-3 py-1 text-zinc-300">Projects</span>
-                <span className="rounded-full border border-white/10 px-3 py-1 text-zinc-300">Image</span>
-                <span className="rounded-full border border-white/10 px-3 py-1 text-zinc-300">Video</span>
+                {[
+                  { key: "all", label: "All" },
+                  { key: "submissions", label: "Submissions" },
+                  { key: "projects", label: "Projects" },
+                  { key: "image", label: "Image" },
+                  { key: "video", label: "Video" },
+                ].map((tab) => (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => setActiveTab(tab.key as any)}
+                    className={`rounded-full border px-3 py-1 transition ${
+                      activeTab === tab.key
+                        ? "border-white/20 bg-white/10 text-white"
+                        : "border-white/10 text-zinc-300 hover:bg-white/5"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
@@ -121,7 +163,14 @@ export default function SettingsPage() {
             </div>
             <p className="text-sm font-medium text-zinc-200">Add featured creator</p>
             <p className="mt-1 text-xs text-zinc-400">Highlight one approved creator profile here.</p>
-            <button className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#b7ff3c] px-4 py-2 text-sm font-bold text-zinc-900">
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab("submissions");
+                fileInputRef.current?.click();
+              }}
+              className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#b7ff3c] px-4 py-2 text-sm font-bold text-zinc-900"
+            >
               <Plus className="h-4 w-4" /> Add creator
             </button>
           </div>
@@ -138,7 +187,7 @@ export default function SettingsPage() {
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 className="text-xl font-semibold">New Submission</h2>
-            <p className="mt-1 text-sm text-zinc-400">Provide the creator details and media links (one URL per line).</p>
+            <p className="mt-1 text-sm text-zinc-400">Provide the creator details and upload creator photos for review.</p>
           </div>
           <span className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs text-zinc-300">
             <Sparkles className="h-3.5 w-3.5" /> Creator intake
@@ -168,14 +217,45 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="mb-2 block text-sm text-zinc-300">Media URLs ({mediaCount})</label>
-            <textarea
-              value={mediaUrlsInput}
-              onChange={(e) => setMediaUrlsInput(e.target.value)}
-              className="w-full min-h-28 rounded-xl border border-white/15 bg-black/30 px-3 py-2 text-sm outline-none focus:border-[#8b7bff]"
-              placeholder={"https://...\nhttps://..."}
-              required
+            <label className="mb-2 block text-sm text-zinc-300">Creator Photos ({mediaCount})</label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                const incoming = Array.from(e.target.files || []);
+                if (!incoming.length) return;
+                setSelectedFiles((prev) => [...prev, ...incoming].slice(0, 12));
+                e.currentTarget.value = "";
+              }}
             />
+
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 bg-black/30 px-4 py-6 text-sm text-zinc-300 hover:bg-white/5"
+            >
+              <Upload className="h-4 w-4" /> Click to add photos (max 12)
+            </button>
+
+            {selectedFiles.length > 0 && (
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+                {selectedFiles.map((file, idx) => (
+                  <div key={`${file.name}-${idx}`} className="rounded-lg border border-white/10 bg-black/20 p-2 text-xs text-zinc-300">
+                    <div className="truncate">{file.name}</div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedFiles((prev) => prev.filter((_, i) => i !== idx))}
+                      className="mt-1 inline-flex items-center gap-1 text-rose-300 hover:text-rose-200"
+                    >
+                      <X className="h-3.5 w-3.5" /> Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <label className="flex items-start gap-2 text-sm text-zinc-300">
@@ -217,10 +297,10 @@ export default function SettingsPage() {
         <div className="mt-4 space-y-3">
           {loading ? (
             <div className="text-sm text-zinc-400">Loading submissions...</div>
-          ) : submissions.length === 0 ? (
-            <div className="text-sm text-zinc-400">No submissions yet.</div>
+          ) : filteredSubmissions.length === 0 ? (
+            <div className="text-sm text-zinc-400">No items for this tab yet.</div>
           ) : (
-            submissions.map((submission) => {
+            filteredSubmissions.map((submission) => {
               const cfg = statusConfig[submission.status];
               const Icon = cfg.icon;
               return (
