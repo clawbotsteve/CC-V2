@@ -122,10 +122,10 @@ export const routes = [
     label: "Others",
     children: [
       {
-        label: "Affiliate",
-        icon: Share2,
+        label: "Earn Now",
+        icon: DollarSign,
         href: "/dashboard/affiliate",
-        color: "text-foreground",
+        color: "text-lime-400",
       },
       {
         label: "Support",

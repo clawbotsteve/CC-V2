@@ -104,6 +104,7 @@ const navLinks = [
     },
   },
   { label: "Apps", href: "/tools" },
+  { label: "Earn Now", href: "/dashboard/affiliate" },
   { label: "Community", href: "https://whop.com/joined/tavira-ai-academy/", external: true },
 ];
 
@@ -116,6 +117,7 @@ const mobileNavItems = [
   { label: "Upscale", icon: Image, href: "/tools/image-upscale" },
   { label: "Edit", icon: Pencil, href: "/tools/image-upscale?model=seedvr-image" },
   { label: "Prompt", icon: MessageSquare, href: "/tools/prompt-generation" },
+  { label: "Earn Now", icon: CreditCard, href: "/dashboard/affiliate" },
   { label: "Pricing", icon: CreditCard, href: "/pricing" },
 ];
 
