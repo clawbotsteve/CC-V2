@@ -468,6 +468,12 @@ enum OnboardingStep {
   COMPLETE // Final: onboarding complete
 }
 
+enum CreatorSubmissionStatus {
+  pending
+  approved
+  rejected
+}
+
 model User {
   id                     String          @id @default(cuid())
   userId                 String          @unique
@@ -518,6 +524,26 @@ model AdminAuditLog {
   @@index([adminUserId])
   @@index([targetUserId])
   @@index([action])
+  @@index([createdAt(sort: Desc)])
+}
+
+model CreatorSubmission {
+  id              String                  @id @default(cuid())
+  userId          String
+  fullName        String
+  notes           String?
+  status          CreatorSubmissionStatus @default(pending)
+  consentAccepted Boolean                 @default(false)
+  rightsConfirmed Boolean                 @default(false)
+  mediaUrls       String[]
+  reviewedAt      DateTime?
+  reviewNotes     String?
+  reviewedBy      String?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+
+  @@index([userId])
+  @@index([status])
   @@index([createdAt(sort: Desc)])
 }
 
