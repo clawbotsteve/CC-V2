@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import prismadb from "@/lib/prismadb";
 import { isUserAdmin } from "@/app/api/user/info/_lib/check-if-admin";
 
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -11,7 +11,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
   if (!admin) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json();
     const status = body?.status as "approved" | "rejected" | undefined;
     const reviewNotes = typeof body?.reviewNotes === "string" ? body.reviewNotes.trim() : null;
