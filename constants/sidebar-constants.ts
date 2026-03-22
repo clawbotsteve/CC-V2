@@ -14,7 +14,8 @@ import {
   Settings,
   Store,
   ScanFace,
-  Brush
+  Brush,
+  Layers,
 } from 'lucide-react';
 
 export const routes = [
@@ -85,6 +86,12 @@ export const routes = [
         icon: MessageSquare,
         href: "/tools/prompt-generation",
         color: "text-foreground",
+      },
+      {
+        label: "Batch Generator",
+        icon: Layers,
+        href: "/batch/new/setup",
+        color: "text-foreground",
       }
     ]
   },
@@ -100,7 +107,7 @@ export const routes = [
       {
         label: "Manage Subscriptions",
         icon: Settings,
-        href: "/settings",
+        href: "/settings/subscription",
         color: "text-foreground",
       },
       {
