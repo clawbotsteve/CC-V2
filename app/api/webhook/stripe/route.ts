@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import prismadb from "@/lib/prismadb";
 import { assignPlan } from "@/lib/assign-plan";
+import { addCreditsFromPack } from "@/lib/api-limit";
+import { creditPackById, type CreditPackId } from "@/constants";
 
 function verifyStripeSignature(rawBody: string, signatureHeader: string, secret: string) {
   const items = Object.fromEntries(
@@ -158,36 +160,82 @@ export async function POST(req: Request) {
     if (type === "checkout.session.completed") {
       const userId = object?.client_reference_id || object?.metadata?.userId;
       const subscriptionId = object?.subscription || undefined;
-      let priceId = extractPriceIdFromCheckoutSession(object);
-      let periodEnd: Date | undefined;
+      const metadataType = object?.metadata?.type as string | undefined;
 
-      if (subscriptionId && (!priceId || !userId)) {
-        const sub = await fetchStripeSubscription(subscriptionId);
-        priceId = priceId || sub?.items?.data?.[0]?.price?.id;
-        periodEnd = sub?.current_period_end ? new Date(sub.current_period_end * 1000) : undefined;
-      }
+      // ── Credit Pack Purchase (one-time, no subscription) ──
+      if (metadataType === "credit_pack" && !subscriptionId) {
+        const packId = object?.metadata?.packId as CreditPackId | undefined;
+        const creditsFromMeta = parseInt(object?.metadata?.credits || "0", 10);
 
-      if (!userId) {
-        console.error("[STRIPE WEBHOOK] checkout.session.completed missing userId", {
-          checkoutSessionId: object?.id,
-          subscriptionId,
-        });
-      } else {
-        const plan = await resolvePlanByPriceId(priceId);
-
-        if (!plan) {
-          console.error("[STRIPE WEBHOOK] Unable to resolve plan from priceId", {
+        if (!userId) {
+          console.error("[STRIPE WEBHOOK] credit_pack missing userId", {
+            checkoutSessionId: object?.id,
+          });
+        } else if (!packId || !creditsFromMeta) {
+          console.error("[STRIPE WEBHOOK] credit_pack missing packId or credits", {
             userId,
-            priceId,
+            packId,
             checkoutSessionId: object?.id,
           });
         } else {
-          await assignPlan(userId, plan.id, {
-            status: "active",
-            stripePriceId: priceId ?? null,
-            stripeSubscriptionId: subscriptionId ?? null,
-            stripeCurrentPeriodEnd: periodEnd ?? null,
+          // Verify pack exists in our constants
+          const pack = creditPackById[packId];
+          const creditsToGrant = pack?.credits || creditsFromMeta;
+
+          await addCreditsFromPack(userId, creditsToGrant);
+
+          // Record transaction
+          await prismadb.transaction.create({
+            data: {
+              userId,
+              phyziroId: object?.id || `stripe_${Date.now()}`,
+              amount: object?.amount_total ? Math.round(object.amount_total / 100) : 0,
+              currency: object?.currency || "usd",
+              status: "completed",
+              type: "credit_pack",
+              metadata: { packId, credits: creditsToGrant, source: "stripe" },
+            },
           });
+
+          console.log(
+            `[STRIPE WEBHOOK] ✅ Credit pack ${packId} (${creditsToGrant} credits) granted to user ${userId}`
+          );
+        }
+      }
+
+      // ── Subscription Purchase ──
+      else {
+        let priceId = extractPriceIdFromCheckoutSession(object);
+        let periodEnd: Date | undefined;
+
+        if (subscriptionId && (!priceId || !userId)) {
+          const sub = await fetchStripeSubscription(subscriptionId);
+          priceId = priceId || sub?.items?.data?.[0]?.price?.id;
+          periodEnd = sub?.current_period_end ? new Date(sub.current_period_end * 1000) : undefined;
+        }
+
+        if (!userId) {
+          console.error("[STRIPE WEBHOOK] checkout.session.completed missing userId", {
+            checkoutSessionId: object?.id,
+            subscriptionId,
+          });
+        } else {
+          const plan = await resolvePlanByPriceId(priceId);
+
+          if (!plan) {
+            console.error("[STRIPE WEBHOOK] Unable to resolve plan from priceId", {
+              userId,
+              priceId,
+              checkoutSessionId: object?.id,
+            });
+          } else {
+            await assignPlan(userId, plan.id, {
+              status: "active",
+              stripePriceId: priceId ?? null,
+              stripeSubscriptionId: subscriptionId ?? null,
+              stripeCurrentPeriodEnd: periodEnd ?? null,
+            });
+          }
         }
       }
     }

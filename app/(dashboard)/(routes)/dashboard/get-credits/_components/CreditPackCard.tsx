@@ -25,19 +25,12 @@ export const CreditPackCard = ({ pack }: Props) => {
 
   const purchaseCredits = async (packId: string) => {
     try {
-      const response = await fetch("/api/billing/pz/payment", {
+      const response = await fetch("/api/billing/stripe/credit-pack", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          email: user?.primaryEmailAddress?.emailAddress,
-          userId: userId,
-          price: pack.price,
-          title: pack.title,
-          note: pack.note,
-          nonce: `charge-${packId}`
-        }),
+        body: JSON.stringify({ packId }),
       });
 
       const data = await response.json();
@@ -45,7 +38,7 @@ export const CreditPackCard = ({ pack }: Props) => {
       if (data?.url) {
         window.location.href = data.url;
       } else {
-        console.error("Phyziro checkout URL not found.");
+        console.error("Stripe checkout URL not found:", data?.error);
       }
     } catch (error) {
       console.error("Error purchasing credits:", error);

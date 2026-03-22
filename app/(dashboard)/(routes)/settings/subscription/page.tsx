@@ -18,11 +18,13 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import type { UserSubscriptionResponse } from "@/app/api/user/subscription/route";
 import { cn } from "@/lib/utils";
+import { BuyCreditsModal } from "@/components/buy-credits-modal";
 
 export default function SubscriptionPage() {
   const { plan, availableCredit, totalCredit, isLoading } = useUserContext();
   const [subscription, setSubscription] = useState<UserSubscriptionResponse | null>(null);
   const [manageOpen, setManageOpen] = useState(false);
+  const [buyCreditsOpen, setBuyCreditsOpen] = useState(false);
 
   const planKey = plan ? TIER_KEY_MAP[plan] : "Free";
   const planInfo = planKey ? PLAN_MAPS[planKey] : PLAN_MAPS.Free;
@@ -132,12 +134,12 @@ export default function SubscriptionPage() {
             <span className="text-sm text-zinc-400">Monthly credits left</span>
             <Info className="h-3.5 w-3.5 text-zinc-600" />
           </div>
-          <Link
-            href="/pricing"
+          <button
+            onClick={() => setBuyCreditsOpen(true)}
             className="inline-flex items-center gap-1.5 rounded-lg bg-lime-400 px-3 py-1.5 text-xs font-bold text-black hover:bg-lime-300 transition"
           >
             + Buy credits
-          </Link>
+          </button>
         </div>
 
         <div className="flex items-baseline gap-1.5 mb-3">
@@ -291,6 +293,9 @@ export default function SubscriptionPage() {
           </div>
         </section>
       )}
+
+      {/* Buy Credits Modal */}
+      <BuyCreditsModal open={buyCreditsOpen} onClose={() => setBuyCreditsOpen(false)} />
     </div>
   );
 }

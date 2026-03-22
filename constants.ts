@@ -139,24 +139,43 @@ export const planToPriceId: Record<string, string> = isDev
     "price_1Rlw4kRtdu7lUaLOzWJyRiDH": PLAN_STUDIO,    // Elite quarterly prod
   };
 
-// Credit Packs
+// Credit Packs — Stripe one-time payments
+// Env vars: STRIPE_PRICE_PACK_100, STRIPE_PRICE_PACK_500, etc.
+export const CREDIT_PACKS = [
+  { id: "pack-100", name: "Small", credits: 100, price: 12, pricePerCredit: 0.12 },
+  { id: "pack-500", name: "Medium", credits: 500, price: 55, pricePerCredit: 0.11 },
+  { id: "pack-1000", name: "Large", credits: 1000, price: 100, pricePerCredit: 0.10 },
+  { id: "pack-2500", name: "XL", credits: 2500, price: 225, pricePerCredit: 0.09 },
+  { id: "pack-5000", name: "Mega", credits: 5000, price: 400, pricePerCredit: 0.08 },
+] as const;
+
+export type CreditPackId = (typeof CREDIT_PACKS)[number]["id"];
+
+export const creditPackById = Object.fromEntries(
+  CREDIT_PACKS.map((p) => [p.id, p])
+) as Record<CreditPackId, (typeof CREDIT_PACKS)[number]>;
+
+// Maps pack ID → Stripe Price ID (set these in your Stripe dashboard)
 export const creditToPriceId: Record<string, string> = isDev
   ? {
-    "pack-100": "price_pack_100_dev",
-    "pack-500": "price_pack_500_dev",
-    "pack-1500": "price_pack_1500_dev",
+    "pack-100": process.env.STRIPE_PRICE_PACK_100 || "price_pack_100_dev",
+    "pack-500": process.env.STRIPE_PRICE_PACK_500 || "price_pack_500_dev",
+    "pack-1000": process.env.STRIPE_PRICE_PACK_1000 || "price_pack_1000_dev",
+    "pack-2500": process.env.STRIPE_PRICE_PACK_2500 || "price_pack_2500_dev",
+    "pack-5000": process.env.STRIPE_PRICE_PACK_5000 || "price_pack_5000_dev",
   }
-  : { // production
-    "pack-100": "price_pack_100_prod",
-    "pack-500": "price_pack_500_prod",
-    "pack-1500": "price_pack_1500_prod",
+  : {
+    "pack-100": process.env.STRIPE_PRICE_PACK_100 || "",
+    "pack-500": process.env.STRIPE_PRICE_PACK_500 || "",
+    "pack-1000": process.env.STRIPE_PRICE_PACK_1000 || "",
+    "pack-2500": process.env.STRIPE_PRICE_PACK_2500 || "",
+    "pack-5000": process.env.STRIPE_PRICE_PACK_5000 || "",
   };
 
-export const creditPackDetails: Record<string, { name: string; credits: number; price: number }> = {
-  "pack-100": { name: "100 Credits", credits: 100, price: 9.99 },
-  "pack-500": { name: "500 Credits", credits: 500, price: 39.99 },
-  "pack-1500": { name: "1,500 Credits", credits: 1500, price: 99.99 },
-};
+// Legacy compat
+export const creditPackDetails: Record<string, { name: string; credits: number; price: number }> = Object.fromEntries(
+  CREDIT_PACKS.map((p) => [p.id, { name: `${p.credits} Credits`, credits: p.credits, price: p.price }])
+);
 
 export const avatarImagePrompt = "A confident and charismatic digital persona standing in front of a soft gradient background, wearing modern smart-casual attire, looking directly at the camera with a warm and welcoming expression. Clean studio lighting, portrait orientation, detailed facial features, cinematic depth of field. Perfect for a professional AI-generated self-introduction video."
 
