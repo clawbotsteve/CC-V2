@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import { CheckCircle2, Clock3, XCircle } from "lucide-react";
+import { CheckCircle2, Clock3, Plus, Sparkles, UserRound, XCircle } from "lucide-react";
 
 type SubmissionStatus = "pending" | "approved" | "rejected";
 
@@ -94,12 +94,39 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1100px] px-6 py-10 space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Profile & Creator Submissions</h1>
-        <p className="mt-2 text-sm text-zinc-400">
-          Submit creator media for Tavira review. Approved submissions can be used for AI image/video workflows.
-        </p>
-      </div>
+      <section className="rounded-3xl border border-white/10 bg-[#0f1016] p-6 md:p-8">
+        <div className="grid gap-6 md:grid-cols-[1.1fr_1fr] md:items-center">
+          <div className="flex items-start gap-4">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full border border-white/15 bg-gradient-to-br from-lime-300/80 to-zinc-100 text-zinc-900">
+              <UserRound className="h-8 w-8" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Creator Profile</h1>
+              <p className="mt-2 text-sm text-zinc-400 max-w-xl">
+                Submit creator media for Tavira review. Approved submissions can be used for image and video generation workflows.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2 text-xs">
+                <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1">All</span>
+                <span className="rounded-full border border-white/10 px-3 py-1 text-zinc-300">Submissions</span>
+                <span className="rounded-full border border-white/10 px-3 py-1 text-zinc-300">Projects</span>
+                <span className="rounded-full border border-white/10 px-3 py-1 text-zinc-300">Image</span>
+                <span className="rounded-full border border-white/10 px-3 py-1 text-zinc-300">Video</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center">
+            <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/5">
+              <Sparkles className="h-5 w-5 text-zinc-200" />
+            </div>
+            <p className="text-sm font-medium text-zinc-200">Add featured creator</p>
+            <p className="mt-1 text-xs text-zinc-400">Highlight one approved creator profile here.</p>
+            <button className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#b7ff3c] px-4 py-2 text-sm font-bold text-zinc-900">
+              <Plus className="h-4 w-4" /> Add creator
+            </button>
+          </div>
+        </div>
+      </section>
 
       {error && (
         <div className="rounded-xl border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
@@ -108,8 +135,15 @@ export default function SettingsPage() {
       )}
 
       <section className="rounded-2xl border border-white/10 bg-[#111118] p-6">
-        <h2 className="text-xl font-semibold">New Submission</h2>
-        <p className="mt-1 text-sm text-zinc-400">Provide the creator details and media links (one URL per line).</p>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-xl font-semibold">New Submission</h2>
+            <p className="mt-1 text-sm text-zinc-400">Provide the creator details and media links (one URL per line).</p>
+          </div>
+          <span className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs text-zinc-300">
+            <Sparkles className="h-3.5 w-3.5" /> Creator intake
+          </span>
+        </div>
 
         <form onSubmit={onSubmit} className="mt-5 space-y-4">
           <div>
