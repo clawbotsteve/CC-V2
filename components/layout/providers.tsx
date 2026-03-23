@@ -8,7 +8,6 @@ import { UserProvider } from "./user-context";
 import { CreditWarningModal } from "../modal/CreditWarningModal";
 import { BuyCreditsModal } from "../buy-credits-modal";
 import SubscriptionExpiryChecker from "../subscription-expiry-checker";
-import Onboarding from "../onboarding";
 
 export default function Providers({
   activeThemeValue,
@@ -24,7 +23,7 @@ export default function Providers({
   // External URLs in these props cause redirects instead of showing embedded component
   const signInUrl = process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL;
   const signUpUrl = process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL;
-  
+
   const isSignInUrlLocal = signInUrl && !signInUrl.startsWith("http://") && !signInUrl.startsWith("https://");
   const isSignUpUrlLocal = signUpUrl && !signUpUrl.startsWith("http://") && !signUpUrl.startsWith("https://");
 
@@ -51,7 +50,6 @@ export default function Providers({
       <ActiveThemeProvider initialTheme={activeThemeValue}>
         <ClerkProvider {...clerkProviderProps}>
           <UserProvider>
-            <Onboarding />
             <SubscriptionExpiryChecker />
 
             {children}

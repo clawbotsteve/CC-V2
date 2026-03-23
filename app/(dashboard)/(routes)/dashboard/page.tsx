@@ -250,9 +250,9 @@ export default function DashboardPage() {
           <h2 className="font-display text-4xl md:text-5xl font-black tracking-tight text-white">The New Era of Content Creation</h2>
           <p className="mt-5 text-base md:text-xl font-semibold text-zinc-200">AI is changing how stories are created — faster, more visual, and more personal.</p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5 gap-3 md:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
           {contentExamples.map((item) => (
-            <motion.div key={item.title} whileHover={{ y: -4 }} className="relative rounded-2xl overflow-hidden border border-border hover:border-[#6366f1] transition-all" style={{ aspectRatio: '16/9' }}>
+            <motion.div key={item.title} whileHover={{ y: -4 }} className="relative rounded-2xl overflow-hidden border border-border hover:border-[#6366f1] transition-all" style={{ aspectRatio: '16/8.5' }}>
               <GlowingEffect disabled={false} proximity={72} spread={32} borderWidth={2} />
               <div className="relative h-full w-full">
                 {item.type === "image" ? (
