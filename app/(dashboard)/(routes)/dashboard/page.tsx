@@ -57,6 +57,14 @@ const vfxEffects = [
   { emoji: "🤖", name: "Cyborg", bg: "linear-gradient(135deg, #312e81, #4338ca)" },
 ];
 
+const modelCloud = [
+  { name: "Nano Banana 2", sub: "Image Model" },
+  { name: "Kling 2.6", sub: "Video Model" },
+  { name: "Veo 3.1", sub: "Premium Video" },
+  { name: "Motion Control", sub: "Camera Control" },
+  { name: "Bytedance", sub: "Video Engine" },
+];
+
 const pricingPlans = [
   {
     name: "Free",
@@ -206,6 +214,26 @@ export default function DashboardPage() {
             ))}
           </div>
         </motion.div>
+      </section>
+
+      {/* ===== MODEL CLOUD ===== */}
+      <section className="max-w-[1280px] mx-auto px-6 pt-10 pb-8">
+        <div className="rounded-2xl border border-white/10 bg-[linear-gradient(180deg,#0f1016_0%,#0b0c12_100%)] p-5 md:p-6">
+          <div className="mb-4 text-center">
+            <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Models we use</p>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
+            {modelCloud.map((model) => (
+              <div
+                key={model.name}
+                className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-center min-w-[150px]"
+              >
+                <p className="text-sm font-semibold text-white">{model.name}</p>
+                <p className="text-[11px] text-zinc-400">{model.sub}</p>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* ===== CONTENT EXAMPLES ===== */}
