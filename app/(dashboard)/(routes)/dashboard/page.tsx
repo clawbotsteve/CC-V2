@@ -72,7 +72,7 @@ const pricingPlans = [
     name: "Free",
     hook: "Try the magic first",
     price: "$0",
-    credits: "5 credits/month",
+    credits: "3 credits/month",
     featured: false,
     cta: "Try Free",
     features: ["5 Nano Banana Pro images", "Watermarked output", "Signup required"],
