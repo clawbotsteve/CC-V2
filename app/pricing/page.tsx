@@ -170,6 +170,11 @@ export default function PricingPage() {
         <button className={`px-3 py-1.5 text-sm rounded-full ${billing === "annual" ? "bg-white/20 text-white" : "text-muted-foreground"}`} onClick={() => setBilling("annual")}>3-Months</button>
         <span className="text-xs font-semibold rounded-full bg-pink-500/20 text-pink-200 px-2 py-0.5">20% OFF</span>
       </div>
+      <p className="text-center text-xs text-zinc-400 -mt-1">
+        {billing === "monthly"
+          ? "Intro offer shown on Monthly plans only. Renewal uses standard monthly price."
+          : "3-Month plans use flat 20% savings (no intro month discount)."}
+      </p>
 
       <div className="max-w-[1480px] mx-auto grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-2.5 items-stretch">
         {CARDS.map((card) => {

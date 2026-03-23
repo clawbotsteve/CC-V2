@@ -567,6 +567,11 @@ export default function DashboardPage() {
             </button>
             <span className="rounded-full bg-pink-500 px-2 py-0.5 text-[11px] font-bold text-white">20% OFF</span>
           </div>
+          <p className="mt-2 text-xs text-zinc-400">
+            {pricingBilling === "monthly"
+              ? "Intro offer shown on Monthly plans only. Renewal uses standard monthly price."
+              : "3-Month plans use flat 20% savings (no intro month discount)."}
+          </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {pricingPlans.map((plan) => {
