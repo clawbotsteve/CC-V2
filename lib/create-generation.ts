@@ -7,6 +7,7 @@ import { toast } from "sonner";
 export interface CreateGenerationOptions {
   closeSettings?: () => void;
   refetch?: () => void;
+  onInsufficientCredits?: () => void;
 }
 
 /**
@@ -224,7 +225,11 @@ export const createGeneration = async <
 
 
   } catch (err: any) {
-    toast.error(err?.message || "Something went wrong");
+    const msg = err?.message || "Something went wrong";
+    if (/insufficient|not enough|credit/i.test(msg)) {
+      callbacks?.onInsufficientCredits?.();
+    }
+    toast.error(msg);
     return null;
   }
 };

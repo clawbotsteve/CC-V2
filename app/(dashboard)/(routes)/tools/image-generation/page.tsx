@@ -13,6 +13,7 @@ import { CreditCostDisplay } from "@/components/credit-costs-display";
 import { ActionButtons } from "@/components/generate-button";
 import { Sparkles } from "lucide-react";
 import { AuthWallModal } from "@/components/auth-wall-modal";
+import { OutOfFreeCreditsModal } from "@/components/out-of-free-credits-modal";
 import { GeneratedImageList } from "./_components/GeneratedImageList";
 import { ImageUploadHandle } from "@/components/image-upload";
 import ImageSettingsPanel from "./_components/ImageSettingsPanel";
@@ -25,12 +26,13 @@ export default function GenerateImagePage() {
   const endpoint = "/api/tools/image";
   const searchParams = useSearchParams();
 
-  const { userId, refetch, isLoading, creditCosts } = useUserContext();
+  const { userId, refetch, isLoading, creditCosts, plan, availableCredit } = useUserContext();
   const [trainedModels, setTrainedModels] = useState<InfluencerWithOwner[]>([]);
   const [generations, setGenerations] = useState<GeneratedImage[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoadingImages, setIsLoadingImages] = useState(true);
   const [authWallOpen, setAuthWallOpen] = useState(false);
+  const [outOfFreeCreditsOpen, setOutOfFreeCreditsOpen] = useState(false);
 
   const uploadRefs = {
     image_url: useRef<ImageUploadHandle>(null),
@@ -53,6 +55,12 @@ export default function GenerateImagePage() {
       return;
     }
 
+    const isFreePlan = plan === "plan_free" || plan === "free";
+    if (isFreePlan && (availableCredit ?? 0) <= 0) {
+      setOutOfFreeCreditsOpen(true);
+      return;
+    }
+
     setIsGenerating(true);
 
     const newGen = await createGeneration({
@@ -65,6 +73,10 @@ export default function GenerateImagePage() {
       uploadRefs,
       callbacks: {
         refetch: fetchImages,
+        onInsufficientCredits: () => {
+          const isFreePlan = plan === "plan_free" || plan === "free";
+          if (isFreePlan) setOutOfFreeCreditsOpen(true);
+        },
       },
       preserveFields: ["model"],
     });
@@ -231,6 +243,11 @@ export default function GenerateImagePage() {
       <AuthWallModal
         open={authWallOpen}
         onOpenChange={setAuthWallOpen}
+      />
+
+      <OutOfFreeCreditsModal
+        open={outOfFreeCreditsOpen}
+        onOpenChange={setOutOfFreeCreditsOpen}
       />
     </PageContainer>
   );
