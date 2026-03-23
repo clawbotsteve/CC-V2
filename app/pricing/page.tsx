@@ -40,7 +40,7 @@ const CARDS: CardMeta[] = [
     tierAnnual: "plan_free",
     wrapper: "from-slate-800/70 to-slate-950/80 border-slate-600/40",
     displayMonthlyPrice: 0,
-    creditsText: "5 credits/month",
+    creditsText: "3 credits/month",
     fullAccess: ["Nano Banana Pro"],
     unlimited: ["—"],
   },
@@ -192,7 +192,7 @@ export default function PricingPage() {
               <div className="mt-4 space-y-1.5 text-zinc-200 text-[13px]">
                 {card.key === "free" ? (
                   <>
-                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> 5 Nano Banana Pro images</p>
+                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> 3 Nano Banana Pro images</p>
                     <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Watermarked output</p>
                     <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Signup required</p>
                   </>

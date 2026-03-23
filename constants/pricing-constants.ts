@@ -55,7 +55,7 @@ export const planPacks: Record<PlanKey, PlanPack> = {
     tier: "plan_free",
     price: 0,
     period: "monthly" as BillingPeriod,
-    creditsPerMonth: 5,
+    creditsPerMonth: 3,
     maxAvatarCount: 0,
     devPriceId: "",
     phyziroPriceId: ""
@@ -320,7 +320,7 @@ export const PLAN_MAPS: Record<PlanKey, {
     name: "Free Plan",
     description: "Limited trial access. Perfect for testing the platform.",
     features: [
-      "5 Nano Banana Pro images",
+      "3 Nano Banana Pro images",
       "Watermarked output",
       "No credit card required",
     ],
