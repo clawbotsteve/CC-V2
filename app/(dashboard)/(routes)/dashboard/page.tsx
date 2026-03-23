@@ -65,6 +65,8 @@ const modelCloud = [
   { name: "Bytedance", sub: "Video Engine" },
 ];
 
+const modelCloudLoop = [...modelCloud, ...modelCloud];
+
 const pricingPlans = [
   {
     name: "Free",
@@ -217,27 +219,33 @@ export default function DashboardPage() {
       </section>
 
       {/* ===== MODEL CLOUD ===== */}
-      <section className="max-w-[1280px] mx-auto px-6 pt-10 pb-8">
-        <div className="rounded-2xl border border-white/10 bg-[linear-gradient(180deg,#0f1016_0%,#0b0c12_100%)] p-5 md:p-6">
+      <section className="max-w-[1280px] mx-auto px-6 pt-12 pb-12">
+        <div className="rounded-2xl border border-white/10 bg-[linear-gradient(180deg,#0f1016_0%,#0b0c12_100%)] p-5 md:p-6 overflow-hidden">
           <div className="mb-4 text-center">
             <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Models we use</p>
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3">
-            {modelCloud.map((model) => (
-              <div
-                key={model.name}
-                className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-center min-w-[150px]"
-              >
-                <p className="text-sm font-semibold text-white">{model.name}</p>
-                <p className="text-[11px] text-zinc-400">{model.sub}</p>
-              </div>
-            ))}
+
+          <div className="relative">
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-[#0d0e14] to-transparent z-10" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-[#0d0e14] to-transparent z-10" />
+
+            <div className="flex w-max items-center gap-3 animate-[model-marquee_26s_linear_infinite] hover:[animation-play-state:paused]">
+              {modelCloudLoop.map((model, idx) => (
+                <div
+                  key={`${model.name}-${idx}`}
+                  className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-center min-w-[170px]"
+                >
+                  <p className="text-sm font-semibold text-white">{model.name}</p>
+                  <p className="text-[11px] text-zinc-400">{model.sub}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* ===== CONTENT EXAMPLES ===== */}
-      <section className="max-w-[1280px] mx-auto px-6 pb-24 pt-8">
+      <section className="max-w-[1280px] mx-auto px-6 pb-24 pt-4">
         <div className="mb-8 text-center">
           <h2 className="font-display text-4xl md:text-5xl font-black tracking-tight text-white">The New Era of Content Creation</h2>
           <p className="mt-5 text-base md:text-xl font-semibold text-zinc-200">AI is changing how stories are created — faster, more visual, and more personal.</p>
@@ -606,6 +614,13 @@ export default function DashboardPage() {
           </Link>
         </div>
       </section>
+
+      <style jsx>{`
+        @keyframes model-marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
 
       {/* ===== FOOTER ===== */}
       <footer className="border-t border-border max-w-[1280px] mx-auto px-6 pt-16 pb-8">
