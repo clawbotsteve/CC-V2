@@ -71,7 +71,7 @@ const CARDS: CardMeta[] = [
     displayMonthlyPrice: 19.99,
     firstMonthPrice: 14.99,
     creditsText: "200 credits/month",
-    fullAccess: ["Kling 2.6", "Nano Banana Pro", "Nano Banana 2", "Topaz Upscale"],
+    fullAccess: ["Kling 2.6", "Kling Motion Control", "Nano Banana Pro", "Nano Banana 2", "Topaz Upscale"],
     unlimited: ["Image generations (fair use)", "Prompt optimizer"],
   },
   {
@@ -246,15 +246,15 @@ export default function PricingPage() {
                 ) : card.key === "starter" ? (
                   <>
                     <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> 24h trial (50 credits)</p>
-                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Nano Banana Pro + Nano Banana 2 + Kling 2.6 + Topaz Upscale</p>
-                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Prompt tools included</p>
-                    <p className="flex items-center gap-2 text-zinc-400">✕ Motion Control / Veo / premium upscale</p>
+                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Nano Banana Pro + Nano Banana 2 + Kling 2.6 + Kling Motion Control</p>
+                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Topaz Upscale + prompt tools included</p>
+                    <p className="flex items-center gap-2 text-zinc-400">✕ Veo 3.1 / highest-priority queue</p>
                   </>
                 ) : card.key === "creator" ? (
                   <>
                     <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Everything in Starter</p>
-                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Motion Control + Nano Banana 2 Edit + all Upscale</p>
-                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Full edit suite</p>
+                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Nano Banana 2 Edit + advanced creator workflows</p>
+                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Full edit suite + priority processing</p>
                     <p className="flex items-center gap-2 text-zinc-400">✕ Veo 3.1</p>
                   </>
                 ) : (

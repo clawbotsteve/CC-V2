@@ -417,7 +417,7 @@ export const PLAN_MAPS: Record<PlanKey, {
     description: "Get moving fast. Great for casual creators.",
     features: [
       "200 credits/month",
-      "All tools unlocked",
+      "Kling 2.6 + Motion Control",
       "1 AI influencer slot",
       "HD video export",
       "Prompt tools included",
@@ -428,7 +428,7 @@ export const PLAN_MAPS: Record<PlanKey, {
     description: "Get moving fast. Great for casual creators.",
     features: [
       "200 credits/month",
-      "All tools unlocked",
+      "Kling 2.6 + Motion Control",
       "1 AI influencer slot",
       "HD video export",
       "Prompt tools included",
