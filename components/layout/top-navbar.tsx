@@ -310,7 +310,7 @@ export default function TopNavbar() {
                   </div>
 
                   <DropdownMenuItem asChild className="rounded-lg">
-                    <Link href="/settings/personal-profile" className="flex items-center gap-2">
+                    <Link href="/settings" className="flex items-center gap-2">
                       <UserCircle className="h-4 w-4" />
                       View profile
                     </Link>
