@@ -158,10 +158,19 @@ const planStyles: Record<string, { card: string; glow: string; save: string }> =
 
 export default function DashboardPage() {
   const toolsScrollRef = useRef<HTMLDivElement | null>(null);
+  const contentScrollRef = useRef<HTMLDivElement | null>(null);
   const [pricingBilling, setPricingBilling] = useState<"monthly" | "threeMonths">("monthly");
 
   const scrollToolsRight = () => {
     toolsScrollRef.current?.scrollBy({ left: 260, behavior: "smooth" });
+  };
+
+  const scrollContentLeft = () => {
+    contentScrollRef.current?.scrollBy({ left: -520, behavior: "smooth" });
+  };
+
+  const scrollContentRight = () => {
+    contentScrollRef.current?.scrollBy({ left: 520, behavior: "smooth" });
   };
 
   return (
@@ -245,36 +254,62 @@ export default function DashboardPage() {
       </section>
 
       {/* ===== CONTENT EXAMPLES ===== */}
-      <section className="max-w-[1920px] mx-auto px-2 md:px-8 pb-24 pt-4">
+      <section className="max-w-[1920px] mx-auto px-2 md:px-6 pb-24 pt-4">
         <div className="mb-8 text-center">
           <h2 className="font-display text-4xl md:text-5xl font-black tracking-tight text-white">The New Era of Content Creation</h2>
           <p className="mt-5 text-base md:text-xl font-semibold text-zinc-200">AI is changing how stories are created — faster, more visual, and more personal.</p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
-          {contentExamples.map((item) => (
-            <motion.div key={item.title} whileHover={{ y: -4 }} className="relative rounded-2xl overflow-hidden border border-border hover:border-[#6366f1] transition-all" style={{ aspectRatio: '16/8.5' }}>
-              <GlowingEffect disabled={false} proximity={72} spread={32} borderWidth={2} />
-              <div className="relative h-full w-full">
-                {item.type === "image" ? (
-                  <Image src={item.src} alt={item.title} fill className="object-cover" />
-                ) : item.type === "beforeAfter" ? (
-                  <div className="grid h-full w-full grid-cols-2">
-                    <div className="relative h-full">
-                      <Image src={item.beforeSrc} alt={`${item.title} before`} fill className="object-cover" />
-                      <span className="absolute left-2 top-2 rounded bg-black/70 px-2 py-0.5 text-[10px] font-semibold text-white">Before</span>
+
+        <div className="relative">
+          <button
+            type="button"
+            aria-label="Previous examples"
+            onClick={scrollContentLeft}
+            className="absolute left-2 top-1/2 z-20 hidden -translate-y-1/2 rounded-full border border-white/20 bg-black/60 p-2 text-white backdrop-blur transition hover:bg-black/80 md:inline-flex"
+          >
+            <ArrowRight className="h-5 w-5 rotate-180" />
+          </button>
+
+          <button
+            type="button"
+            aria-label="Next examples"
+            onClick={scrollContentRight}
+            className="absolute right-2 top-1/2 z-20 hidden -translate-y-1/2 rounded-full border border-white/20 bg-black/60 p-2 text-white backdrop-blur transition hover:bg-black/80 md:inline-flex"
+          >
+            <ArrowRight className="h-5 w-5" />
+          </button>
+
+          <div ref={contentScrollRef} className="flex gap-3 overflow-x-auto no-scrollbar px-1 md:px-10 snap-x snap-mandatory">
+            {contentExamples.map((item) => (
+              <motion.div
+                key={item.title}
+                whileHover={{ y: -4 }}
+                className="relative snap-start min-w-[92vw] sm:min-w-[70vw] lg:min-w-[44vw] xl:min-w-[36vw] rounded-2xl overflow-hidden border border-border hover:border-[#6366f1] transition-all"
+                style={{ aspectRatio: "16 / 9" }}
+              >
+                <GlowingEffect disabled={false} proximity={72} spread={32} borderWidth={2} />
+                <div className="relative h-full w-full bg-black/60">
+                  {item.type === "image" ? (
+                    <Image src={item.src} alt={item.title} fill className="object-contain" />
+                  ) : item.type === "beforeAfter" ? (
+                    <div className="grid h-full w-full grid-cols-2">
+                      <div className="relative h-full">
+                        <Image src={item.beforeSrc} alt={`${item.title} before`} fill className="object-contain" />
+                        <span className="absolute left-2 top-2 rounded bg-black/70 px-2 py-0.5 text-[10px] font-semibold text-white">Before</span>
+                      </div>
+                      <div className="relative h-full">
+                        <Image src={item.afterSrc} alt={`${item.title} after`} fill className="object-contain" />
+                        <span className="absolute right-2 top-2 rounded bg-indigo-600/80 px-2 py-0.5 text-[10px] font-semibold text-white">After</span>
+                      </div>
                     </div>
-                    <div className="relative h-full">
-                      <Image src={item.afterSrc} alt={`${item.title} after`} fill className="object-cover" />
-                      <span className="absolute right-2 top-2 rounded bg-indigo-600/80 px-2 py-0.5 text-[10px] font-semibold text-white">After</span>
-                    </div>
-                  </div>
-                ) : (
-                  <video src={item.src} className="h-full w-full object-cover" autoPlay muted loop playsInline />
-                )}
-              </div>
-              {/* no copy on cards */}
-            </motion.div>
-          ))}
+                  ) : (
+                    <video src={item.src} className="h-full w-full object-contain" autoPlay muted loop playsInline />
+                  )}
+                </div>
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent" />
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
