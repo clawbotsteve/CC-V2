@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { GlowingEffect } from "@/components/ui/glowing-effect";
+import { TypingAnimation } from "@/components/ui/typing-animation";
 import { motion } from "framer-motion";
 import { useRef } from "react";
 import {
@@ -207,10 +208,16 @@ export default function DashboardPage() {
             Powered by Flux Pro, Kling 3.0 & Veo 3
           </div>
 
-          <h1 className="font-display text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.05] mb-5">
-            This is where you build <br />
-            <span className="bg-gradient-to-r from-[#6366f1] to-[#a78bfa] bg-clip-text text-transparent">your AI influencer.</span>
-          </h1>
+          <div className="mb-5">
+            <h1 className="font-display text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.05]">
+              This is where you build
+            </h1>
+            <TypingAnimation
+              text="your AI influencer."
+              duration={90}
+              className="font-display text-center text-5xl md:text-7xl font-extrabold leading-[1.05] bg-gradient-to-r from-[#6366f1] to-[#a78bfa] bg-clip-text text-transparent"
+            />
+          </div>
 
           <p className="text-lg text-muted-foreground max-w-[560px] mx-auto mb-9 leading-relaxed">
             Build AI influencers that post, grow, and generate income — without you lifting a finger
