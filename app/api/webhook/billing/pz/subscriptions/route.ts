@@ -8,6 +8,7 @@ import { PLAN_FREE } from "@/constants";
 import { getSubscriptionTierIdByPriceId } from "@/lib/get-active-tier-by-price-id";
 import { SubscriptionStatus } from "@prisma/client";
 import { assignPlan } from "@/lib/assign-plan";
+import { clerkClient } from "@clerk/nextjs/server";
 
 export interface PhyziroSubscriptionWebhookPayload {
   event: "subscription.created" | "subscription.updated" | "subscription.canceled";
@@ -52,18 +53,42 @@ export async function POST(req: Request) {
 
     console.debug(`[WEBHOOK] Processing event: ${eventType} for user ${data.userId}`);
 
-    // For subscription.updated, we should allow creating if it doesn't exist
-    // For subscription.created, we might want to check if user exists in User table
-    if (eventType === "subscription.created") {
-      const userExists = await prismadb.user.findUnique({
-        where: { userId: data.userId },
-        select: { id: true },
-      });
+    // Ensure user exists in DB before processing any subscription event.
+    // If Clerk webhook failed, auto-create the user from Clerk data so the
+    // subscription can still be applied (prevents paid users getting nothing).
+    const userExists = await prismadb.user.findUnique({
+      where: { userId: data.userId },
+      select: { id: true },
+    });
 
-      if (!userExists) {
-        console.error(`[WEBHOOK] User not found in User table for userId: ${data.userId}`);
+    if (!userExists) {
+      console.warn(`[WEBHOOK] User ${data.userId} not in DB — attempting auto-create from Clerk`);
+      try {
+        const clerk = await clerkClient();
+        const clerkUser = await clerk.users.getUser(data.userId);
+        const email = clerkUser.emailAddresses[0]?.emailAddress || "";
+        const name = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ");
+
+        await prismadb.user.create({
+          data: {
+            userId: clerkUser.id,
+            name,
+            email,
+            imageUrl: clerkUser.hasImage ? clerkUser.imageUrl : "",
+            referralCode: "",
+            firstVisit: false,
+          },
+        });
+
+        // Assign free plan baseline (creates UserSubscription + UserApiLimit)
+        const freePlanId = await getPlanIdByTier(PLAN_FREE);
+        await assignPlan(clerkUser.id, freePlanId);
+
+        console.info(`[WEBHOOK] Auto-created user ${data.userId} (${email}) from Clerk`);
+      } catch (createError: any) {
+        console.error(`[WEBHOOK] Failed to auto-create user ${data.userId}:`, createError?.message);
         return NextResponse.json(
-          { event: eventType, message: "error", reason: "User not found" },
+          { event: eventType, message: "error", reason: "User not found and auto-create failed" },
           { status: 404 }
         );
       }
