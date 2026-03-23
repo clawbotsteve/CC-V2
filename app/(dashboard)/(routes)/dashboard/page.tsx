@@ -282,7 +282,7 @@ export default function DashboardPage() {
       <section className="w-full px-4 md:px-6 py-24">
         <div className="rounded-3xl border border-[#6366f1]/25 bg-[linear-gradient(130deg,#111118_0%,#171332_42%,#111118_100%)] p-4 md:p-6 w-full">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-stretch">
-            <div className="lg:w-[320px] lg:pr-2">
+            <div className="lg:w-[280px] lg:pr-2">
               <h2 className="font-display text-4xl font-black uppercase leading-[1.02] tracking-tight text-white">
                 What will you <span className="text-[#8b7bff]">create today?</span>
               </h2>
@@ -305,11 +305,11 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            <div className="flex-1 overflow-x-auto no-scrollbar" ref={toolsScrollRef}>
-              <div className="flex min-w-max gap-4">
+            <div className="flex-1 overflow-x-auto no-scrollbar px-1" ref={toolsScrollRef}>
+              <div className="flex min-w-max gap-4 snap-x snap-mandatory">
                 {tools.map((tool) => (
                   <Link key={tool.name} href={tool.href}>
-                    <motion.div whileHover={{ y: -2 }} className={`group relative h-[260px] ${("cardClass" in tool ? (tool as any).cardClass : undefined) || "w-[220px]"} overflow-hidden rounded-2xl border border-white/10 bg-[#111118] transition-all hover:border-[#6366f1]`}>
+                    <motion.div whileHover={{ y: -2 }} className={`group relative snap-start h-[300px] ${("cardClass" in tool ? (tool as any).cardClass : undefined) || "w-[82vw] sm:w-[420px]"} overflow-hidden rounded-2xl border border-white/10 bg-[#111118] transition-all hover:border-[#6366f1]`}>
                       <GlowingEffect disabled={false} proximity={70} spread={28} borderWidth={2} />
                       {tool.preview ? (
                         tool.previewType === "image" ? (
