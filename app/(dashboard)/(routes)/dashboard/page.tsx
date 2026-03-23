@@ -245,14 +245,14 @@ export default function DashboardPage() {
       </section>
 
       {/* ===== CONTENT EXAMPLES ===== */}
-      <section className="max-w-[1280px] mx-auto px-6 pb-24 pt-4">
+      <section className="max-w-[1680px] mx-auto px-4 md:px-6 pb-24 pt-4">
         <div className="mb-8 text-center">
           <h2 className="font-display text-4xl md:text-5xl font-black tracking-tight text-white">The New Era of Content Creation</h2>
           <p className="mt-5 text-base md:text-xl font-semibold text-zinc-200">AI is changing how stories are created — faster, more visual, and more personal.</p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5 gap-3 md:gap-4">
           {contentExamples.map((item) => (
-            <motion.div key={item.title} whileHover={{ y: -4 }} className="relative rounded-2xl overflow-hidden border border-border hover:border-[#6366f1] transition-all" style={{ aspectRatio: '4/5' }}>
+            <motion.div key={item.title} whileHover={{ y: -4 }} className="relative rounded-2xl overflow-hidden border border-border hover:border-[#6366f1] transition-all" style={{ aspectRatio: '16/10' }}>
               <GlowingEffect disabled={false} proximity={72} spread={32} borderWidth={2} />
               <div className="relative h-full w-full">
                 {item.type === "image" ? (
@@ -269,7 +269,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 ) : (
-                  <video src={item.src} className="h-full w-full object-cover" autoPlay muted loop playsInline />
+                  <video src={item.src} className="h-full w-full object-contain bg-black" autoPlay muted loop playsInline />
                 )}
               </div>
               {/* no copy on cards */}
