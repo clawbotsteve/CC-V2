@@ -8,6 +8,7 @@ const isProtectedRoute = createRouteMatcher([
 
 const isIgnoredRoute = createRouteMatcher([
   '/api/webhook(.*)',
+  '/api/analytics/track',
   '/referred',
 ]);
 

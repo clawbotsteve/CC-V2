@@ -702,3 +702,30 @@ model LoraPurchase {
 
   @@unique([userId, loraId])
 }
+
+model PageView {
+  id             String   @id @default(cuid())
+  visitorId      String
+  userId         String?
+  url            String
+  referrer       String?
+  referrerDomain String?
+  utmSource      String?
+  utmMedium      String?
+  utmCampaign    String?
+  utmTerm        String?
+  utmContent     String?
+  affiliateCode  String?
+  userAgent      String?
+  browser        String?
+  os             String?
+  deviceType     String?
+  country        String?
+  createdAt      DateTime @default(now())
+
+  @@index([visitorId])
+  @@index([createdAt])
+  @@index([url])
+  @@index([referrerDomain])
+  @@index([affiliateCode])
+}

@@ -13,6 +13,7 @@ import { cookies } from "next/headers";
 import RouteChangeRefetch from "@/lib/route-change-fetch";
 import dynamic from "next/dynamic";
 import { AffiliateTracker } from "@/components/affiliate-tracker";
+import { AnalyticsTracker } from "@/components/analytics-tracker";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], variable: "--font-space-grotesk" });
@@ -93,6 +94,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
               <ModalProvider />
               <RouteChangeRefetch /> {/* needed for credit calc */}
               <AffiliateTracker />
+              <AnalyticsTracker />
               {children}
             </Providers>
           </ThemeProvider>
