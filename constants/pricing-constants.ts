@@ -2,6 +2,8 @@ import { BillingPeriod, SubscriptionTier, ToolType } from "@prisma/client";
 
 export type PlanKey =
   | "Free"
+  | "Beginner"
+  | "Beginner3Month"
   | "Starter"
   | "Starter3Month"
   | "Creator"
@@ -24,6 +26,13 @@ export type PlanPack = Omit<
 };
 
 const phyziroPriceIds = {
+  beginner: {
+    monthly: "",
+    quarterly: "",
+    devMonthly: "",
+    devQuarterly: "",
+    phyziro: ""
+  },
   starter: {
     monthly: "price_1RibEpRtdu7lUaLOgoGLsBmh",
     quarterly: "price_1Rlw3DRtdu7lUaLO0C418ytH",
@@ -59,6 +68,29 @@ export const planPacks: Record<PlanKey, PlanPack> = {
     maxAvatarCount: 0,
     devPriceId: "",
     phyziroPriceId: ""
+  },
+
+  Beginner: {
+    key: "Beginner",
+    name: "Beginner Plan",
+    tier: "plan_beginner",
+    price: 9.99,
+    period: "monthly" as BillingPeriod,
+    creditsPerMonth: 80,
+    maxAvatarCount: 0,
+    devPriceId: phyziroPriceIds.beginner.devMonthly,
+    phyziroPriceId: phyziroPriceIds.beginner.phyziro,
+  },
+  Beginner3Month: {
+    key: "Beginner3Month",
+    name: "Beginner Plan - 3 Month",
+    tier: "plan_beginner_3month",
+    price: 23.97,
+    period: "three_months" as BillingPeriod,
+    creditsPerMonth: 80,
+    maxAvatarCount: 0,
+    devPriceId: phyziroPriceIds.beginner.devQuarterly,
+    phyziroPriceId: "",
   },
 
   Starter: {
@@ -199,6 +231,42 @@ export const TOOL_COSTS_BY_TIER: Record<
     { tool: ToolType.AVATAR_TO_VIDEO, variant: "5s", creditCost: 11 }, // Avatar to video 5s (Kling pricing)
     { tool: ToolType.AVATAR_TRAINING, variant: "default", creditCost: 67 }, // Avatar training one-time setup
   ],
+  plan_beginner: [
+    { tool: ToolType.IMAGE_GENERATOR, variant: "sfw", creditCost: 1 },
+    { tool: ToolType.IMAGE_GENERATOR, variant: "nsfw", creditCost: 1 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "standard_5s", creditCost: 11 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_5s", creditCost: 8 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "standard_10s", creditCost: 22 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_10s", creditCost: 16 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "wan_720p", creditCost: 8 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "veo_4s", creditCost: 51 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "veo_8s", creditCost: 101 },
+    { tool: ToolType.IMAGE_EDITOR, variant: "default", creditCost: 4 },
+    { tool: ToolType.FACE_ENHANCE, variant: "default", creditCost: 5 },
+    { tool: ToolType.IMAGE_UPSCALER, variant: "default", creditCost: 4 },
+    { tool: ToolType.PROMPT_GENERATOR, variant: "default", creditCost: 1 },
+    { tool: ToolType.PROMPT_OPTIMIZER, variant: "default", creditCost: 1 },
+    { tool: ToolType.AVATAR_TO_VIDEO, variant: "5s", creditCost: 11 },
+    { tool: ToolType.AVATAR_TRAINING, variant: "default", creditCost: 72 },
+  ],
+  plan_beginner_3month: [
+    { tool: ToolType.IMAGE_GENERATOR, variant: "sfw", creditCost: 1 },
+    { tool: ToolType.IMAGE_GENERATOR, variant: "nsfw", creditCost: 1 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "standard_5s", creditCost: 11 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_5s", creditCost: 8 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "standard_10s", creditCost: 22 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_10s", creditCost: 16 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "wan_720p", creditCost: 8 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "veo_4s", creditCost: 51 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "veo_8s", creditCost: 101 },
+    { tool: ToolType.IMAGE_EDITOR, variant: "default", creditCost: 4 },
+    { tool: ToolType.FACE_ENHANCE, variant: "default", creditCost: 5 },
+    { tool: ToolType.IMAGE_UPSCALER, variant: "default", creditCost: 4 },
+    { tool: ToolType.PROMPT_GENERATOR, variant: "default", creditCost: 1 },
+    { tool: ToolType.PROMPT_OPTIMIZER, variant: "default", creditCost: 1 },
+    { tool: ToolType.AVATAR_TO_VIDEO, variant: "5s", creditCost: 11 },
+    { tool: ToolType.AVATAR_TRAINING, variant: "default", creditCost: 72 },
+  ],
   plan_basic: [
     { tool: ToolType.IMAGE_GENERATOR, variant: "sfw", creditCost: 1 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "nsfw", creditCost: 1 },
@@ -325,6 +393,25 @@ export const PLAN_MAPS: Record<PlanKey, {
       "No credit card required",
     ],
   },
+  Beginner: {
+    name: "Beginner Plan",
+    description: "Affordable monthly plan for consistent creation.",
+    features: [
+      "80 credits/month",
+      "Core image + video tools",
+      "Great for first-time paid users",
+    ],
+  },
+  Beginner3Month: {
+    name: "Beginner Plan (3 month)",
+    description: "Affordable monthly plan for consistent creation.",
+    features: [
+      "80 credits/month",
+      "Core image + video tools",
+      "Great for first-time paid users",
+    ],
+  },
+
   Starter: {
     name: "Starter Plan",
     description: "Get moving fast. Great for casual creators.",
@@ -403,6 +490,8 @@ export const PLAN_MAPS: Record<PlanKey, {
 
 export const TIER_KEY_MAP: Record<string, PlanKey> = {
   plan_free: "Free",
+  plan_beginner: "Beginner",
+  plan_beginner_3month: "Beginner3Month",
   plan_basic: "Starter",
   plan_basic_3month: "Starter3Month",
   plan_pro: "Creator",

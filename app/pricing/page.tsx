@@ -13,7 +13,7 @@ import { planPacks } from "@/constants/pricing-constants";
 type BillingView = "monthly" | "annual";
 
 type CardMeta = {
-  key: "free" | "starter" | "creator" | "studio";
+  key: "free" | "beginner" | "starter" | "creator" | "studio";
   name: string;
   topBadge: string;
   subtitle: string;
@@ -24,6 +24,7 @@ type CardMeta = {
   accent?: string;
   popular?: boolean;
   displayMonthlyPrice: number;
+  firstMonthPrice?: number;
   creditsText: string;
   fullAccess: string[];
   unlimited: string[];
@@ -45,6 +46,21 @@ const CARDS: CardMeta[] = [
     unlimited: ["—"],
   },
   {
+    key: "beginner",
+    name: "Beginner",
+    topBadge: "BEST FIRST PAID STEP",
+    subtitle: "START CREATING DAILY",
+    cta: "Start Beginner",
+    tierMonthly: "plan_beginner",
+    tierAnnual: "plan_beginner_3month",
+    wrapper: "from-blue-900/55 to-slate-950/80 border-blue-500/35",
+    displayMonthlyPrice: 9.99,
+    firstMonthPrice: 7.99,
+    creditsText: "80 credits/month",
+    fullAccess: ["Nano Banana Pro", "Nano Banana 2", "Kling 2.6 (core)"],
+    unlimited: ["Prompt optimizer"],
+  },
+  {
     key: "starter",
     name: "Starter",
     topBadge: "BEST FOR FIRST 30 DAYS",
@@ -54,6 +70,7 @@ const CARDS: CardMeta[] = [
     tierAnnual: "plan_basic_3month",
     wrapper: "from-cyan-900/55 to-slate-950/80 border-cyan-500/35",
     displayMonthlyPrice: 19.99,
+    firstMonthPrice: 14.99,
     creditsText: "200 credits/month",
     fullAccess: ["Kling 2.6", "Nano Banana Pro", "Nano Banana 2", "Topaz Upscale"],
     unlimited: ["Image generations (fair use)", "Prompt optimizer"],
@@ -70,6 +87,7 @@ const CARDS: CardMeta[] = [
     accent: "bg-lime-300 text-black",
     popular: true,
     displayMonthlyPrice: 49.99,
+    firstMonthPrice: 39.99,
     creditsText: "600 credits/month",
     fullAccess: ["Kling Motion Control", "SeedVR Image Upscale", "Bytedance Video Upscale", "Nano Banana 2 Edit"],
     unlimited: ["Image generations (fair use)", "Prompt optimizer", "Advanced creator workflows"],
@@ -84,6 +102,7 @@ const CARDS: CardMeta[] = [
     tierAnnual: "plan_elite_3month",
     wrapper: "from-fuchsia-900/50 to-slate-950/80 border-fuchsia-500/35",
     displayMonthlyPrice: 149.99,
+    firstMonthPrice: 99.99,
     creditsText: "2,000 credits/month",
     fullAccess: ["All Creator models", "Veo 3.1 (4s/8s)", "All upscale + all video"],
     unlimited: ["Image generations (fair use)", "Prompt optimizer", "Priority render queue"],
@@ -143,7 +162,7 @@ export default function PricingPage() {
       )}
 
       <div className="text-center space-y-1">
-        <h1 className="text-3xl md:text-4xl font-extrabold">Upgrade to Starter</h1>
+        <h1 className="text-3xl md:text-4xl font-extrabold">Choose your plan</h1>
         <p className="text-muted-foreground text-sm">Start free. Scale as you create.</p>
       </div>
 
@@ -153,7 +172,7 @@ export default function PricingPage() {
         <span className="text-xs font-semibold rounded-full bg-pink-500/20 text-pink-200 px-2 py-0.5">20% OFF</span>
       </div>
 
-      <div className="max-w-[1280px] mx-auto grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2.5 items-stretch">
+      <div className="max-w-[1480px] mx-auto grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-2.5 items-stretch">
         {CARDS.map((card) => {
           const tier = billing === "monthly" ? card.tierMonthly : card.tierAnnual;
           const p = plansByTier.get(tier);
@@ -186,6 +205,9 @@ export default function PricingPage() {
                   )}
                   <span className="text-sm font-semibold text-zinc-300">/mo</span>
                 </p>
+                {billing === "monthly" && card.firstMonthPrice !== undefined && card.key !== "free" && (
+                  <p className="text-[11px] text-zinc-300 mt-1">First month ${card.firstMonthPrice.toFixed(2)}, then ${monthlyBasePrice.toFixed(2)}/mo</p>
+                )}
                 <p className="text-lime-300 font-semibold mt-2 text-sm">{card.creditsText}</p>
               </div>
 
@@ -195,6 +217,13 @@ export default function PricingPage() {
                     <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> 3 Nano Banana Pro images</p>
                     <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Watermarked output</p>
                     <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Signup required</p>
+                  </>
+                ) : card.key === "beginner" ? (
+                  <>
+                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> 80 monthly credits</p>
+                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Nano Banana Pro + Nano Banana 2 + Kling 2.6 core</p>
+                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Prompt tools included</p>
+                    <p className="flex items-center gap-2 text-zinc-400">✕ Motion Control / Veo / premium upscale</p>
                   </>
                 ) : card.key === "starter" ? (
                   <>

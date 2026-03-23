@@ -80,9 +80,22 @@ const pricingPlans = [
     unlimited: ["—"],
   },
   {
+    name: "Beginner",
+    hook: "Best first paid step",
+    price: "$9.99",
+    firstMonth: "$7.99",
+    credits: "80 credits/month",
+    featured: false,
+    cta: "Start Beginner",
+    features: ["Core image + video tools", "Prompt tools included", "Affordable monthly entry"],
+    modelAccess: ["Nano Banana Pro", "Nano Banana 2", "Kling 2.6 (core)"],
+    unlimited: ["Prompt optimizer"],
+  },
+  {
     name: "Starter",
     hook: "Get moving fast",
     price: "$19.99",
+    firstMonth: "$14.99",
     credits: "200 credits/month",
     featured: false,
     cta: "Start Starter",
@@ -94,6 +107,7 @@ const pricingPlans = [
     name: "Creator",
     hook: "Best plan for AI character builders",
     price: "$49.99",
+    firstMonth: "$39.99",
     credits: "600 credits/month",
     featured: true,
     cta: "Build Characters",
@@ -105,6 +119,7 @@ const pricingPlans = [
     name: "Studio",
     hook: "For agencies and operators at serious scale",
     price: "$149.99",
+    firstMonth: "$99.99",
     credits: "2,000 credits/month",
     featured: false,
     cta: "Scale with Studio",
@@ -138,6 +153,11 @@ const planStyles: Record<string, { card: string; glow: string; save: string }> =
     card: "linear-gradient(180deg, rgba(40,44,62,0.75) 0%, rgba(17,17,24,1) 45%)",
     glow: "rgba(148,163,184,0.25)",
     save: "No commitment",
+  },
+  Beginner: {
+    card: "linear-gradient(180deg, rgba(30,64,175,0.62) 0%, rgba(17,17,24,1) 50%)",
+    glow: "rgba(59,130,246,0.35)",
+    save: "Best first paid step",
   },
   Starter: {
     card: "linear-gradient(180deg, rgba(12,74,110,0.65) 0%, rgba(17,17,24,1) 50%)",
@@ -549,7 +569,7 @@ export default function DashboardPage() {
             <span className="rounded-full bg-pink-500 px-2 py-0.5 text-[11px] font-bold text-white">20% OFF</span>
           </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {pricingPlans.map((plan) => {
             const basePrice = Number.parseFloat(plan.price.replace("$", ""));
             const displayPrice =
@@ -575,6 +595,9 @@ export default function DashboardPage() {
               <div className="font-display text-xl font-bold mb-1 mt-4">{plan.name}</div>
               <div className="text-xs font-semibold uppercase tracking-wider text-[#d8ccff] mb-2">{plan.hook}</div>
               <div className="font-display text-4xl font-extrabold tracking-tight mb-1">{displayPrice}<span className="text-base font-normal text-muted-foreground">/mo</span></div>
+              {pricingBilling === "monthly" && plan.name !== "Free" && (plan as any).firstMonth && (
+                <div className="text-[11px] text-zinc-300 mb-1">First month {(plan as any).firstMonth}, then {plan.price}/mo</div>
+              )}
               <div className="text-sm font-semibold text-lime-300 mb-6">{plan.credits}</div>
               <ul className="space-y-2.5 mb-6">
                 {plan.features.map((f) => (
