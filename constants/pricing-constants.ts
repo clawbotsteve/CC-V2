@@ -27,10 +27,10 @@ export type PlanPack = Omit<
 
 const phyziroPriceIds = {
   beginner: {
-    monthly: "",
-    quarterly: "",
-    devMonthly: "",
-    devQuarterly: "",
+    monthly: "price_1TEBTMD1124EVB3ASIOjW98d",
+    quarterly: "price_1TEBUDD1124EVB3AEHUNwJzK",
+    devMonthly: "price_1TEBTMD1124EVB3ASIOjW98d",
+    devQuarterly: "price_1TEBUDD1124EVB3AEHUNwJzK",
     phyziro: ""
   },
   starter: {
