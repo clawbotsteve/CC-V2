@@ -17,6 +17,7 @@ import {
   MessageSquare,
   Brush,
   ChevronDown,
+  Mail,
 } from "lucide-react";
 import { useUserContext } from "./user-context";
 import {
@@ -319,6 +320,12 @@ export default function TopNavbar() {
                     <Link href="/settings/subscription" className="flex items-center gap-2">
                       <CreditCard className="h-4 w-4" />
                       Manage account
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild className="rounded-lg">
+                    <Link href="mailto:travialabsai@gmail.com" className="flex items-center gap-2">
+                      <Mail className="h-4 w-4" />
+                      Support
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild className="rounded-lg">
