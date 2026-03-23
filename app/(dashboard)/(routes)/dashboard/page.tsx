@@ -83,7 +83,6 @@ const pricingPlans = [
     name: "Beginner",
     hook: "Best first paid step",
     price: "$9.99",
-    firstMonth: "$7.99",
     credits: "80 credits/month",
     featured: false,
     cta: "Start Beginner",
@@ -572,10 +571,20 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {pricingPlans.map((plan) => {
             const basePrice = Number.parseFloat(plan.price.replace("$", ""));
+            const firstMonthPrice = (plan as any).firstMonth
+              ? Number.parseFloat((plan as any).firstMonth.replace("$", ""))
+              : null;
+            const firstMonthPct =
+              firstMonthPrice && basePrice > 0
+                ? Math.round(((basePrice - firstMonthPrice) / basePrice) * 100)
+                : null;
+
             const displayPrice =
               pricingBilling === "threeMonths" && plan.name !== "Free"
                 ? `$${(basePrice * 0.8).toFixed(2)}`
-                : plan.price;
+                : pricingBilling === "monthly" && firstMonthPrice
+                  ? `$${firstMonthPrice.toFixed(2)}`
+                  : plan.price;
 
             return (
             <div
@@ -594,9 +603,15 @@ export default function DashboardPage() {
               )}
               <div className="font-display text-xl font-bold mb-1 mt-4">{plan.name}</div>
               <div className="text-xs font-semibold uppercase tracking-wider text-[#d8ccff] mb-2">{plan.hook}</div>
+              {pricingBilling === "monthly" && firstMonthPrice && plan.name !== "Beginner" && (
+                <div className="text-[11px] text-zinc-300 mb-1">
+                  <span className="line-through text-zinc-400">{plan.price}/mo</span>{" "}
+                  <span className="text-pink-300">{firstMonthPct}% off 1st month</span>
+                </div>
+              )}
               <div className="font-display text-4xl font-extrabold tracking-tight mb-1">{displayPrice}<span className="text-base font-normal text-muted-foreground">/mo</span></div>
-              {pricingBilling === "monthly" && plan.name !== "Free" && (plan as any).firstMonth && (
-                <div className="text-[11px] text-zinc-300 mb-1">First month {(plan as any).firstMonth}, then {plan.price}/mo</div>
+              {pricingBilling === "monthly" && firstMonthPrice && plan.name !== "Beginner" && (
+                <div className="text-[11px] text-zinc-300 mb-1">First month ${(firstMonthPrice).toFixed(2)}, then {plan.price}/mo</div>
               )}
               <div className="text-sm font-semibold text-lime-300 mb-6">{plan.credits}</div>
               <ul className="space-y-2.5 mb-6">

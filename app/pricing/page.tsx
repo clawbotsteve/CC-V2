@@ -55,7 +55,6 @@ const CARDS: CardMeta[] = [
     tierAnnual: "plan_beginner_3month",
     wrapper: "from-blue-900/55 to-slate-950/80 border-blue-500/35",
     displayMonthlyPrice: 9.99,
-    firstMonthPrice: 7.99,
     creditsText: "80 credits/month",
     fullAccess: ["Nano Banana Pro", "Nano Banana 2", "Kling 2.6 (core)"],
     unlimited: ["Prompt optimizer"],
@@ -184,6 +183,11 @@ export default function PricingPage() {
           const discountedAnnualPrice = billing === "annual" && card.key !== "free"
             ? Number((monthlyBasePrice * 0.8).toFixed(2))
             : null;
+          const firstMonthPrice = billing === "monthly" ? card.firstMonthPrice : undefined;
+          const firstMonthPct =
+            firstMonthPrice !== undefined && monthlyBasePrice > 0
+              ? Math.round(((monthlyBasePrice - firstMonthPrice) / monthlyBasePrice) * 100)
+              : null;
 
           return (
             <div key={card.key} className={`relative rounded-xl border bg-gradient-to-b ${card.wrapper} p-2.5 flex flex-col min-h-[500px]`}>
@@ -194,19 +198,28 @@ export default function PricingPage() {
               <p className="text-xs text-zinc-300 mt-1 tracking-wide">{card.subtitle}</p>
 
               <div className="mt-3">
+                {billing === "monthly" && firstMonthPrice !== undefined && card.key !== "free" && (
+                  <p className="text-[11px] text-zinc-300 mb-1">
+                    <span className="line-through text-zinc-400">${monthlyBasePrice.toFixed(2)}/mo</span>
+                    {" "}
+                    <span className="text-pink-300">{firstMonthPct}% off 1st month</span>
+                  </p>
+                )}
                 <p className="text-[36px] font-extrabold leading-none flex items-end gap-2">
                   {discountedAnnualPrice !== null && typeof monthlyBasePrice === "number" ? (
                     <>
                       <span className="text-pink-400 line-through text-2xl">${Number(monthlyBasePrice).toFixed(2)}</span>
                       <span>${discountedAnnualPrice.toFixed(2)}</span>
                     </>
+                  ) : firstMonthPrice !== undefined ? (
+                    <span>${firstMonthPrice.toFixed(2)}</span>
                   ) : (
                     <span>${Number(monthlyBasePrice).toFixed(2)}</span>
                   )}
                   <span className="text-sm font-semibold text-zinc-300">/mo</span>
                 </p>
-                {billing === "monthly" && card.firstMonthPrice !== undefined && card.key !== "free" && (
-                  <p className="text-[11px] text-zinc-300 mt-1">First month ${card.firstMonthPrice.toFixed(2)}, then ${monthlyBasePrice.toFixed(2)}/mo</p>
+                {billing === "monthly" && firstMonthPrice !== undefined && card.key !== "free" && (
+                  <p className="text-[11px] text-zinc-300 mt-1">First month ${firstMonthPrice.toFixed(2)}, then ${monthlyBasePrice.toFixed(2)}/mo</p>
                 )}
                 <p className="text-lime-300 font-semibold mt-2 text-sm">{card.creditsText}</p>
               </div>
