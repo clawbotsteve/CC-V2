@@ -4,6 +4,8 @@ import { NextResponse } from 'next/server';
 const isProtectedRoute = createRouteMatcher([
   '/settings(.*)',
   '/tools(.*)',
+  '/api/tools(.*)',
+  '/api/ai(.*)',
 ]);
 
 const isIgnoredRoute = createRouteMatcher([
@@ -74,6 +76,9 @@ export default clerkMiddleware(async (auth, req) => {
   if (isProtectedRoute(req)) {
     const { userId } = await auth();
     if (!userId) {
+      if (req.nextUrl.pathname.startsWith('/api/')) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
       const signInUrl = new URL('/sign-in', req.url);
       return NextResponse.redirect(signInUrl);
     }
