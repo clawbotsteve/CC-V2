@@ -141,7 +141,7 @@ export async function POST(req: NextRequest) {
         prompt: data.prompt,
         image_url: falHostedImageUrl,
         aspect_ratio: data.aspect_ratio,
-        enable_safety_checker: false,
+        enable_safety_checker: true,
       };
 
       const { request_id } = await submitFalJob("fal-ai/wan-pro/image-to-video", {
@@ -162,7 +162,7 @@ export async function POST(req: NextRequest) {
         image_url: falHostedImageUrl,
         aspect_ratio: data.aspect_ratio,
         duration: duration,
-        enable_safety_checker: false,
+        enable_safety_checker: true,
       };
 
       const { request_id } = await submitFalJob("fal-ai/bytedance/seedance/v1/pro/fast/image-to-video", {

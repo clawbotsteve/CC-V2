@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
           loras: [body.loras!],
           guidance_scale: body.guidanceScale,
           num_images: body.numImages,
-          enable_safety_checker: false,
+          enable_safety_checker: true,
           output_format: body.outputFormat,
         },
         webhookUrl,

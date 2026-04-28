@@ -70,7 +70,7 @@ export type VideoGenerationForm = VideoGenerationInput;
 export const defaultVideoGenerationForm: VideoGenerationForm = {
   cfg_scale: 0.75,
   duration: Duration.Five,
-  enable_safety_checker: false,
+  enable_safety_checker: true,
   generate_audio: true,
   keep_original_sound: true,
   image_url: "",

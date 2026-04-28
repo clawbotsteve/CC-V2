@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
         num_inference_steps: 28,
         guidance_scale: 3.5,
         num_images: 1,
-        enable_safety_checker: false,
+        enable_safety_checker: true,
         output_format: "png",
         strength: 0.85,
         loras: [{ path: loraUrl }],
