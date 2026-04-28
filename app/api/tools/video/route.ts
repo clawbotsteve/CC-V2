@@ -10,6 +10,7 @@ import axios from "axios";
 import { NextResponse } from "next/server";
 import { getFalJobResult } from "@/lib/fal-client";
 import { canUseVideoModel, requiredPlanForVideoModel, resolveAccessTier } from "@/lib/plan-access";
+import { moderateAndLog } from "@/lib/content-moderation";
 
 function getFalEndpointFromModel(model?: string): string | null {
   if (!model) return null;
@@ -133,6 +134,15 @@ export async function POST(req: Request) {
         { error: "Missing prompt or Image" },
         { status: 400 }
       );
+    }
+
+    const moderation = await moderateAndLog({
+      userId,
+      endpoint: "tools.video",
+      prompt: data.prompt,
+    });
+    if (!moderation.allowed) {
+      return NextResponse.json({ error: moderation.reason }, { status: 400 });
     }
 
     // Validate video_url for Kling Motion Control

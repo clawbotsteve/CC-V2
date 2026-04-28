@@ -1,22 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { Soul2Input } from "@/types/image";
-import { PLATFORM_SAFETY_NEGATIVE_PROMPT } from "@/constants/constants";
+import { moderateAndLog } from "@/lib/content-moderation";
 
 const DEFAULT_BASE_URL = "https://platform.higgsfield.ai";
-
-/**
- * Blocked terms list derived from the platform safety negative prompt.
- * If any of these appear in the user's prompt, the request is rejected.
- */
-const BLOCKED_TERMS = PLATFORM_SAFETY_NEGATIVE_PROMPT
-  .split(",")
-  .map((t) => t.trim().toLowerCase())
-  .filter(Boolean);
-
-function containsBlockedContent(prompt: string): boolean {
-  const lower = prompt.toLowerCase();
-  return BLOCKED_TERMS.some((term) => lower.includes(term));
-}
 
 function pickRequestId(data: any): string | undefined {
   return data?.request_id || data?.requestId || data?.id || data?.data?.request_id;
@@ -24,6 +11,7 @@ function pickRequestId(data: any): string | undefined {
 
 export async function POST(req: NextRequest) {
   try {
+    const { userId } = await auth();
     const body: Soul2Input = await req.json();
     const apiKey = process.env.HIGGSFIELD_API_KEY;
     const baseUrl = (process.env.HIGGSFIELD_BASE_URL || DEFAULT_BASE_URL).replace(/\/$/, "");
@@ -32,12 +20,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing HIGGSFIELD_API_KEY" }, { status: 500 });
     }
 
-    // Enforce platform safety: reject prompts that contain blocked content
-    if (containsBlockedContent(body.prompt)) {
-      return NextResponse.json(
-        { error: "Your prompt contains content that violates our safety policy. Please revise and try again." },
-        { status: 400 }
-      );
+    if (body.prompt) {
+      const moderation = await moderateAndLog({
+        userId: userId ?? null,
+        endpoint: "ai.image.soul-2",
+        prompt: body.prompt,
+      });
+      if (!moderation.allowed) {
+        return NextResponse.json({ error: moderation.reason }, { status: 400 });
+      }
     }
 
     const payload = {

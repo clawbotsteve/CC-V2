@@ -1,13 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { getWebhookUrl } from "@/lib/utils";
 import { ImageGenerationModel, NanoBannaProInput } from "@/types/image";
 import { submitFalJob } from "@/lib/fal-client";
 import { aspectToImageSize, imageSizeToAspect, normalizeAspect } from "@/lib/aspect-ratio";
+import { moderateAndLog } from "@/lib/content-moderation";
 
 export async function POST(req: NextRequest) {
   try {
+    const { userId } = await auth();
     const body: NanoBannaProInput = await req.json();
     const webhookUrl = getWebhookUrl("/api/webhook/image");
+
+    if (body.prompt) {
+      const moderation = await moderateAndLog({
+        userId: userId ?? null,
+        endpoint: "ai.image.nano-banna-pro",
+        prompt: body.prompt,
+      });
+      if (!moderation.allowed) {
+        return NextResponse.json({ error: moderation.reason }, { status: 400 });
+      }
+    }
 
     // Ensure aspect ratio selection always controls effective size on provider side.
     const normalizedAspect = normalizeAspect(body.aspect_ratio as any) || imageSizeToAspect(body.image_size);

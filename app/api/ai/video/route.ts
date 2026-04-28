@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { getWebhookUrl } from "@/lib/utils";
 import { VideoGenerationInput } from "@/types/video";
 import { VideoModel } from "@/types/types";
 import { submitFalJob, uploadImageUrlToFalStorage } from "@/lib/fal-client";
+import { moderateAndLog } from "@/lib/content-moderation";
 
 
 enum Duration {
@@ -12,7 +14,19 @@ enum Duration {
 
 export async function POST(req: NextRequest) {
   try {
+    const { userId } = await auth();
     const data: VideoGenerationInput = await req.json();
+
+    if (data.prompt) {
+      const moderation = await moderateAndLog({
+        userId: userId ?? null,
+        endpoint: "ai.video",
+        prompt: data.prompt,
+      });
+      if (!moderation.allowed) {
+        return NextResponse.json({ error: moderation.reason }, { status: 400 });
+      }
+    }
 
     const webhookUrl = getWebhookUrl("/api/webhook/video");
 

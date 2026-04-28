@@ -4,6 +4,7 @@ import { fal } from "@fal-ai/client";
 import { checkAvailableCredit } from "@/lib/check-available-credit";
 import { deductCredit } from "@/lib/charge-user";
 import { ToolType } from "@prisma/client";
+import { moderateAndLog } from "@/lib/content-moderation";
 
 fal.config({
     credentials: process.env.FAL_API_KEY!,
@@ -35,6 +36,15 @@ export async function POST(req: NextRequest) {
                 { error: "Missing or invalid prompt" },
                 { status: 400 }
             );
+        }
+
+        const moderation = await moderateAndLog({
+            userId,
+            endpoint: "tools.prompt.optimize",
+            prompt,
+        });
+        if (!moderation.allowed) {
+            return NextResponse.json({ error: moderation.reason }, { status: 400 });
         }
 
         console.log("🔧 Optimizing prompt:", prompt.substring(0, 100) + "...");

@@ -1,13 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { getWebhookUrl } from "@/lib/utils";
 import { ImageGenerationModel, NanoBanana2Input } from "@/types/image";
 import { submitFalJob, uploadImageUrlToFalStorage } from "@/lib/fal-client";
 import { aspectToImageSize, imageSizeToAspect, normalizeAspect } from "@/lib/aspect-ratio";
+import { moderateAndLog } from "@/lib/content-moderation";
 
 export async function POST(req: NextRequest) {
   try {
+    const { userId } = await auth();
     const body: NanoBanana2Input = await req.json();
     const webhookUrl = getWebhookUrl("/api/webhook/image");
+
+    if (body.prompt) {
+      const moderation = await moderateAndLog({
+        userId: userId ?? null,
+        endpoint: "ai.image.nano-banana-2",
+        prompt: body.prompt,
+      });
+      if (!moderation.allowed) {
+        return NextResponse.json({ error: moderation.reason }, { status: 400 });
+      }
+    }
 
     const imageUrls = body.image_urls?.filter(Boolean) ?? [];
     if (imageUrls.length === 0) {

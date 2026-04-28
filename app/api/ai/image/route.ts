@@ -1,14 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { getWebhookUrl } from "@/lib/utils";
 import { submitFalJob } from "@/lib/fal-client";
+import { moderateAndLog } from "@/lib/content-moderation";
 // import { ExtendedImageJobInput } from "../../tools/image/route";
 
 
 export async function POST(req: NextRequest) {
   try {
+    const { userId } = await auth();
     const body = await req.json();
     const hasLora = body.model !== "none";
     const seed = Math.floor(Math.random() * 9_000_000) + 1_000_000;
+
+    if (body.prompt) {
+      const moderation = await moderateAndLog({
+        userId: userId ?? null,
+        endpoint: "ai.image",
+        prompt: body.prompt,
+      });
+      if (!moderation.allowed) {
+        return NextResponse.json({ error: moderation.reason }, { status: 400 });
+      }
+    }
 
     const webhookUrl = getWebhookUrl("/api/webhook/image");
 
