@@ -4,6 +4,7 @@ import prismadb from "@/lib/prismadb";
 import { assignPlan } from "@/lib/assign-plan";
 import { addCreditsFromPack } from "@/lib/api-limit";
 import { creditPackById, type CreditPackId } from "@/constants";
+import { ensureUserExists } from "@/lib/ensure-user-exists";
 
 function verifyStripeSignature(rawBody: string, signatureHeader: string, secret: string) {
   const items = Object.fromEntries(
@@ -28,19 +29,24 @@ function verifyStripeSignature(rawBody: string, signatureHeader: string, secret:
 }
 
 function envPriceTierMap(): Record<string, string> {
+  // Maps Stripe price IDs (from env vars) to SubscriptionTier.tier values in our DB.
+  // DB tier values are the canonical "plan_*" form set by prisma/seed.ts.
   return {
-    [process.env.STRIPE_PRICE_STARTER || ""]: "starter",
-    [process.env.STRIPE_PRICE_STARTER_QUARTERLY || ""]: "starter_quarterly",
-    [process.env.STRIPE_PRICE_CREATOR || ""]: "creator",
-    [process.env.STRIPE_PRICE_CREATOR_QUARTERLY || ""]: "creator_quarterly",
-    [process.env.STRIPE_PRICE_STUDIO || ""]: "studio",
-    [process.env.STRIPE_PRICE_STUDIO_QUARTERLY || ""]: "studio_quarterly",
-    [process.env.STRIPE_PRICE_PLAN_BASIC || ""]: "starter",
-    [process.env.STRIPE_PRICE_PLAN_BASIC_3MONTH || ""]: "starter_quarterly",
-    [process.env.STRIPE_PRICE_PLAN_PRO || ""]: "creator",
-    [process.env.STRIPE_PRICE_PLAN_PRO_3MONTH || ""]: "creator_quarterly",
-    [process.env.STRIPE_PRICE_PLAN_ELITE || ""]: "studio",
-    [process.env.STRIPE_PRICE_PLAN_ELITE_3MONTH || ""]: "studio_quarterly",
+    [process.env.STRIPE_PRICE_BEGINNER || ""]: "plan_beginner",
+    [process.env.STRIPE_PRICE_BEGINNER_QUARTERLY || ""]: "plan_beginner_3month",
+    [process.env.STRIPE_PRICE_STARTER || ""]: "plan_basic",
+    [process.env.STRIPE_PRICE_STARTER_QUARTERLY || ""]: "plan_basic_3month",
+    [process.env.STRIPE_PRICE_CREATOR || ""]: "plan_pro",
+    [process.env.STRIPE_PRICE_CREATOR_QUARTERLY || ""]: "plan_pro_3month",
+    [process.env.STRIPE_PRICE_STUDIO || ""]: "plan_elite",
+    [process.env.STRIPE_PRICE_STUDIO_QUARTERLY || ""]: "plan_elite_3month",
+    // Legacy env var names — still mapped for back-compat.
+    [process.env.STRIPE_PRICE_PLAN_BASIC || ""]: "plan_basic",
+    [process.env.STRIPE_PRICE_PLAN_BASIC_3MONTH || ""]: "plan_basic_3month",
+    [process.env.STRIPE_PRICE_PLAN_PRO || ""]: "plan_pro",
+    [process.env.STRIPE_PRICE_PLAN_PRO_3MONTH || ""]: "plan_pro_3month",
+    [process.env.STRIPE_PRICE_PLAN_ELITE || ""]: "plan_elite",
+    [process.env.STRIPE_PRICE_PLAN_ELITE_3MONTH || ""]: "plan_elite_3month",
   };
 }
 
@@ -162,6 +168,20 @@ export async function POST(req: Request) {
       const subscriptionId = object?.subscription || undefined;
       const metadataType = object?.metadata?.type as string | undefined;
 
+      // Auto-create the user from Clerk if their /api/webhook/user-created hasn't
+      // landed yet (race against fast checkout). Without this, every downstream
+      // upsert fails with a foreign-key error and the buyer gets no credits.
+      if (userId) {
+        const ok = await ensureUserExists(userId);
+        if (!ok) {
+          console.error(
+            "[STRIPE WEBHOOK] User auto-create failed; aborting checkout.session.completed",
+            { userId, checkoutSessionId: object?.id }
+          );
+          return NextResponse.json({ error: "User not found" }, { status: 500 });
+        }
+      }
+
       // ── Credit Pack Purchase (one-time, no subscription) ──
       if (metadataType === "credit_pack" && !subscriptionId) {
         const packId = object?.metadata?.packId as CreditPackId | undefined;
@@ -258,6 +278,16 @@ export async function POST(req: Request) {
       }
 
       if (userId) {
+        const ok = await ensureUserExists(userId);
+        if (!ok) {
+          console.error("[STRIPE WEBHOOK] User auto-create failed; aborting subscription event", {
+            type,
+            userId,
+            subscriptionId,
+          });
+          return NextResponse.json({ error: "User not found" }, { status: 500 });
+        }
+
         const plan = await resolvePlanByPriceId(priceId);
         if (plan) {
           await assignPlan(userId, plan.id, {
@@ -274,6 +304,61 @@ export async function POST(req: Request) {
             subscriptionId,
           });
         }
+      }
+    }
+
+    // invoice.paid fires on every successful charge for a subscription, including
+    // renewals. We use it to refresh the user's monthly credits and extend
+    // currentPeriodEnd. Note: the first invoice for a new sub also fires, but
+    // checkout.session.completed has already done the work; assignPlan is
+    // idempotent so this is safe.
+    if (type === "invoice.paid") {
+      const subscriptionId = (object?.subscription || object?.parent?.subscription_details?.subscription) as
+        | string
+        | undefined;
+      const periodEndUnix = object?.lines?.data?.[0]?.period?.end as number | undefined;
+      const periodEnd = periodEndUnix ? new Date(periodEndUnix * 1000) : undefined;
+
+      if (subscriptionId) {
+        const existing = await prismadb.userSubscription.findFirst({
+          where: { phyziroSubscriptionId: subscriptionId },
+          select: { userId: true, planId: true },
+        });
+
+        if (existing?.userId) {
+          // assignPlan resets monthlyRemainingCredits and refreshes
+          // availableCredit while preserving credit-pack carryover.
+          await assignPlan(existing.userId, existing.planId, {
+            status: "active",
+            stripeCurrentPeriodEnd: periodEnd ?? null,
+          });
+        } else {
+          console.warn("[STRIPE WEBHOOK] invoice.paid: no UserSubscription matched", {
+            subscriptionId,
+          });
+        }
+      }
+    }
+
+    // invoice.payment_failed fires when Stripe fails to collect a renewal charge.
+    // We mark the subscription past_due so the app can show a banner and the
+    // user can update their payment method. Stripe will keep retrying per the
+    // smart-retry settings; if all retries exhaust, customer.subscription.deleted
+    // will fire and downgrade them to Free.
+    if (type === "invoice.payment_failed") {
+      const subscriptionId = (object?.subscription || object?.parent?.subscription_details?.subscription) as
+        | string
+        | undefined;
+
+      if (subscriptionId) {
+        await prismadb.userSubscription
+          .updateMany({
+            where: { phyziroSubscriptionId: subscriptionId },
+            data: { status: "past_due" },
+          })
+          .catch((err) => {
+            console.error("[STRIPE WEBHOOK] invoice.payment_failed update error", err);
+          });
       }
     }
 
