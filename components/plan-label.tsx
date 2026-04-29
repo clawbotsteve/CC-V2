@@ -1,11 +1,15 @@
-import { Star, Shield, Crown } from "lucide-react";
+import { Sparkles, Star, Shield, Crown } from "lucide-react";
 import { JSX } from "react";
 
-type DisplayPlan = "FREE" | "STARTER" | "CREATOR" | "STUDIO";
+type DisplayPlan = "FREE" | "BEGINNER" | "STARTER" | "CREATOR" | "STUDIO";
 
-// Map DB tier suffixes to display names
+// Map DB tier suffixes (after `plan_` prefix) to display names.
+// Tier values come from prisma/seed.ts → plan_free, plan_beginner,
+// plan_basic, plan_pro, plan_elite (+ _3month variants which collapse
+// to the same display tier).
 const TIER_DISPLAY_MAP: Record<string, DisplayPlan> = {
   FREE: "FREE",
+  BEGINNER: "BEGINNER",
   BASIC: "STARTER",
   PRO: "CREATOR",
   ELITE: "STUDIO",
@@ -17,6 +21,7 @@ export const PlanLabel = ({ plan }: { plan?: string }) => {
 
   const planInfo: Record<DisplayPlan, { icon: JSX.Element; emoji: string }> = {
     FREE: { icon: <Star className="inline h-4 w-4 mr-1 text-yellow-400" />, emoji: "✨" },
+    BEGINNER: { icon: <Sparkles className="inline h-4 w-4 mr-1 text-emerald-400" />, emoji: "🌱" },
     STARTER: { icon: <Star className="inline h-4 w-4 mr-1 text-yellow-400" />, emoji: "⭐" },
     CREATOR: { icon: <Shield className="inline h-4 w-4 mr-1 text-blue-500" />, emoji: "🛡️" },
     STUDIO: { icon: <Crown className="inline h-4 w-4 mr-1 text-purple-600" />, emoji: "👑" },
