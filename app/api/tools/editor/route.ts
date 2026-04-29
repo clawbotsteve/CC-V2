@@ -6,6 +6,7 @@ import axios from "axios";
 import { ImageEditorInput } from "@/types/editor";
 import { checkAvailableCredit } from "@/lib/check-available-credit";
 import { ToolType } from "@prisma/client";
+import { moderateAndLog } from "@/lib/content-moderation";
 
 export async function GET(request: Request) {
   try {
@@ -51,6 +52,15 @@ export async function POST(req: Request) {
 
     if (!data.image_url) {
       return NextResponse.json({ error: "Upload an Image." }, { status: 400 });
+    }
+
+    const moderation = await moderateAndLog({
+      userId,
+      endpoint: "tools.editor",
+      prompt: data.prompt,
+    });
+    if (!moderation.allowed) {
+      return NextResponse.json({ error: moderation.reason }, { status: 400 });
     }
 
     // Correct axios POST call

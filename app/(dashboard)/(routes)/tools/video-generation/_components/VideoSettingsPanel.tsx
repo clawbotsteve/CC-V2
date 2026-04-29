@@ -40,9 +40,8 @@ export default function VideoSettingsPanel({
         <Select value={form.model} onValueChange={(value) => {
           const newModel = value as VideoModel;
           const newVariant = getVideoVariant(newModel, form.duration);
-          // Kling/Kling Motion Control/Veo enforce safety (SFW only)
-          // Bytedance supports NSFW
-          const enable_safety_checker = newModel === VideoModel.Kling || newModel === VideoModel.KlingMotionControl || newModel === VideoModel.Veo;
+          // All available models enforce safety (platform is SFW-only as of 2026-04-29).
+          const enable_safety_checker = true;
           const generate_audio = newModel === VideoModel.Kling ? (form.generate_audio ?? true) : false;
           const keep_original_sound = newModel === VideoModel.KlingMotionControl ? (form.keep_original_sound ?? true) : form.keep_original_sound;
           updateForm(setForm, { model: newModel, variant: newVariant, enable_safety_checker, generate_audio, keep_original_sound });
@@ -53,7 +52,6 @@ export default function VideoSettingsPanel({
           <SelectContent>
             <SelectItem value={VideoModel.Kling}>Kling 2.6</SelectItem>
             <SelectItem value={VideoModel.KlingMotionControl}>Kling Motion Control</SelectItem>
-            <SelectItem value={VideoModel.Bytedance}>Bytedance</SelectItem>
             <SelectItem value={VideoModel.Veo}>Veo 3.1</SelectItem>
           </SelectContent>
         </Select>

@@ -10,6 +10,7 @@ import { getFalJobResult, submitFalJob, uploadImageUrlToFalStorage } from "@/lib
 import { aspectToImageSize, imageSizeToAspect, normalizeAspect } from "@/lib/aspect-ratio";
 import { canUseImageModel, requiredPlanForImageModel, resolveAccessTier } from "@/lib/plan-access";
 import { PLATFORM_SAFETY_NEGATIVE_PROMPT } from "@/constants/constants";
+import { moderateAndLog } from "@/lib/content-moderation";
 
 function getImageCreditVariant(input: ImageGenerationInput): string {
   if (input.model === ImageGenerationModel.NanoBanana2 || input.model === ImageGenerationModel.NanoBannaPro || input.model === ImageGenerationModel.NanoBanana2Base) {
@@ -101,6 +102,17 @@ export async function POST(req: Request) {
     // Safety fallback: production requests without explicit model should default to Nano Banana Pro.
     if (!data.model) {
       data.model = ImageGenerationModel.NanoBannaPro;
+    }
+
+    if (data.prompt) {
+      const moderation = await moderateAndLog({
+        userId,
+        endpoint: "tools.image",
+        prompt: data.prompt,
+      });
+      if (!moderation.allowed) {
+        return NextResponse.json({ error: moderation.reason }, { status: 400 });
+      }
     }
 
     const subscription = await prismadb.userSubscription.findUnique({

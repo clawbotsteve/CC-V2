@@ -1,17 +1,31 @@
 // app/api/image-understand/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { getWebhookUrl } from "@/lib/utils";
 import { ModelEnum, PromptGenerationInput } from "@/types/prompt";
 import { submitFalJob } from "@/lib/fal-client";
+import { moderateAndLog } from "@/lib/content-moderation";
 
 
 export async function POST(req: NextRequest) {
   try {
+    const { userId } = await auth();
     const data: PromptGenerationInput = await req.json();
 
     if (!data) {
       return NextResponse.json({ error: "Missing imageUrl" }, { status: 400 });
+    }
+
+    if (data.input_concept) {
+      const moderation = await moderateAndLog({
+        userId: userId ?? null,
+        endpoint: "ai.image-understand",
+        prompt: data.input_concept,
+      });
+      if (!moderation.allowed) {
+        return NextResponse.json({ error: moderation.reason }, { status: 400 });
+      }
     }
 
     const webhookUrl = getWebhookUrl("/api/webhook/image-understand");

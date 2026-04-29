@@ -7,6 +7,7 @@ import { ClarityUpscalerInput, getUpscaleVariant, UpscaleModel } from "@/types/u
 import { checkAvailableCredit } from "@/lib/check-available-credit";
 import { ToolType } from "@prisma/client";
 import { canUseUpscaleModel, resolveAccessTier } from "@/lib/plan-access";
+import { moderateAndLog } from "@/lib/content-moderation";
 
 export async function GET(request: Request) {
   try {
@@ -70,6 +71,17 @@ export async function POST(req: Request) {
     } else {
       if (!data.image_url) {
         return NextResponse.json({ error: "Reference image is required" }, { status: 400 });
+      }
+    }
+
+    if (data.prompt && data.prompt.trim()) {
+      const moderation = await moderateAndLog({
+        userId,
+        endpoint: "tools.upscale",
+        prompt: data.prompt,
+      });
+      if (!moderation.allowed) {
+        return NextResponse.json({ error: moderation.reason }, { status: 400 });
       }
     }
 

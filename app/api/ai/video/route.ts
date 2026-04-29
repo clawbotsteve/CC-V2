@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { getWebhookUrl } from "@/lib/utils";
 import { VideoGenerationInput } from "@/types/video";
 import { VideoModel } from "@/types/types";
 import { submitFalJob, uploadImageUrlToFalStorage } from "@/lib/fal-client";
+import { moderateAndLog } from "@/lib/content-moderation";
 
 
 enum Duration {
@@ -12,7 +14,19 @@ enum Duration {
 
 export async function POST(req: NextRequest) {
   try {
+    const { userId } = await auth();
     const data: VideoGenerationInput = await req.json();
+
+    if (data.prompt) {
+      const moderation = await moderateAndLog({
+        userId: userId ?? null,
+        endpoint: "ai.video",
+        prompt: data.prompt,
+      });
+      if (!moderation.allowed) {
+        return NextResponse.json({ error: moderation.reason }, { status: 400 });
+      }
+    }
 
     const webhookUrl = getWebhookUrl("/api/webhook/video");
 
@@ -141,7 +155,7 @@ export async function POST(req: NextRequest) {
         prompt: data.prompt,
         image_url: falHostedImageUrl,
         aspect_ratio: data.aspect_ratio,
-        enable_safety_checker: false,
+        enable_safety_checker: true,
       };
 
       const { request_id } = await submitFalJob("fal-ai/wan-pro/image-to-video", {
@@ -155,25 +169,12 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 🔹 Bytedance handler
+    // 🔹 Bytedance handler (DEPRECATED 2026-04-29 — was the NSFW path, now blocked)
     if (data.model === VideoModel.Bytedance) {
-      const input = {
-        prompt: data.prompt,
-        image_url: falHostedImageUrl,
-        aspect_ratio: data.aspect_ratio,
-        duration: duration,
-        enable_safety_checker: false,
-      };
-
-      const { request_id } = await submitFalJob("fal-ai/bytedance/seedance/v1/pro/fast/image-to-video", {
-        input,
-        webhookUrl
-      });
-
-      return NextResponse.json({
-        success: true,
-        requestId: request_id,
-      });
+      return NextResponse.json(
+        { error: "This model is no longer available. Please use Kling or Veo." },
+        { status: 410 }
+      );
     }
 
     // ❌ Invalid model

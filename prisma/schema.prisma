@@ -563,6 +563,22 @@ model AdminAuditLog {
   @@index([createdAt(sort: Desc)])
 }
 
+model ModerationLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  endpoint  String
+  prompt    String
+  allowed   Boolean
+  flags     Json     @default("[]")
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([allowed])
+  @@index([endpoint])
+  @@index([createdAt(sort: Desc)])
+}
+
 model CreatorSubmission {
   id              String                  @id @default(cuid())
   userId          String

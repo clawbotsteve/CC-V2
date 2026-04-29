@@ -6,6 +6,7 @@ import axios from "axios";
 import { PromptGenerationInput } from "@/types/prompt";
 import { checkAvailableCredit } from "@/lib/check-available-credit";
 import { ToolType } from "@prisma/client";
+import { moderateAndLog } from "@/lib/content-moderation";
 
 export async function GET(request: Request) {
   try {
@@ -64,6 +65,15 @@ export async function POST(req: Request) {
         { error: "Missing Input concept prompt" },
         { status: 400 }
       );
+    }
+
+    const moderation = await moderateAndLog({
+      userId,
+      endpoint: "tools.prompt",
+      prompt: data.input_concept,
+    });
+    if (!moderation.allowed) {
+      return NextResponse.json({ error: moderation.reason }, { status: 400 });
     }
 
     const falRes = await axios.post(
