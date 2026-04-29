@@ -169,25 +169,12 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 🔹 Bytedance handler
+    // 🔹 Bytedance handler (DEPRECATED 2026-04-29 — was the NSFW path, now blocked)
     if (data.model === VideoModel.Bytedance) {
-      const input = {
-        prompt: data.prompt,
-        image_url: falHostedImageUrl,
-        aspect_ratio: data.aspect_ratio,
-        duration: duration,
-        enable_safety_checker: true,
-      };
-
-      const { request_id } = await submitFalJob("fal-ai/bytedance/seedance/v1/pro/fast/image-to-video", {
-        input,
-        webhookUrl
-      });
-
-      return NextResponse.json({
-        success: true,
-        requestId: request_id,
-      });
+      return NextResponse.json(
+        { error: "This model is no longer available. Please use Kling or Veo." },
+        { status: 410 }
+      );
     }
 
     // ❌ Invalid model

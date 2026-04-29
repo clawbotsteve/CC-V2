@@ -101,6 +101,14 @@ export async function POST(req: Request) {
     // Platform safety enforcement: always enable safety checker, override user input
     data.enable_safety_checker = true;
 
+    // Bytedance model is the historical NSFW-allowing path; removed 2026-04-29.
+    if (data.model === VideoModel.Bytedance) {
+      return NextResponse.json(
+        { error: "This model is no longer available. Please use Kling or Veo." },
+        { status: 410 }
+      );
+    }
+
     const subscription = await prismadb.userSubscription.findUnique({
       where: { userId },
       include: { plan: true },

@@ -161,24 +161,7 @@ export default function Settings({ form, setForm, imageUploadRef }: Props) {
         </p>
       </div>
 
-      {/* Safety Filter */}
-      <div className="space-y-2">
-        <div className="space-y-1 py-2">
-          <label className="text-sm font-medium">Content Type</label>
-          <div className="flex gap-4">
-            <Button variant={form.enable_safety_checker ? "default" : "outline"} className="flex-1" onClick={() => setForm(f => ({ ...f, enable_safety_checker: true }))}>
-              SFW
-            </Button>
-            <Button variant={!form.enable_safety_checker ? "default" : "outline"} className="flex-1" onClick={() => setForm(f => ({ ...f, enable_safety_checker: false }))}>
-              NSFW
-            </Button>
-          </div>
-        </div>
-        <p className="text-xs text-muted-foreground flex items-center gap-1">
-          <Info className="h-3 w-3" />
-          Filters potentially unsafe content (recommended to keep enabled)
-        </p>
-      </div>
+      {/* Content safety toggle removed 2026-04-29: platform is SFW-only. */}
     </div >
   );
 }

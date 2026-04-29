@@ -79,6 +79,7 @@ export enum Duration {
 export enum VideoModel {
   Wan = 'wan',
   Kling = 'kling',
+  /** @deprecated Bytedance video model removed 2026-04-29 (NSFW-only path). Kept in enum for type compatibility with existing DB rows; no new generations should reference it. */
   Bytedance = 'bytedance',
   KlingMotionControl = 'kling-motion-control',
   Veo = 'veo',
