@@ -64,7 +64,7 @@ export const planPacks: Record<PlanKey, PlanPack> = {
     tier: "plan_free",
     price: 0,
     period: "monthly" as BillingPeriod,
-    creditsPerMonth: 3,
+    creditsPerMonth: 1,
     maxAvatarCount: 0,
     devPriceId: "",
     phyziroPriceId: ""
@@ -395,10 +395,10 @@ export const PLAN_MAPS: Record<PlanKey, {
 }> = {
   Free: {
     name: "Free Plan",
-    description: "Limited trial access. Perfect for testing the platform.",
+    description: "Try TraviaLabs with one free image generation. No credit card required.",
     features: [
-      "3 Nano Banana Pro images",
-      "Watermarked output",
+      "1 GPT Image 2 generation",
+      "Text-to-image only",
       "No credit card required",
     ],
   },
