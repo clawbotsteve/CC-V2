@@ -13,6 +13,9 @@ import { PLATFORM_SAFETY_NEGATIVE_PROMPT } from "@/constants/constants";
 import { moderateAndLog } from "@/lib/content-moderation";
 
 function getImageCreditVariant(input: ImageGenerationInput): string {
+  if (input.model === ImageGenerationModel.GptImage2) {
+    return "gpt_image_2_medium";
+  }
   if (input.model === ImageGenerationModel.NanoBanana2 || input.model === ImageGenerationModel.NanoBannaPro || input.model === ImageGenerationModel.NanoBanana2Base) {
     const res = input.output_resolution ?? "1k";
     return `nano_banana_2_${res}`;
@@ -99,9 +102,10 @@ export async function POST(req: Request) {
     const today = startOfDay(new Date());
     const data: ImageGenerationInput = await req.json();
 
-    // Safety fallback: production requests without explicit model should default to Nano Banana Pro.
+    // Safety fallback: production requests without explicit model should default
+    // to gpt-image-2 (the entry-level model available on Beginner+).
     if (!data.model) {
-      data.model = ImageGenerationModel.NanoBannaPro;
+      data.model = ImageGenerationModel.GptImage2;
     }
 
     if (data.prompt) {
@@ -182,7 +186,26 @@ export async function POST(req: Request) {
     const webhookUrl = getWebhookUrl("/api/webhook/image");
     let requestId: string | undefined;
 
-    if (data.model === ImageGenerationModel.NanoBannaPro || data.model === ImageGenerationModel.NanoBanana2Base) {
+    if (data.model === ImageGenerationModel.GptImage2) {
+      const normalizedAspect = normalizeAspect(body.aspect_ratio as any) || imageSizeToAspect(body.image_size as any);
+      const normalizedImageSize = normalizedAspect ? aspectToImageSize(normalizedAspect) : undefined;
+
+      const resp = await submitFalJob(ImageGenerationModel.GptImage2, {
+        input: {
+          prompt: body.prompt,
+          // Forced server-side: see types/image.ts → GptImage2Input docstring.
+          quality: "medium",
+          num_images: body.num_images || 1,
+          output_format: body.output_format || "png",
+          ...(normalizedAspect ? { aspect_ratio: normalizedAspect } : {}),
+          ...(normalizedImageSize ? { image_size: normalizedImageSize } : {}),
+          ...(body.seed !== undefined ? { seed: body.seed } : {}),
+        },
+        webhookUrl,
+      });
+
+      requestId = resp?.request_id;
+    } else if (data.model === ImageGenerationModel.NanoBannaPro || data.model === ImageGenerationModel.NanoBanana2Base) {
       const normalizedAspect = normalizeAspect(body.aspect_ratio as any) || imageSizeToAspect(body.image_size as any);
       if (!normalizedAspect) {
         return NextResponse.json({ error: "Aspect ratio is required for Nano Banana 2." }, { status: 400 });

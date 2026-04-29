@@ -40,8 +40,12 @@ export type FalImageOutput =
 
 //* Image Input
 export enum ImageGenerationModel {
+  /** OpenAI gpt-image-2 (text-to-image), routed through FAL. Beginner+ tier. */
+  GptImage2 = "fal-ai/gpt-image-2",
+  /** @deprecated Removed from picker 2026-04-29 (consolidated to gpt-image-2). Enum kept so historical rows resolve. */
   V1 = "fal-ai/flux-pro/v1.1",
   Lora = "fal-ai/flux-lora",
+  /** @deprecated Removed from picker 2026-04-29. Enum kept for historical rows. */
   NanoBannaPro = "fal-ai/nano-banana-pro",
   NanoBanana2Base = "fal-ai/nano-banana-2",
   NanoBanana2 = "fal-ai/nano-banana-2/edit",
@@ -99,6 +103,26 @@ export interface Soul2Input {
   seed?: number;
   output_format?: OutputFormat;
   aspect_ratio?: AspectRatio;
+}
+
+/**
+ * Input for openai/gpt-image-2 (text-to-image) via FAL.
+ * https://fal.ai/models/openai/gpt-image-2
+ *
+ * `quality` is server-side forced to "medium" for all paid tiers right now —
+ * unit cost balloons at "high" + 4K and would burn through plan margins.
+ * If we add a Studio-only HD upsell later, surface this field to the UI.
+ */
+export type GptImage2Quality = "low" | "medium" | "high";
+
+export interface GptImage2Input {
+  prompt: string;
+  image_size?: ImageSize | CustomImageSize;
+  aspect_ratio?: AspectRatio;
+  quality?: GptImage2Quality;
+  num_images?: number;
+  output_format?: OutputFormat;
+  seed?: number;
 }
 
 export type NanoBananaResolution = "1k" | "2k" | "4k";

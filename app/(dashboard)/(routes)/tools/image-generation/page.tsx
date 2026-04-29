@@ -157,10 +157,13 @@ export default function GenerateImagePage() {
     if (appliedQueryRef.current === querySignature) return;
 
     const modelMap: Record<string, ImageGenerationModel> = {
-      "nano-banana-pro": ImageGenerationModel.NanoBannaPro,
+      "gpt-image-2": ImageGenerationModel.GptImage2,
       "nano-banana-2": ImageGenerationModel.NanoBanana2Base,
       "nano-banana-2-edit": ImageGenerationModel.NanoBanana2,
       "flux-lora": ImageGenerationModel.Lora,
+      // Deprecated picker entries 2026-04-29 — still resolve so old links work,
+      // but the dispatch in /api/tools/image will gate them per plan.
+      "nano-banana-pro": ImageGenerationModel.NanoBannaPro,
       "flux-v1": ImageGenerationModel.V1,
     };
 

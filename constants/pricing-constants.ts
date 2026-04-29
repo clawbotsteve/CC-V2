@@ -216,6 +216,7 @@ export const TOOL_COSTS_BY_TIER: Record<
   plan_free: [
     { tool: ToolType.IMAGE_GENERATOR, variant: "sfw", creditCost: 1 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "nsfw", creditCost: 1 },
+    { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_medium", creditCost: 1 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_5s", creditCost: 11 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_5s", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_10s", creditCost: 22 },
@@ -234,6 +235,7 @@ export const TOOL_COSTS_BY_TIER: Record<
   plan_beginner: [
     { tool: ToolType.IMAGE_GENERATOR, variant: "sfw", creditCost: 1 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "nsfw", creditCost: 1 },
+    { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_medium", creditCost: 1 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_5s", creditCost: 11 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_5s", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_10s", creditCost: 22 },
@@ -252,6 +254,7 @@ export const TOOL_COSTS_BY_TIER: Record<
   plan_beginner_3month: [
     { tool: ToolType.IMAGE_GENERATOR, variant: "sfw", creditCost: 1 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "nsfw", creditCost: 1 },
+    { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_medium", creditCost: 1 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_5s", creditCost: 11 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_5s", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_10s", creditCost: 22 },
@@ -270,6 +273,7 @@ export const TOOL_COSTS_BY_TIER: Record<
   plan_basic: [
     { tool: ToolType.IMAGE_GENERATOR, variant: "sfw", creditCost: 1 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "nsfw", creditCost: 1 },
+    { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_medium", creditCost: 1 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_5s", creditCost: 11 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_5s", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_10s", creditCost: 22 },
@@ -288,6 +292,7 @@ export const TOOL_COSTS_BY_TIER: Record<
   plan_basic_3month: [
     { tool: ToolType.IMAGE_GENERATOR, variant: "sfw", creditCost: 1 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "nsfw", creditCost: 1 },
+    { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_medium", creditCost: 1 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_5s", creditCost: 11 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_5s", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_10s", creditCost: 22 },
@@ -306,6 +311,7 @@ export const TOOL_COSTS_BY_TIER: Record<
   plan_pro: [
     { tool: ToolType.IMAGE_GENERATOR, variant: "sfw", creditCost: 1 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "nsfw", creditCost: 1 },
+    { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_medium", creditCost: 1 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_5s", creditCost: 11 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_5s", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_10s", creditCost: 22 },
@@ -324,6 +330,7 @@ export const TOOL_COSTS_BY_TIER: Record<
   plan_pro_3month: [
     { tool: ToolType.IMAGE_GENERATOR, variant: "sfw", creditCost: 1 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "nsfw", creditCost: 1 },
+    { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_medium", creditCost: 1 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_5s", creditCost: 11 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_5s", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_10s", creditCost: 22 },
@@ -342,6 +349,7 @@ export const TOOL_COSTS_BY_TIER: Record<
   plan_elite: [
     { tool: ToolType.IMAGE_GENERATOR, variant: "sfw", creditCost: 1 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "nsfw", creditCost: 1 },
+    { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_medium", creditCost: 1 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_5s", creditCost: 11 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_5s", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_10s", creditCost: 22 },
@@ -360,6 +368,7 @@ export const TOOL_COSTS_BY_TIER: Record<
   plan_elite_3month: [
     { tool: ToolType.IMAGE_GENERATOR, variant: "sfw", creditCost: 1 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "nsfw", creditCost: 1 },
+    { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_medium", creditCost: 1 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_5s", creditCost: 11 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_5s", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_10s", creditCost: 22 },
