@@ -58,3 +58,4 @@ scripts/verify-test-user.ts
 scripts/link-test-user-to-clerk.ts
 scripts/find-users.ts
 scripts/check-fal-job.ts
+.claude/
