@@ -68,12 +68,14 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
   // Removed runtime auto-switch effect to prevent hook import/runtime mismatches.
 
 
+  // Active picker — kept in display order. Nano Banana Pro and Flux Pro V1 were
+  // removed 2026-04-29 (consolidated to gpt-image-2 + the existing nano/flux
+  // models). The enum values still exist so historical generations resolve.
   const modelOptions = [
-    { value: ImageGenerationModel.NanoBannaPro, label: "Nano Banana Pro", mode: "text", tag: "Text-to-Image" },
+    { value: ImageGenerationModel.GptImage2, label: "GPT Image 2", mode: "text", tag: "Text-to-Image" },
     { value: ImageGenerationModel.NanoBanana2Base, label: "Nano Banana 2", mode: "text", tag: "Text-to-Image" },
     { value: ImageGenerationModel.NanoBanana2, label: "Nano Banana 2 Edit", mode: "image", tag: "Image-to-Image" },
     { value: ImageGenerationModel.Lora, label: "Flux LoRA", mode: "text", tag: "Text-to-Image" },
-    { value: ImageGenerationModel.V1, label: "Flux Pro V1", mode: "text", tag: "Text-to-Image" },
   ] as const;
 
   return (
@@ -85,7 +87,20 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
           value={form.model}
           onValueChange={(value) => {
             const newModel = value as ImageGenerationModel;
-            if (newModel === ImageGenerationModel.NanoBannaPro) {
+            if (newModel === ImageGenerationModel.GptImage2) {
+              setForm((f) => {
+                const nextAspect = (f.aspect_ratio ?? imageSizeToAspect(f.image_size as any) ?? "1:1") as any;
+                return {
+                  ...f,
+                  model: newModel,
+                  lora_id: "none",
+                  aspect_ratio: nextAspect,
+                  image_size: aspectToImageSize(nextAspect) as any,
+                  referenceImage: undefined,
+                  image_url: undefined,
+                };
+              });
+            } else if (newModel === ImageGenerationModel.NanoBannaPro) {
               setForm((f) => {
                 const nextAspect = (f.aspect_ratio ?? imageSizeToAspect(f.image_size as any) ?? "1:1") as any;
                 return {
