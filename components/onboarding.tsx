@@ -6,7 +6,7 @@ import { destroyCookie, parseCookies } from "nookies";
 import { Button } from "./ui/button";
 import confetti from "canvas-confetti";
 import { useUserContext } from "./layout/user-context";
-import OnboardingSlideshow from "./onboard/Onboarding-Slideshow";
+import OnboardingQuestionnaire from "./onboard/OnboardingQuestionnaire";
 import { usePathname } from "next/navigation";
 import Cookies from "js-cookie";
 
@@ -138,7 +138,7 @@ const Onboarding = () => {
   return (
     <div>
       {showOnboarding && (
-        <OnboardingSlideshow onClose={handleCloseOnboarding} />
+        <OnboardingQuestionnaire open={showOnboarding} onClose={handleCloseOnboarding} />
       )}
     </div>
   );
