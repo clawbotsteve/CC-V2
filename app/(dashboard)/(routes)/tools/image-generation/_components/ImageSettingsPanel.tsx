@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { updateForm } from "@/lib/utils";
 import ImageUpload, { ImageUploadHandle } from "@/components/image-upload";
 import { OptimizePromptButton } from "@/components/optimize-prompt-button";
+import { useUserContext } from "@/components/layout/user-context";
 
 type Props = {
   form: ImageGenerationInput;
@@ -58,6 +59,12 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
   const isV1 = form.model === ImageGenerationModel.V1;
   const isNanoBanana2 = form.model === ImageGenerationModel.NanoBanana2;
   const isNanoBanana2Base = form.model === ImageGenerationModel.NanoBanana2Base;
+  const isGptImage2 = form.model === ImageGenerationModel.GptImage2;
+
+  // Free users can only use the "medium" quality of gpt-image-2 (their single
+  // trial credit). Lock the picker for them; paid users can pick low/medium/high.
+  const { plan } = useUserContext();
+  const isFreeTier = !plan || plan === "plan_free";
 
   // Image-to-image models require a reference image
   const isImageToImage = isNanoBanana2;
@@ -170,6 +177,50 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
           <Info className="w-3 h-3" /> Choose any model — mode is handled automatically
         </p>
       </div>
+
+      {/* GPT Image 2 — Quality picker. Free tier locked to "medium". */}
+      {isGptImage2 && (
+        <div className="space-y-1 py-2">
+          <label className="text-sm font-medium text-foreground">Quality</label>
+          <Select
+            value={form.quality ?? "medium"}
+            disabled={isFreeTier}
+            onValueChange={(value) =>
+              setForm((f) => ({ ...f, quality: value as "low" | "medium" | "high" }))
+            }
+          >
+            <SelectTrigger className="w-full h-10">
+              <SelectValue placeholder="Quality" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="low">
+                <div className="flex items-center justify-between w-full gap-2">
+                  <span>Low</span>
+                  <span className="text-[10px] text-muted-foreground">1 credit</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="medium">
+                <div className="flex items-center justify-between w-full gap-2">
+                  <span>Medium</span>
+                  <span className="text-[10px] text-muted-foreground">1 credit</span>
+                </div>
+              </SelectItem>
+              <SelectItem value="high">
+                <div className="flex items-center justify-between w-full gap-2">
+                  <span>High</span>
+                  <span className="text-[10px] text-muted-foreground">3 credits</span>
+                </div>
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <Info className="w-3 h-3" />
+            {isFreeTier
+              ? "Free plan is locked to medium. Upgrade to access higher quality."
+              : "Higher quality looks better but costs more credits per generation."}
+          </p>
+        </div>
+      )}
 
       {/* Trained LoRA Selector - only show for LoRA model */}
       {isLora && (
