@@ -225,6 +225,12 @@ export const TOOL_COSTS_BY_TIER: Record<
     { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_5s", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_10s", creditCost: 22 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_10s", creditCost: 16 },
+    // Kling 2.6 audio/silent — same as standard_* with a small silent
+    // discount (audio adds compute on FAL). Mirrors getFallbackCreditCost.
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_audio_5s", creditCost: 11 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_audio_10s", creditCost: 22 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_5s", creditCost: 9 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_10s", creditCost: 18 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "wan_720p", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_4s", creditCost: 51 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_8s", creditCost: 101 },
@@ -248,6 +254,12 @@ export const TOOL_COSTS_BY_TIER: Record<
     { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_5s", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_10s", creditCost: 22 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_10s", creditCost: 16 },
+    // Kling 2.6 audio/silent — same as standard_* with a small silent
+    // discount (audio adds compute on FAL). Mirrors getFallbackCreditCost.
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_audio_5s", creditCost: 11 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_audio_10s", creditCost: 22 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_5s", creditCost: 9 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_10s", creditCost: 18 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "wan_720p", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_4s", creditCost: 51 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_8s", creditCost: 101 },
@@ -271,6 +283,12 @@ export const TOOL_COSTS_BY_TIER: Record<
     { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_5s", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_10s", creditCost: 22 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_10s", creditCost: 16 },
+    // Kling 2.6 audio/silent — same as standard_* with a small silent
+    // discount (audio adds compute on FAL). Mirrors getFallbackCreditCost.
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_audio_5s", creditCost: 11 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_audio_10s", creditCost: 22 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_5s", creditCost: 9 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_10s", creditCost: 18 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "wan_720p", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_4s", creditCost: 51 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_8s", creditCost: 101 },
@@ -294,6 +312,12 @@ export const TOOL_COSTS_BY_TIER: Record<
     { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_5s", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_10s", creditCost: 22 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_10s", creditCost: 16 },
+    // Kling 2.6 audio/silent — same as standard_* with a small silent
+    // discount (audio adds compute on FAL). Mirrors getFallbackCreditCost.
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_audio_5s", creditCost: 11 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_audio_10s", creditCost: 22 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_5s", creditCost: 9 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_10s", creditCost: 18 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "wan_720p", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_4s", creditCost: 51 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_8s", creditCost: 101 },
@@ -317,6 +341,12 @@ export const TOOL_COSTS_BY_TIER: Record<
     { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_5s", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_10s", creditCost: 22 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_10s", creditCost: 16 },
+    // Kling 2.6 audio/silent — same as standard_* with a small silent
+    // discount (audio adds compute on FAL). Mirrors getFallbackCreditCost.
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_audio_5s", creditCost: 11 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_audio_10s", creditCost: 22 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_5s", creditCost: 9 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_10s", creditCost: 18 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "wan_720p", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_4s", creditCost: 51 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_8s", creditCost: 101 },
@@ -340,6 +370,12 @@ export const TOOL_COSTS_BY_TIER: Record<
     { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_5s", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_10s", creditCost: 22 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_10s", creditCost: 16 },
+    // Kling 2.6 audio/silent — same as standard_* with a small silent
+    // discount (audio adds compute on FAL). Mirrors getFallbackCreditCost.
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_audio_5s", creditCost: 11 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_audio_10s", creditCost: 22 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_5s", creditCost: 9 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_10s", creditCost: 18 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "wan_720p", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_4s", creditCost: 51 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_8s", creditCost: 101 },
@@ -363,6 +399,12 @@ export const TOOL_COSTS_BY_TIER: Record<
     { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_5s", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_10s", creditCost: 22 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_10s", creditCost: 16 },
+    // Kling 2.6 audio/silent — same as standard_* with a small silent
+    // discount (audio adds compute on FAL). Mirrors getFallbackCreditCost.
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_audio_5s", creditCost: 11 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_audio_10s", creditCost: 22 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_5s", creditCost: 9 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_10s", creditCost: 18 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "wan_720p", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_4s", creditCost: 51 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_8s", creditCost: 101 },
@@ -386,6 +428,12 @@ export const TOOL_COSTS_BY_TIER: Record<
     { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_5s", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_10s", creditCost: 22 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_10s", creditCost: 16 },
+    // Kling 2.6 audio/silent — same as standard_* with a small silent
+    // discount (audio adds compute on FAL). Mirrors getFallbackCreditCost.
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_audio_5s", creditCost: 11 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_audio_10s", creditCost: 22 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_5s", creditCost: 9 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_10s", creditCost: 18 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "wan_720p", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_4s", creditCost: 51 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_8s", creditCost: 101 },
@@ -409,6 +457,12 @@ export const TOOL_COSTS_BY_TIER: Record<
     { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_5s", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_10s", creditCost: 22 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "nsfw_10s", creditCost: 16 },
+    // Kling 2.6 audio/silent — same as standard_* with a small silent
+    // discount (audio adds compute on FAL). Mirrors getFallbackCreditCost.
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_audio_5s", creditCost: 11 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_audio_10s", creditCost: 22 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_5s", creditCost: 9 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_10s", creditCost: 18 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "wan_720p", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_4s", creditCost: 51 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_8s", creditCost: 101 },

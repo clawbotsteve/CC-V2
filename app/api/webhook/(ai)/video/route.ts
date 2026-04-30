@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
 
     const jobRecord = await prismadb.generatedVideo.findUnique({
       where: { id: requestId },
-      select: { userId: true, variant: true, status: true },
+      select: { userId: true, variant: true, creditVariant: true, status: true },
     });
 
     if (!jobRecord?.userId) return new NextResponse("Missing userId", { status: 400 });
@@ -30,6 +30,10 @@ export async function POST(req: NextRequest) {
       return new NextResponse("Video saved", { status: 200 });
     }
 
+    // Prefer the credit-cost variant captured at job creation; fall back
+    // to the VideoVariant enum for old rows pre-2026-04-30.
+    const creditVariant = jobRecord.creditVariant ?? jobRecord.variant ?? undefined;
+
     // SUCCESS
     if (data.status === "OK") {
       const status = await updateJobStatus({
@@ -38,6 +42,7 @@ export async function POST(req: NextRequest) {
         userId: jobRecord.userId,
         urlValue: data.payload.video.url,
         toolType: ToolType.VIDEO_GENERATOR,
+        variant: creditVariant,
       });
 
       return new NextResponse(
@@ -63,6 +68,7 @@ export async function POST(req: NextRequest) {
         userId: jobRecord.userId,
         urlValue: undefined,
         toolType: ToolType.VIDEO_GENERATOR,
+        variant: creditVariant,
         reason: [errors]
       });
 
