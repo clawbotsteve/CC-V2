@@ -24,7 +24,6 @@ type CardMeta = {
   accent?: string;
   popular?: boolean;
   displayMonthlyPrice: number;
-  firstMonthPrice?: number;
   creditsText: string;
   fullAccess: string[];
   unlimited: string[];
@@ -69,7 +68,6 @@ const CARDS: CardMeta[] = [
     tierAnnual: "plan_basic_3month",
     wrapper: "from-cyan-900/55 to-slate-950/80 border-cyan-500/35",
     displayMonthlyPrice: 19.99,
-    firstMonthPrice: 14.99,
     creditsText: "200 credits/month",
     fullAccess: ["Kling 2.6", "Kling Motion Control", "Nano Banana Pro", "Nano Banana 2", "Topaz Upscale"],
     unlimited: ["Image generations (fair use)", "Prompt optimizer"],
@@ -86,7 +84,6 @@ const CARDS: CardMeta[] = [
     accent: "bg-lime-300 text-black",
     popular: true,
     displayMonthlyPrice: 49.99,
-    firstMonthPrice: 39.99,
     creditsText: "600 credits/month",
     fullAccess: ["Kling Motion Control", "SeedVR Image Upscale", "Bytedance Video Upscale", "Nano Banana 2 Edit"],
     unlimited: ["Image generations (fair use)", "Prompt optimizer", "Advanced creator workflows"],
@@ -101,7 +98,6 @@ const CARDS: CardMeta[] = [
     tierAnnual: "plan_elite_3month",
     wrapper: "from-fuchsia-900/50 to-slate-950/80 border-fuchsia-500/35",
     displayMonthlyPrice: 149.99,
-    firstMonthPrice: 99.99,
     creditsText: "2,000 credits/month",
     fullAccess: ["All Creator models", "Veo 3.1 (4s/8s)", "All upscale + all video"],
     unlimited: ["Image generations (fair use)", "Prompt optimizer", "Priority render queue"],
@@ -188,11 +184,11 @@ export default function PricingPage() {
           const discountedAnnualPrice = billing === "annual" && card.key !== "free"
             ? Number((monthlyBasePrice * 0.8).toFixed(2))
             : null;
-          const firstMonthPrice = billing === "monthly" ? card.firstMonthPrice : undefined;
-          const firstMonthPct =
-            firstMonthPrice !== undefined && monthlyBasePrice > 0
-              ? Math.round(((monthlyBasePrice - firstMonthPrice) / monthlyBasePrice) * 100)
-              : null;
+
+          // Intro-month discount UI removed 2026-04-30: Stripe checkout
+          // charges the full monthly price on day one, so showing a
+          // discounted "first month" was misleading. To re-introduce, set
+          // up real Stripe coupons and pass them into the checkout session.
 
           return (
             <div key={card.key} className={`relative rounded-xl border bg-gradient-to-b ${card.wrapper} p-2.5 flex flex-col min-h-[500px]`}>
@@ -203,29 +199,17 @@ export default function PricingPage() {
               <p className="text-xs text-zinc-300 mt-1 tracking-wide">{card.subtitle}</p>
 
               <div className="mt-3">
-                {billing === "monthly" && firstMonthPrice !== undefined && card.key !== "free" && (
-                  <p className="text-[11px] text-zinc-300 mb-1">
-                    <span className="line-through text-zinc-400">${monthlyBasePrice.toFixed(2)}/mo</span>
-                    {" "}
-                    <span className="text-pink-300">{firstMonthPct}% off 1st month</span>
-                  </p>
-                )}
                 <p className="text-[36px] font-extrabold leading-none flex items-end gap-2">
                   {discountedAnnualPrice !== null && typeof monthlyBasePrice === "number" ? (
                     <>
                       <span className="text-pink-400 line-through text-2xl">${Number(monthlyBasePrice).toFixed(2)}</span>
                       <span>${discountedAnnualPrice.toFixed(2)}</span>
                     </>
-                  ) : firstMonthPrice !== undefined ? (
-                    <span>${firstMonthPrice.toFixed(2)}</span>
                   ) : (
                     <span>${Number(monthlyBasePrice).toFixed(2)}</span>
                   )}
                   <span className="text-sm font-semibold text-zinc-300">/mo</span>
                 </p>
-                {billing === "monthly" && firstMonthPrice !== undefined && card.key !== "free" && (
-                  <p className="text-[11px] text-zinc-300 mt-1">First month ${firstMonthPrice.toFixed(2)}, then ${monthlyBasePrice.toFixed(2)}/mo</p>
-                )}
                 <p className="text-lime-300 font-semibold mt-2 text-sm">{card.creditsText}</p>
               </div>
 

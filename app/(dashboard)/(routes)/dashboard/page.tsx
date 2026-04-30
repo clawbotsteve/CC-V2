@@ -98,7 +98,6 @@ const pricingPlans = [
     name: "Starter",
     hook: "Get moving fast",
     price: "$19.99",
-    firstMonth: "$14.99",
     credits: "200 credits/month",
     featured: false,
     cta: "Start Starter",
@@ -110,7 +109,6 @@ const pricingPlans = [
     name: "Creator",
     hook: "Best plan for AI character builders",
     price: "$49.99",
-    firstMonth: "$39.99",
     credits: "600 credits/month",
     featured: true,
     cta: "Build Characters",
@@ -122,7 +120,6 @@ const pricingPlans = [
     name: "Studio",
     hook: "For agencies and operators at serious scale",
     price: "$149.99",
-    firstMonth: "$99.99",
     credits: "2,000 credits/month",
     featured: false,
     cta: "Scale with Studio",
@@ -601,28 +598,23 @@ export default function DashboardPage() {
             <span className="rounded-full bg-pink-500 px-2 py-0.5 text-[11px] font-bold text-white">20% OFF</span>
           </div>
           <p className="mt-2 text-xs text-zinc-400">
-            {pricingBilling === "monthly"
-              ? "Intro offer shown on Monthly plans only. Renewal uses standard monthly price."
-              : "3-Month plans use flat 20% savings (no intro month discount)."}
+            {pricingBilling === "threeMonths"
+              ? "3-Month plans save 20% vs paying monthly."
+              : ""}
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {pricingPlans.map((plan) => {
             const basePrice = Number.parseFloat(plan.price.replace("$", ""));
-            const firstMonthPrice = (plan as any).firstMonth
-              ? Number.parseFloat((plan as any).firstMonth.replace("$", ""))
-              : null;
-            const firstMonthPct =
-              firstMonthPrice && basePrice > 0
-                ? Math.round(((basePrice - firstMonthPrice) / basePrice) * 100)
-                : null;
 
+            // Display price = monthly base, or 20%-off-equivalent for 3-month plans.
+            // Intro-month discount UI was removed 2026-04-30 — Stripe checkout
+            // charges the full monthly price on day one, so showing a discounted
+            // "first month" was misleading.
             const displayPrice =
               pricingBilling === "threeMonths" && plan.name !== "Free"
                 ? `$${(basePrice * 0.8).toFixed(2)}`
-                : pricingBilling === "monthly" && firstMonthPrice
-                  ? `$${firstMonthPrice.toFixed(2)}`
-                  : plan.price;
+                : plan.price;
 
             return (
             <div
@@ -641,16 +633,7 @@ export default function DashboardPage() {
               )}
               <div className="font-display text-xl font-bold mb-1 mt-4">{plan.name}</div>
               <div className="text-xs font-semibold uppercase tracking-wider text-[#d8ccff] mb-2">{plan.hook}</div>
-              {pricingBilling === "monthly" && firstMonthPrice && plan.name !== "Beginner" && (
-                <div className="text-[11px] text-zinc-300 mb-1">
-                  <span className="line-through text-zinc-400">{plan.price}/mo</span>{" "}
-                  <span className="text-pink-300">{firstMonthPct}% off 1st month</span>
-                </div>
-              )}
               <div className="font-display text-4xl font-extrabold tracking-tight mb-1">{displayPrice}<span className="text-base font-normal text-muted-foreground">/mo</span></div>
-              {pricingBilling === "monthly" && firstMonthPrice && plan.name !== "Beginner" && (
-                <div className="text-[11px] text-zinc-300 mb-1">First month ${(firstMonthPrice).toFixed(2)}, then {plan.price}/mo</div>
-              )}
               <div className="text-sm font-semibold text-lime-300 mb-6">{plan.credits}</div>
               <ul className="space-y-2.5 mb-6">
                 {plan.features.map((f) => (
