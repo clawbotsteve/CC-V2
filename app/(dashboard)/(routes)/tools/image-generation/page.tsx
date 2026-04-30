@@ -42,12 +42,20 @@ export default function GenerateImagePage() {
   const pollingRefs = useRef<Record<string, NodeJS.Timeout>>({});
   const appliedQueryRef = useRef<string | null>(null);
 
+  // Mirror the server-side getImageCreditVariant() so the Generate button
+  // shows the actual credit cost the API will charge. If these drift, the
+  // user sees one number on the button and gets billed another. The /api/tools/image
+  // route is the source of truth — keep these in sync if you change either.
   const selectedCreditVariant =
-    form.model === ImageGenerationModel.NanoBanana2 || form.model === ImageGenerationModel.NanoBannaPro
-      ? `nano_banana_2_${form.output_resolution ?? "1k"}`
-      : form.enable_safety_checker
-        ? "sfw"
-        : "nsfw";
+    form.model === ImageGenerationModel.GptImage2
+      ? `gpt_image_2_${form.quality ?? "medium"}`
+      : form.model === ImageGenerationModel.NanoBanana2 ||
+        form.model === ImageGenerationModel.NanoBannaPro ||
+        form.model === ImageGenerationModel.NanoBanana2Base
+        ? `nano_banana_2_${form.output_resolution ?? "1k"}`
+        : form.enable_safety_checker
+          ? "sfw"
+          : "nsfw";
 
   const handleGenerate = async () => {
     if (!userId) {
@@ -99,6 +107,7 @@ export default function GenerateImagePage() {
         contentType: "sfw",
         nsfwFlag: false,
         variant: "sfw",
+        creditVariant: selectedCreditVariant,
         generationTime: new Date(),
         reason: {},
       };

@@ -464,7 +464,15 @@ export async function POST(req: Request) {
           userId,
           imageUrl: "",
           prompt: data.prompt,
+          // variant is the content classification (sfw/nsfw enum).
           variant: isNSFW ? "nsfw" : "sfw",
+          // creditVariant is the credit-cost lookup key
+          // (e.g. "gpt_image_2_medium", "nano_banana_2_1k", "sfw").
+          // The webhook reads this back to deduct the right number of credits.
+          // Previously the webhook had no way to look up the per-quality cost,
+          // so high-quality gpt-image-2 jobs were under-charged or not
+          // charged at all.
+          creditVariant: getImageCreditVariant(data),
           contentType: isNSFW ? "nsfw" : "sfw",
           nsfwFlag: isNSFW,
           status: "queued",
