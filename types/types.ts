@@ -79,8 +79,11 @@ export enum Duration {
 export enum VideoModel {
   Wan = 'wan',
   Kling = 'kling',
-  /** @deprecated Bytedance video model removed 2026-04-29 (NSFW-only path). Kept in enum for type compatibility with existing DB rows; no new generations should reference it. */
+  /** @deprecated Old Bytedance Seedance v1 (NSFW path) — API-blocked 2026-04-29. Removed from picker 2026-04-29. Enum kept for historical DB rows. */
   Bytedance = 'bytedance',
   KlingMotionControl = 'kling-motion-control',
+  /** Bytedance Seedance 2.0 reference-to-video, added 2026-04-29 (Creator+ tier). FAL endpoint: fal-ai/bytedance/seedance-2.0/reference-to-video */
+  Seedance2Ref = 'seedance-2-ref',
+  /** @deprecated Removed from picker 2026-04-29. Enum kept for historical DB rows. */
   Veo = 'veo',
 }

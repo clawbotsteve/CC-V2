@@ -68,15 +68,30 @@ export function canUseImageModel(access: AccessTier, model?: string): boolean {
   return true;
 }
 
+/**
+ * Video-model access rules (2026-04-29):
+ *   Free / Beginner → no video
+ *   Starter         → Kling 2.6 only
+ *   Creator+        → Kling 2.6, Kling Motion Control, Seedance 2.0 ref-to-video
+ *   Studio          → all (incl. legacy Veo / Bytedance for historical compatibility)
+ */
 export function canUseVideoModel(access: AccessTier, model?: string): boolean {
   if (!model) return false;
   if (access === "free" || access === "beginner") return false;
+
   if (access === "starter") {
     return model === "kling";
   }
+
   if (access === "creator") {
-    return model !== "veo";
+    return (
+      model === "kling" ||
+      model === "kling-motion-control" ||
+      model === "seedance-2-ref"
+    );
   }
+
+  // studio: all (incl. deprecated entries kept for historical access)
   return true;
 }
 
@@ -88,6 +103,7 @@ export function canUseUpscaleModel(access: AccessTier, model?: string): boolean 
 
 export function requiredPlanForVideoModel(model?: string): string {
   if (model === "kling-motion-control") return "Creator";
+  if (model === "seedance-2-ref") return "Creator";
   if (model === "veo") return "Studio";
   return "Starter";
 }

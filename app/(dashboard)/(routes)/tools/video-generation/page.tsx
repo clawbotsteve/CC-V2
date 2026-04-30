@@ -51,6 +51,8 @@ export default function GenerateVideoPage() {
       const modelMap: Record<string, VideoModel> = {
         'kling-2.6': VideoModel.Kling,
         'kling-motion-control': VideoModel.KlingMotionControl,
+        'seedance-2-ref': VideoModel.Seedance2Ref,
+        // Deprecated 2026-04-29 — kept so old links don't crash; gated server-side.
         'bytedance': VideoModel.Bytedance,
         'veo-3.1': VideoModel.Veo,
         'veo': VideoModel.Veo,
@@ -59,7 +61,8 @@ export default function GenerateVideoPage() {
       if (selectedModel) {
         setForm((f) => {
           const newVariant = getVideoVariant(selectedModel, f.duration);
-          const enable_safety_checker = selectedModel === VideoModel.Kling || selectedModel === VideoModel.KlingMotionControl || selectedModel === VideoModel.Veo;
+          // Platform is SFW-only as of 2026-04-29; safety always on.
+          const enable_safety_checker = true;
           return { ...f, model: selectedModel, variant: newVariant, enable_safety_checker };
         });
       }

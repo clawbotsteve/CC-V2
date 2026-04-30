@@ -169,10 +169,35 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 🔹 Bytedance handler (DEPRECATED 2026-04-29 — was the NSFW path, now blocked)
+    // 🔹 Bytedance Seedance 2.0 reference-to-video (Creator+, added 2026-04-29)
+    // FAL endpoint: fal-ai/bytedance/seedance-2.0/reference-to-video
+    if (data.model === VideoModel.Seedance2Ref) {
+      const input: Record<string, unknown> = {
+        prompt: data.prompt,
+        image_urls: [falHostedImageUrl],
+        // Map our internal "5"/"10" duration to FAL's expected format.
+        duration: duration === Duration.Ten ? "10" : "5",
+        // Seedance 2.0 fixes resolution at 720p (only option per FAL docs).
+        resolution: "720p",
+        ...(data.aspect_ratio ? { aspect_ratio: data.aspect_ratio } : {}),
+        ...(data.generate_audio !== undefined ? { generate_audio: data.generate_audio } : {}),
+      };
+
+      const { request_id } = await submitFalJob(
+        "fal-ai/bytedance/seedance-2.0/reference-to-video",
+        { input, webhookUrl }
+      );
+
+      return NextResponse.json({
+        success: true,
+        requestId: request_id,
+      });
+    }
+
+    // 🔹 Bytedance Seedance v1 (DEPRECATED 2026-04-29 — was the NSFW path, now blocked)
     if (data.model === VideoModel.Bytedance) {
       return NextResponse.json(
-        { error: "This model is no longer available. Please use Kling or Veo." },
+        { error: "This model is no longer available. Please use Kling or Seedance 2.0." },
         { status: 410 }
       );
     }
