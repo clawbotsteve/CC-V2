@@ -29,11 +29,16 @@ export async function POST(req: NextRequest) {
 
     const webhookUrl = getWebhookUrl("/api/webhook/image");
 
+    // Quality enforcement is the caller's job (the public-facing
+    // /api/tools/image route) since it knows the user's plan tier. This raw
+    // proxy just relays whatever quality is requested; default to "medium"
+    // for direct API consumers.
+    const quality = body.quality ?? "medium";
+
     const { request_id } = await submitFalJob(ImageGenerationModel.GptImage2, {
       input: {
         prompt: body.prompt,
-        // Server-forced "medium" — see types/image.ts comment on GptImage2Input.
-        quality: "medium",
+        quality,
         num_images: body.num_images ?? 1,
         output_format: body.output_format ?? "png",
         // Pass through whichever sizing field the caller supplied; FAL

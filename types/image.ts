@@ -109,9 +109,14 @@ export interface Soul2Input {
  * Input for openai/gpt-image-2 (text-to-image) via FAL.
  * https://fal.ai/models/openai/gpt-image-2
  *
- * `quality` is server-side forced to "medium" for all paid tiers right now —
- * unit cost balloons at "high" + 4K and would burn through plan margins.
- * If we add a Studio-only HD upsell later, surface this field to the UI.
+ * Quality tiers (FAL pricing at 1024x1024):
+ *   low    → $0.01 / image
+ *   medium → $0.06 / image (default)
+ *   high   → $0.22 / image
+ *
+ * Free tier is server-side locked to "medium" (their single trial credit).
+ * Paid tiers can pick any quality and are charged per the
+ * gpt_image_2_{quality} credit-cost variant.
  */
 export type GptImage2Quality = "low" | "medium" | "high";
 
@@ -153,6 +158,8 @@ export interface ImageGenerationInput {
   num_images: number;
   output_format: OutputFormat;
   output_resolution?: NanoBananaResolution;
+  /** GPT Image 2 quality tier (server-forced to "medium" for Free users). */
+  quality?: GptImage2Quality;
   prompt: string;
   safety_tolerance?: SafetyTolerance;
   seed: number;
@@ -179,6 +186,8 @@ export const defaultImageGenerationForm: ImageGenerationInput = {
   num_images: 1,
   output_format: OutputFormat.Png,
   output_resolution: "1k",
+  // gpt-image-2 default quality (also server-forced for Free tier).
+  quality: "medium",
   prompt: "",
   safety_tolerance: SafetyTolerance.Level6,
   seed: Math.floor(Math.random() * 9_000_000) + 1_000_000,

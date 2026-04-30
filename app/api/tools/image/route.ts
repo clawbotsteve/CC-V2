@@ -14,7 +14,8 @@ import { moderateAndLog } from "@/lib/content-moderation";
 
 function getImageCreditVariant(input: ImageGenerationInput): string {
   if (input.model === ImageGenerationModel.GptImage2) {
-    return "gpt_image_2_medium";
+    const q = input.quality ?? "medium";
+    return `gpt_image_2_${q}`;
   }
   if (input.model === ImageGenerationModel.NanoBanana2 || input.model === ImageGenerationModel.NanoBannaPro || input.model === ImageGenerationModel.NanoBanana2Base) {
     const res = input.output_resolution ?? "1k";
@@ -137,6 +138,14 @@ export async function POST(req: Request) {
     // Platform safety enforcement: always enable safety checker, override user input
     body.enable_safety_checker = true;
 
+    // Quality enforcement for gpt-image-2:
+    //   - Free tier is locked to "medium" (their single trial credit).
+    //   - Paid tiers can pick low / medium / high; default to medium.
+    if (data.model === ImageGenerationModel.GptImage2) {
+      const requested = (data.quality ?? "medium");
+      body.quality = access === "free" ? "medium" : requested;
+    }
+
     let canUse = true;
     let creditCost = 1;
     try {
@@ -193,8 +202,8 @@ export async function POST(req: Request) {
       const resp = await submitFalJob(ImageGenerationModel.GptImage2, {
         input: {
           prompt: body.prompt,
-          // Forced server-side: see types/image.ts → GptImage2Input docstring.
-          quality: "medium",
+          // body.quality has already been normalized + Free-tier-clamped above.
+          quality: body.quality ?? "medium",
           num_images: body.num_images || 1,
           output_format: body.output_format || "png",
           ...(normalizedAspect ? { aspect_ratio: normalizedAspect } : {}),
