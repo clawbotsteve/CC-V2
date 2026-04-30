@@ -47,6 +47,8 @@ export async function POST(req: Request) {
     params.append("metadata[type]", "credit_pack");
     params.append("success_url", `${appUrl}/settings/subscription?purchase=success`);
     params.append("cancel_url", `${appUrl}/settings/subscription?purchase=cancelled`);
+    // Allow promo codes on credit-pack checkout too.
+    params.append("allow_promotion_codes", "true");
 
     const res = await fetch("https://api.stripe.com/v1/checkout/sessions", {
       method: "POST",
