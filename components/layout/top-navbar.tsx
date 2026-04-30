@@ -146,7 +146,24 @@ export default function TopNavbar() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [pendingHref, setPendingHref] = useState<string | null>(null);
   const [onboardingOpen, setOnboardingOpen] = useState(false);
-  const creditPercent = Math.max(0, Math.min(100, Number(availableCredit ?? 0)));
+
+  // Credits-left display + progress bar.
+  // Capacities are the per-plan creditsPerMonth values (mirror of
+  // pricing-constants.ts so we don't import that whole module here).
+  const planCapacity: Record<string, number> = {
+    plan_free: 2,
+    plan_beginner: 80,
+    plan_beginner_3month: 80,
+    plan_basic: 200,
+    plan_basic_3month: 200,
+    plan_pro: 600,
+    plan_pro_3month: 600,
+    plan_elite: 2000,
+    plan_elite_3month: 2000,
+  };
+  const creditCount = Number(availableCredit ?? 0);
+  const capacity = (plan && planCapacity[plan]) || Math.max(1, creditCount);
+  const creditPercent = Math.max(0, Math.min(100, Math.round((creditCount / capacity) * 100)));
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border" style={{ background: 'rgba(10,10,15,0.85)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', height: '56px' }}>
@@ -293,7 +310,9 @@ export default function TopNavbar() {
                     </div>
 
                     <div className="rounded-xl border border-white/10 bg-white/5 p-3 mb-2">
-                      <div className="text-sm text-zinc-200 mb-2">{creditPercent}% credits left</div>
+                      <div className="text-sm text-zinc-200 mb-2">
+                        {creditCount} / {capacity} credits left
+                      </div>
                       <div className="h-2 w-full rounded-full bg-zinc-700/70 overflow-hidden mb-3">
                         <div className="h-full rounded-full bg-lime-300" style={{ width: `${creditPercent}%` }} />
                       </div>
