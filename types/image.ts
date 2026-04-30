@@ -164,13 +164,17 @@ export type ImageGenerationForm = ImageGenerationInput;
 
 export const defaultImageGenerationForm: ImageGenerationInput = {
   aspect_ratio: undefined,
-  enable_safety_checker: false,
+  // Platform is SFW-only as of 2026-04-29; safety always on.
+  enable_safety_checker: true,
   guidance_scale: 3,
   image_size: ImageSize.Portrait16_9,
   image_url: "",
   loras: [],
   lora_id: "none",
-  model: ImageGenerationModel.NanoBannaPro,
+  // Default to gpt-image-2 — the entry-level model available on every
+  // paid tier (and Free's single-trial credit). Was NanoBannaPro,
+  // which was removed from the picker 2026-04-29.
+  model: ImageGenerationModel.GptImage2,
   num_inference_steps: 28,
   num_images: 1,
   output_format: OutputFormat.Png,
