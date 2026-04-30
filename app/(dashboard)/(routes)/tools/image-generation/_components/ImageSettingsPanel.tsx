@@ -68,7 +68,11 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
 
   // Image-to-image models require a reference image
   const isImageToImage = isNanoBanana2;
-  const isTextToImage = isV1 || isLora;
+  // GPT Image 2 is text-to-image. Including it here surfaces the existing
+  // aspect-ratio picker, which already maps to FAL's `image_size` enum
+  // (square_hd / square / portrait_4_3 / portrait_16_9 / landscape_4_3 /
+  // landscape_16_9) — exactly what gpt-image-2 expects.
+  const isTextToImage = isV1 || isLora || isGptImage2;
   const isNanoModel = isNanoBanana2 || isNanoBannaPro || isNanoBanana2Base;
 
   // Plan lock UI remains in dropdown badges/disabled items.
