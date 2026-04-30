@@ -93,6 +93,10 @@ export async function POST(req: Request) {
     params.set("metadata[userId]", authedUserId);
     params.set("metadata[priceId]", priceId);
     if (email) params.set("customer_email", email);
+    // Surface the "Add promotion code" link on the Stripe checkout page —
+    // off by default. Users with a promo code from a campaign / referral
+    // can enter it themselves; otherwise no change to UX.
+    params.set("allow_promotion_codes", "true");
 
     const stripeSecret = process.env.STRIPE_SECRET_KEY || process.env.STRIPE_API_KEY;
     if (!stripeSecret) {
