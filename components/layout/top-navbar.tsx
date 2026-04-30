@@ -105,7 +105,7 @@ const navLinks = [
   },
   { label: "Apps", href: "/tools" },
   { label: "Earn Now", href: "/dashboard/affiliate" },
-  { label: "Community", href: "https://whop.com/joined/tavira-ai-academy/", external: true },
+  { label: "Community", href: "https://www.skool.com/aimodelforge/about", external: true },
 ];
 
 const mobileNavItems = [
