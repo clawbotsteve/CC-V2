@@ -12,9 +12,9 @@ export function OutOfFreeCreditsModal({ open, onOpenChange }: OutOfFreeCreditsMo
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md border-white/10 bg-[#111118]">
-        <DialogTitle className="text-center text-2xl font-bold text-white">Out of Free credits</DialogTitle>
+        <DialogTitle className="text-center text-2xl font-bold text-white">Out of credits</DialogTitle>
         <DialogDescription className="text-center text-zinc-400">
-          You used all 3 free credits. Upgrade to keep generating with Tavira tools.
+          You&apos;ve used all your free credits. Upgrade to keep generating with TraviaLabs.
         </DialogDescription>
 
         <div className="mt-2 rounded-xl border border-white/10 bg-black/30 p-6 text-center">
