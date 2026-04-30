@@ -223,6 +223,10 @@ model GeneratedImage {
   contentType    ContentType      @default(nsfw)
   nsfwFlag       Boolean          @default(false)
   variant        ImageVariant     @default(nsfw)
+  // Credit-cost lookup key (e.g. "gpt_image_2_medium", "nano_banana_2_1k").
+  // Distinct from `variant` (which is the sfw/nsfw content classification).
+  // Optional for backward-compat with rows created before 2026-04-30.
+  creditVariant  String?
   generationTime DateTime         @default(now())
   reason         Json?
   status         GenerationStatus

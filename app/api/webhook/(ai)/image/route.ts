@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     // Fetch job record
     const jobRecord = await prismadb.generatedImage.findUnique({
       where: { id: requestId },
-      select: { userId: true, variant: true, status: true },
+      select: { userId: true, variant: true, creditVariant: true, status: true },
     });
 
     if (!jobRecord?.userId) {
@@ -74,6 +74,9 @@ export async function POST(req: NextRequest) {
           userId: jobRecord.userId,
           urlValue: undefined,
           toolType: ToolType.IMAGE_GENERATOR,
+          // Prefer the credit-cost variant captured at job creation;
+        // fall back to the sfw/nsfw enum for old rows pre-2026-04-30.
+        variant: jobRecord.creditVariant ?? jobRecord.variant ?? undefined,
           reason: nsfwErrors
         });
 
@@ -90,6 +93,9 @@ export async function POST(req: NextRequest) {
         urlValue: imageUrl,
         imagesArray: imagesArray.length > 0 ? imagesArray : undefined,
         toolType: ToolType.IMAGE_GENERATOR,
+        // Prefer the credit-cost variant captured at job creation;
+        // fall back to the sfw/nsfw enum for old rows pre-2026-04-30.
+        variant: jobRecord.creditVariant ?? jobRecord.variant ?? undefined,
       });
 
       console.log(`[IMAGE WEBHOOK] Updated job ${requestId} to status: ${status}`);
@@ -113,6 +119,9 @@ export async function POST(req: NextRequest) {
         userId: jobRecord.userId,
         urlValue: undefined,
         toolType: ToolType.IMAGE_GENERATOR,
+        // Prefer the credit-cost variant captured at job creation;
+        // fall back to the sfw/nsfw enum for old rows pre-2026-04-30.
+        variant: jobRecord.creditVariant ?? jobRecord.variant ?? undefined,
         reason: normalizedErrors,
       });
 

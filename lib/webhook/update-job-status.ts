@@ -26,6 +26,14 @@ export async function updateJobStatus(params: {
   imagesArray?: Image[];
   toolType: ToolType;
   reason?: NormalizedError[];
+  /**
+   * Credit-cost variant from the job record (e.g. "gpt_image_2_medium",
+   * "nano_banana_2_1k"). Required for the cost lookup in chargeUserForTool —
+   * without it, the lookup falls through to whichever ToolCreditCost row
+   * comes back first, which is wrong (and silently undeducts on tools
+   * that have multiple variants).
+   */
+  variant?: string;
 }) {
   const modelName = params.model._meta?.name || params.model?.name
   const mapping = modelToUsageTable[modelName];
@@ -59,6 +67,7 @@ export async function updateJobStatus(params: {
     await chargeUserForTool({
       userId: params.userId,
       tool: params.toolType,
+      variant: params.variant,
       usageId: params.requestId,
       usageTable,
     });
