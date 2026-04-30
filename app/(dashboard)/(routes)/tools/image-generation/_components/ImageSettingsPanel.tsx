@@ -202,13 +202,13 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
               <SelectItem value="medium">
                 <div className="flex items-center justify-between w-full gap-2">
                   <span>Medium</span>
-                  <span className="text-[10px] text-muted-foreground">1 credit</span>
+                  <span className="text-[10px] text-muted-foreground">2 credits</span>
                 </div>
               </SelectItem>
               <SelectItem value="high">
                 <div className="flex items-center justify-between w-full gap-2">
                   <span>High</span>
-                  <span className="text-[10px] text-muted-foreground">3 credits</span>
+                  <span className="text-[10px] text-muted-foreground">5 credits</span>
                 </div>
               </SelectItem>
             </SelectContent>
