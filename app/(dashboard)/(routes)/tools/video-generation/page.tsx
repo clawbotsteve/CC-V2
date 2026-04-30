@@ -128,6 +128,7 @@ export default function GenerateVideoPage() {
         adherence: newGen.cfg_scale ?? 0.5,
         contentType: "sfw",
         variant: newGen.variant,
+        creditVariant: getVideoCreditVariant(form),
         nsfwFlag: false,
         generationTime: new Date(),
         reason: {},

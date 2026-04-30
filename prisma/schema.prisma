@@ -250,6 +250,11 @@ model GeneratedVideo {
   contentType    ContentType      @default(nsfw)
   nsfwFlag       Boolean          @default(false)
   variant        VideoVariant     @default(wan_720p)
+  // Credit-cost lookup key (e.g. "standard_5s", "kling_audio_10s",
+  // "seedance_v2_ref_5s"). Distinct from `variant` (the VideoVariant
+  // enum content classification). Same pattern as GeneratedImage.creditVariant.
+  // Optional for backward-compat with rows created before 2026-04-30.
+  creditVariant  String?
   generationTime DateTime         @default(now())
   reason         Json?
   status         GenerationStatus

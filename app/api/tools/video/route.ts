@@ -196,6 +196,13 @@ export async function POST(req: Request) {
         contentType: nsfwFlag ? "nsfw" : "sfw",
         nsfwFlag,
         variant: data.variant,
+        // Same fix as GeneratedImage from earlier today: store the
+        // credit-cost variant (kling_audio_5s, seedance_v2_ref_10s, etc.)
+        // so the completion webhook can deduct the correct number of
+        // credits. Without this, the webhook's chargeUserForTool falls
+        // through to whichever VIDEO_GENERATOR row .find() returns first
+        // — wrong cost or silent failure.
+        creditVariant: getVideoCreditVariant(data),
         videoUrl: null,
         status: "queued",
         creditUsed: 0,
