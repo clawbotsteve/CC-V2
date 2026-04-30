@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useUserContext } from "@/components/layout/user-context";
+import OnboardingQuestionnaire from "@/components/onboard/OnboardingQuestionnaire";
 import { GlowingEffect } from "@/components/ui/glowing-effect";
 import { TypingAnimation } from "@/components/ui/typing-animation";
 import { motion } from "framer-motion";
@@ -182,6 +185,22 @@ export default function DashboardPage() {
   const contentScrollRef = useRef<HTMLDivElement | null>(null);
   const [pricingBilling, setPricingBilling] = useState<"monthly" | "threeMonths">("monthly");
 
+  // Onboarding flow: triggered by the "Create Your First Image" CTA.
+  // First-time users (firstVisit === true on the user-info /me payload) get
+  // the personalization questionnaire; returning users skip straight to the
+  // tool. The questionnaire's POST /api/onboarding/complete flips firstVisit
+  // → false, so the second click bypasses the modal.
+  const router = useRouter();
+  const { meta } = useUserContext();
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const handleCreateFirstImage = () => {
+    if (meta?.firstVisit) {
+      setOnboardingOpen(true);
+    } else {
+      router.push("/tools/image-generation?model=gpt-image-2");
+    }
+  };
+
   const scrollToolsRight = () => {
     toolsScrollRef.current?.scrollBy({ left: 260, behavior: "smooth" });
   };
@@ -224,8 +243,9 @@ export default function DashboardPage() {
           </p>
 
           <div className="flex gap-3 justify-center flex-wrap">
-            <Link
-              href="/tools/image-generation"
+            <button
+              type="button"
+              onClick={handleCreateFirstImage}
               className="relative overflow-hidden inline-flex items-center gap-3 rounded-xl border-[3px] border-black bg-[#6d57ff] px-5 py-2.5 text-[16px] tracking-[0.07em] text-white transition-all hover:-translate-y-0.5 hover:brightness-110"
               style={{ boxShadow: "0 8px 28px rgba(109,87,255,0.35)", fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" }}
             >
@@ -234,8 +254,13 @@ export default function DashboardPage() {
                 ›
               </span>
               <span className="uppercase">Create Your First Image</span>
-            </Link>
+            </button>
           </div>
+
+          <OnboardingQuestionnaire
+            open={onboardingOpen}
+            onClose={() => setOnboardingOpen(false)}
+          />
 
           {/* Stats */}
           <div className="flex gap-10 justify-center mt-12 pt-8 border-t border-border flex-wrap">

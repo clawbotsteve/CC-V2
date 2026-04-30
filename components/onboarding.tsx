@@ -1,24 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { destroyCookie, parseCookies } from "nookies";
-import { Button } from "./ui/button";
 import confetti from "canvas-confetti";
-import { useUserContext } from "./layout/user-context";
-import OnboardingQuestionnaire from "./onboard/OnboardingQuestionnaire";
 import { usePathname } from "next/navigation";
 import Cookies from "js-cookie";
 
+/**
+ * Side-effects that run once a Clerk-authed user lands on the dashboard:
+ *   - Tracks any pending referral / affiliate cookies via /api/user/onboard.
+ *   - Fires confetti on the first dashboard visit (cookie-gated, 30 days).
+ *
+ * The personalized onboarding questionnaire is NOT triggered here — it's
+ * launched explicitly by the "Create Your First Image" CTA on the
+ * dashboard hero (see app/(dashboard)/(routes)/dashboard/page.tsx).
+ */
 const Onboarding = () => {
   const { isSignedIn, isLoaded } = useUser();
-  const { meta } = useUserContext()
-  const [showOnboarding, setShowOnboarding] = useState(false)
   const pathname = usePathname();
-
-  const handleCloseOnboarding = () => {
-    setShowOnboarding(false)
-  }
 
   useEffect(() => {
     if (!isSignedIn || !isLoaded) return;
@@ -99,13 +99,9 @@ const Onboarding = () => {
   useEffect(() => {
     if (pathname !== "/dashboard") return;
 
-    // If cookie exists, don't run again
+    // Cookie-gated so the confetti fires only once per device per 30 days.
     if (Cookies.get("dashboard_confetti_shown")) return;
-
-    // Mark as shown
-    Cookies.set("dashboard_confetti_shown", "true", { expires: 30 }); // 30 days
-
-    setShowOnboarding(true);
+    Cookies.set("dashboard_confetti_shown", "true", { expires: 30 });
 
     const duration = 2.5 * 1000;
     const animationEnd = Date.now() + duration;
@@ -133,15 +129,11 @@ const Onboarding = () => {
         origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
       });
     }, 250);
-  }, [pathname, isSignedIn, isLoaded, meta]);
+  }, [pathname, isSignedIn, isLoaded]);
 
-  return (
-    <div>
-      {showOnboarding && (
-        <OnboardingQuestionnaire open={showOnboarding} onClose={handleCloseOnboarding} />
-      )}
-    </div>
-  );
+  // No modal here anymore — the personalization questionnaire is launched
+  // by the "Create Your First Image" CTA in dashboard/page.tsx.
+  return null;
 };
 
 export default Onboarding;
