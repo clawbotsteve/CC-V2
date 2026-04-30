@@ -87,14 +87,21 @@ export const defaultVideoGenerationForm: VideoGenerationForm = {
 };
 
 /**
- * Helper function to determine the correct variant based on model and duration
+ * Helper function to determine the correct DB-level variant based on model and duration.
+ * The returned VideoVariant is what gets persisted on GeneratedVideo for analytics
+ * grouping. Credit-cost lookup uses getVideoCreditVariant() below, which can return
+ * arbitrary strings (allowing per-model variants without expanding the schema enum).
  */
 export function getVideoVariant(model: VideoModel, duration?: Duration): VideoVariant {
   if (model === VideoModel.Bytedance) {
     return duration === Duration.Ten ? VideoVariant.nsfw_10s : VideoVariant.nsfw_5s;
   }
 
-  if (model === VideoModel.Kling || model === VideoModel.KlingMotionControl) {
+  if (
+    model === VideoModel.Kling ||
+    model === VideoModel.KlingMotionControl ||
+    model === VideoModel.Seedance2Ref
+  ) {
     return duration === Duration.Ten ? VideoVariant.standard_10s : VideoVariant.standard_5s;
   }
 
@@ -105,10 +112,15 @@ export function getVideoVariant(model: VideoModel, duration?: Duration): VideoVa
   return VideoVariant.standard_5s;
 }
 
-export function getVideoCreditVariant(input: Pick<VideoGenerationInput, "model" | "duration" | "generate_audio" | "variant">): string {
+export function getVideoCreditVariant(
+  input: Pick<VideoGenerationInput, "model" | "duration" | "generate_audio" | "variant">
+): string {
   if (input.model === VideoModel.Kling) {
     const d = input.duration === Duration.Ten ? "10s" : "5s";
     return input.generate_audio === false ? `kling_silent_${d}` : `kling_audio_${d}`;
+  }
+  if (input.model === VideoModel.Seedance2Ref) {
+    return input.duration === Duration.Ten ? "seedance_v2_ref_10s" : "seedance_v2_ref_5s";
   }
   return input.variant;
 }

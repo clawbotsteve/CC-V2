@@ -52,7 +52,7 @@ export default function VideoSettingsPanel({
           <SelectContent>
             <SelectItem value={VideoModel.Kling}>Kling 2.6</SelectItem>
             <SelectItem value={VideoModel.KlingMotionControl}>Kling Motion Control</SelectItem>
-            <SelectItem value={VideoModel.Veo}>Veo 3.1</SelectItem>
+            <SelectItem value={VideoModel.Seedance2Ref}>Seedance 2.0 (Reference)</SelectItem>
           </SelectContent>
         </Select>
       </div>

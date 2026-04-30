@@ -16,6 +16,8 @@ function getFalEndpointFromModel(model?: string): string | null {
   if (!model) return null;
   if (model === "kling") return "fal-ai/kling-video/v2.6/pro/image-to-video";
   if (model === "kling-motion-control") return "fal-ai/kling-video/v2.6/standard/motion-control";
+  if (model === "seedance-2-ref") return "fal-ai/bytedance/seedance-2.0/reference-to-video";
+  // Deprecated — kept so historical job lookups by requestId still resolve.
   if (model === "veo") return "fal-ai/veo3.1/fast/image-to-video";
   if (model === "bytedance") return "fal-ai/bytedance/seedance/v1/pro/fast/image-to-video";
   return null;
