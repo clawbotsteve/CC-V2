@@ -530,6 +530,11 @@ model User {
   onboardingCompletedAt  DateTime?
   onboardingStep         OnboardingStep? @default(WELCOME)
   hasCompletedOnboarding Boolean         @default(false)
+  // Terms / AUP / age attestation captured at signup or first dashboard
+  // visit. Bump termsVersion when the legal pages change to re-prompt
+  // users; null means they haven't accepted the current version yet.
+  termsAcceptedAt        DateTime?
+  termsVersion           String?
   firstSeenAt            DateTime?
   lastSeenAt             DateTime?
   lastLoginAt            DateTime?

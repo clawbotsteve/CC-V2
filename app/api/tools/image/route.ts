@@ -11,6 +11,7 @@ import { aspectToImageSize, imageSizeToAspect, normalizeAspect } from "@/lib/asp
 import { canUseImageModel, requiredPlanForImageModel, resolveAccessTier } from "@/lib/plan-access";
 import { PLATFORM_SAFETY_NEGATIVE_PROMPT } from "@/constants/constants";
 import { moderateAndLog } from "@/lib/content-moderation";
+import { requireTermsAccepted } from "@/lib/require-terms-accepted";
 
 function getImageCreditVariant(input: ImageGenerationInput): string {
   if (input.model === ImageGenerationModel.GptImage2) {
@@ -100,6 +101,16 @@ export async function POST(req: Request) {
     if (!userId) {
       console.warn("[IMAGE TOOLS] POST - Unauthorized access, missing userId");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Defense in depth: the frontend modal also gates this, but stale
+    // tokens or direct API hits could bypass it. Mirrors the pattern
+    // we'll apply to /api/tools/video and other generation routes.
+    if (!(await requireTermsAccepted(userId))) {
+      return NextResponse.json(
+        { error: "You must accept the Terms of Service to generate." },
+        { status: 403 }
+      );
     }
 
     const today = startOfDay(new Date());

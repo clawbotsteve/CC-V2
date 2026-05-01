@@ -40,6 +40,10 @@ type CreditCostsMap = Record<string, number | Record<string, number>>;
 type MetaType = {
   firstVisit: boolean;
   degraded?: boolean;
+  /** ISO timestamp; null when the user has not accepted the current terms version. */
+  termsAcceptedAt?: string | null;
+  /** Terms version the user accepted (matches CURRENT_TERMS_VERSION when current). */
+  termsVersion?: string | null;
 };
 
 /**
@@ -160,6 +164,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         plans: data.plans,
         meta: {
           firstVisit: data.meta?.firstVisit!,
+          termsAcceptedAt: data.meta?.termsAcceptedAt ?? null,
+          termsVersion: data.meta?.termsVersion ?? null,
         },
         isLoading: false,
         error: null,
