@@ -54,6 +54,8 @@ export async function POST() {
       meta: {
         firstVisit: user?.firstVisit || false,
         degraded: false,
+        termsAcceptedAt: user?.termsAcceptedAt?.toISOString() ?? null,
+        termsVersion: user?.termsVersion ?? null,
       },
     };
 

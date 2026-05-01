@@ -2,6 +2,7 @@
 import Link from "next/link";
 import TopNavbar from "@/components/layout/top-navbar";
 import { AffiliateCapture } from "@/components/affiliate/affiliate-capture";
+import TermsAttestationModal from "@/components/legal/terms-attestation-modal";
 
 export default async function DashboardLayout({
   children,
@@ -12,6 +13,12 @@ export default async function DashboardLayout({
     <div className="h-screen overflow-y-auto flex flex-col">
       <TopNavbar />
       <AffiliateCapture />
+      {/*
+        Required attestation gate. Self-shows when the authed user hasn't
+        accepted the current terms version; ships with the dashboard so it
+        appears no matter which dashboard route the user lands on first.
+      */}
+      <TermsAttestationModal />
       <main className="pt-16 flex-1">
         <div className="max-w-[1400px] mx-auto px-4 py-6">
           {children}

@@ -1,0 +1,60 @@
+import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
+import prismadb from "@/lib/prismadb";
+import { CURRENT_TERMS_VERSION } from "@/constants/constants";
+
+/**
+ * Records the user's acceptance of the Terms / Privacy Policy / AUP
+ * and the 18+ + likeness-consent attestations. Stores the timestamp
+ * and the terms version they accepted; bumping CURRENT_TERMS_VERSION
+ * later will re-prompt them.
+ *
+ * Body shape:
+ *   {
+ *     ageConfirmed: boolean,    // "I am at least 18"
+ *     likenessConfirmed: boolean, // "I will not depict real people without consent"
+ *     termsConfirmed: boolean,  // "I agree to ToS / Privacy / AUP"
+ *   }
+ *
+ * All three must be true. We store ONLY the acceptance — no need to
+ * keep the individual checkboxes since acceptance is binary.
+ */
+export async function POST(req: Request) {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await req.json().catch(() => ({}));
+    const { ageConfirmed, likenessConfirmed, termsConfirmed } = body ?? {};
+
+    if (!ageConfirmed || !likenessConfirmed || !termsConfirmed) {
+      return NextResponse.json(
+        { error: "All three attestations are required to use TraviaLabs." },
+        { status: 400 }
+      );
+    }
+
+    const now = new Date();
+    await prismadb.user.update({
+      where: { userId },
+      data: {
+        termsAcceptedAt: now,
+        termsVersion: CURRENT_TERMS_VERSION,
+      },
+    });
+
+    return NextResponse.json({
+      ok: true,
+      termsAcceptedAt: now.toISOString(),
+      termsVersion: CURRENT_TERMS_VERSION,
+    });
+  } catch (err: any) {
+    console.error("[accept-terms] error:", err?.message || err);
+    return NextResponse.json(
+      { error: "Failed to save acceptance. Please try again." },
+      { status: 500 }
+    );
+  }
+}

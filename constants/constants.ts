@@ -1,5 +1,14 @@
 export const INTERNAL_DASHBOARD_TOKEN = 'yebeud7dnj3nu3immmms';
 
+/**
+ * Bump this when the Terms / Privacy Policy / AUP change in a way that
+ * requires re-acceptance. Users whose `User.termsVersion` doesn't match
+ * this value will be re-prompted by the attestation modal.
+ *
+ * Format: ISO date of the legal change. Easy to read and never collides.
+ */
+export const CURRENT_TERMS_VERSION = "2026-05-01";
+
 export const SAFETY_LEVELS: Record<number, string> = {
   1: "Most Strict",
   2: "Strict",

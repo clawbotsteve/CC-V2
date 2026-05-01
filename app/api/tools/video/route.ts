@@ -11,6 +11,7 @@ import { NextResponse } from "next/server";
 import { getFalJobResult } from "@/lib/fal-client";
 import { canUseVideoModel, requiredPlanForVideoModel, resolveAccessTier } from "@/lib/plan-access";
 import { moderateAndLog } from "@/lib/content-moderation";
+import { requireTermsAccepted } from "@/lib/require-terms-accepted";
 
 function getFalEndpointFromModel(model?: string): string | null {
   if (!model) return null;
@@ -96,6 +97,14 @@ export async function POST(req: Request) {
     if (!userId) {
       console.warn("[VIDEO TOOLS] POST - Unauthorized request: missing userId");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Defense in depth: terms-acceptance gate.
+    if (!(await requireTermsAccepted(userId))) {
+      return NextResponse.json(
+        { error: "You must accept the Terms of Service to generate." },
+        { status: 403 }
+      );
     }
 
     const data: VideoGenerationInput = await req.json();
