@@ -5,11 +5,15 @@ import { getFalJobResult, getFalJobStatus } from "@/lib/fal-client";
 import { ImageGenerationModel } from "@/types/image";
 
 const FAL_ENDPOINTS = [
+  // Order doesn't matter functionally (we try each until one returns
+  // a job for this id), but listing the active models first reduces
+  // wasted FAL lookups for the common case.
+  ImageGenerationModel.GptImage2,
   ImageGenerationModel.NanoBanana2,
+  ImageGenerationModel.NanoBanana2Base,
   ImageGenerationModel.NanoBannaPro,
-  // Kontext removed
-  ImageGenerationModel.V1,
   ImageGenerationModel.Lora,
+  ImageGenerationModel.V1,
 ] as const;
 
 const HIGGS_BASE = (process.env.HIGGSFIELD_BASE_URL || "https://platform.higgsfield.ai").replace(/\/$/, "");

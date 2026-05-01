@@ -44,10 +44,12 @@ export async function GET(request: Request) {
     for (const img of images) {
       if ((img.status === "queued" || img.status === "processing") && !img.imageUrl) {
         const endpoints = [
+          ImageGenerationModel.GptImage2,
           ImageGenerationModel.NanoBanana2,
+          ImageGenerationModel.NanoBanana2Base,
           ImageGenerationModel.NanoBannaPro,
-          ImageGenerationModel.V1,
           ImageGenerationModel.Lora,
+          ImageGenerationModel.V1,
         ];
 
         for (const endpoint of endpoints) {
