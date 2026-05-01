@@ -58,10 +58,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { email, userId, subscriptionId } = await req.json();
+    const { email, userId, subscriptionId, couponId } = await req.json();
     if (!subscriptionId) {
       return NextResponse.json({ error: "Missing subscription ID" }, { status: 400 });
     }
+    // Light validation on couponId — Stripe coupon IDs are short alnum
+    // strings; refuse anything else so a bad caller can't poison the
+    // checkout session.
+    const safeCouponId =
+      typeof couponId === "string" && /^[a-zA-Z0-9_-]{4,32}$/.test(couponId)
+        ? couponId
+        : null;
 
     if (userId && userId !== authedUserId) {
       return NextResponse.json({ error: "Invalid user" }, { status: 403 });
@@ -93,10 +100,17 @@ export async function POST(req: Request) {
     params.set("metadata[userId]", authedUserId);
     params.set("metadata[priceId]", priceId);
     if (email) params.set("customer_email", email);
-    // Surface the "Add promotion code" link on the Stripe checkout page —
-    // off by default. Users with a promo code from a campaign / referral
-    // can enter it themselves; otherwise no change to UX.
-    params.set("allow_promotion_codes", "true");
+
+    // Coupon handling.
+    //   - With an auto-applied coupon → set `discounts[0][coupon]=<id>` and
+    //     skip `allow_promotion_codes` (Stripe rejects both at once).
+    //   - Without one → keep `allow_promotion_codes=true` so power users can
+    //     still type a launch / referral code on the checkout page.
+    if (safeCouponId) {
+      params.set("discounts[0][coupon]", safeCouponId);
+    } else {
+      params.set("allow_promotion_codes", "true");
+    }
 
     const stripeSecret = process.env.STRIPE_SECRET_KEY || process.env.STRIPE_API_KEY;
     if (!stripeSecret) {

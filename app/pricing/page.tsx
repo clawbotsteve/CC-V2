@@ -24,6 +24,14 @@ type CardMeta = {
   accent?: string;
   popular?: boolean;
   displayMonthlyPrice: number;
+  /**
+   * First-month coupon, if any. Stripe coupon ID + the percent it
+   * discounts. Drives the "$X first month, then $Y/mo" UI and gets
+   * forwarded to /api/billing/pz/subscriptions which applies it via
+   * `discounts[0][coupon]=<id>`. Only applies on the monthly plan
+   * (the 3-month price IDs are separately discounted via lower price).
+   */
+  firstMonthCoupon?: { id: string; percentOff: number };
   creditsText: string;
   fullAccess: string[];
   unlimited: string[];
@@ -84,6 +92,7 @@ const CARDS: CardMeta[] = [
     accent: "bg-lime-300 text-black",
     popular: true,
     displayMonthlyPrice: 49.99,
+    firstMonthCoupon: { id: "O79kBqPK", percentOff: 20 },
     creditsText: "600 credits/month",
     fullAccess: ["Kling Motion Control", "SeedVR Image Upscale", "Bytedance Video Upscale", "Nano Banana 2 Edit"],
     unlimited: ["Image generations (fair use)", "Prompt optimizer", "Advanced creator workflows"],
@@ -98,6 +107,7 @@ const CARDS: CardMeta[] = [
     tierAnnual: "plan_elite_3month",
     wrapper: "from-fuchsia-900/50 to-slate-950/80 border-fuchsia-500/35",
     displayMonthlyPrice: 149.99,
+    firstMonthCoupon: { id: "abjQuA1g", percentOff: 31 },
     creditsText: "2,000 credits/month",
     fullAccess: ["All Creator models", "Veo 3.1 (4s/8s)", "All upscale + all video"],
     unlimited: ["Image generations (fair use)", "Prompt optimizer", "Priority render queue"],
@@ -126,7 +136,7 @@ export default function PricingPage() {
     return map;
   }, [plans]);
 
-  const onSubscribe = async (subscriptionId: string) => {
+  const onSubscribe = async (subscriptionId: string, couponId?: string) => {
     try {
       setSubmittingId(subscriptionId);
       const response = await fetch("/api/billing/pz/subscriptions", {
@@ -135,6 +145,10 @@ export default function PricingPage() {
           email: user?.primaryEmailAddress?.emailAddress,
           userId,
           subscriptionId,
+          // Auto-applied first-month coupon. Only sent when the card has
+          // one configured AND the user is on the monthly view (3-month
+          // plans are discounted via separate price IDs, not coupons).
+          couponId,
         }),
       });
       const data = await response.json();
@@ -168,7 +182,7 @@ export default function PricingPage() {
       </div>
       <p className="text-center text-xs text-zinc-400 -mt-1">
         {billing === "monthly"
-          ? "Intro offer shown on Monthly plans only. Renewal uses standard monthly price."
+          ? "First-month intro pricing shown on plans where available. Renewal uses standard monthly price."
           : "3-Month plans use flat 20% savings (no intro month discount)."}
       </p>
 
@@ -185,10 +199,14 @@ export default function PricingPage() {
             ? Number((monthlyBasePrice * 0.8).toFixed(2))
             : null;
 
-          // Intro-month discount UI removed 2026-04-30: Stripe checkout
-          // charges the full monthly price on day one, so showing a
-          // discounted "first month" was misleading. To re-introduce, set
-          // up real Stripe coupons and pass them into the checkout session.
+          // First-month coupon — only relevant on monthly view, only for
+          // cards that have one configured. Backed by a real Stripe coupon
+          // (Duration: Once), forwarded to the checkout session via
+          // discounts[0][coupon]=<id>.
+          const introCoupon = billing === "monthly" ? card.firstMonthCoupon : undefined;
+          const firstMonthPrice = introCoupon
+            ? Number((monthlyBasePrice * (1 - introCoupon.percentOff / 100)).toFixed(2))
+            : null;
 
           return (
             <div key={card.key} className={`relative rounded-xl border bg-gradient-to-b ${card.wrapper} p-2.5 flex flex-col min-h-[500px]`}>
@@ -199,17 +217,30 @@ export default function PricingPage() {
               <p className="text-xs text-zinc-300 mt-1 tracking-wide">{card.subtitle}</p>
 
               <div className="mt-3">
+                {introCoupon && firstMonthPrice !== null && (
+                  <p className="text-[11px] text-zinc-300 mb-1">
+                    <span className="line-through text-zinc-400">${monthlyBasePrice.toFixed(2)}/mo</span>{" "}
+                    <span className="text-pink-300">{introCoupon.percentOff}% off 1st month</span>
+                  </p>
+                )}
                 <p className="text-[36px] font-extrabold leading-none flex items-end gap-2">
                   {discountedAnnualPrice !== null && typeof monthlyBasePrice === "number" ? (
                     <>
                       <span className="text-pink-400 line-through text-2xl">${Number(monthlyBasePrice).toFixed(2)}</span>
                       <span>${discountedAnnualPrice.toFixed(2)}</span>
                     </>
+                  ) : firstMonthPrice !== null ? (
+                    <span>${firstMonthPrice.toFixed(2)}</span>
                   ) : (
                     <span>${Number(monthlyBasePrice).toFixed(2)}</span>
                   )}
                   <span className="text-sm font-semibold text-zinc-300">/mo</span>
                 </p>
+                {introCoupon && firstMonthPrice !== null && (
+                  <p className="text-[11px] text-zinc-300 mt-1">
+                    First month ${firstMonthPrice.toFixed(2)}, then ${monthlyBasePrice.toFixed(2)}/mo
+                  </p>
+                )}
                 <p className="text-lime-300 font-semibold mt-2 text-sm">{card.creditsText}</p>
               </div>
 
@@ -273,7 +304,7 @@ export default function PricingPage() {
                   className="w-full h-9 text-sm"
                   variant={card.key === "creator" ? "premium" : "outline"}
                   disabled={isLoading || isCurrent || !subId || submittingId === subId}
-                  onClick={() => onSubscribe(subId)}
+                  onClick={() => onSubscribe(subId, introCoupon?.id)}
                 >
                   {isCurrent ? "Current Plan" : card.cta}
                 </Button>

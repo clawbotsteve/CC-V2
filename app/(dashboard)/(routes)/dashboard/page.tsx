@@ -109,6 +109,9 @@ const pricingPlans = [
     name: "Creator",
     hook: "Best plan for AI character builders",
     price: "$49.99",
+    // First-month coupon is real (Stripe coupon, Duration: Once). Mirror in
+    // app/pricing/page.tsx — both pages share the same source of truth here.
+    firstMonthDiscountPct: 20,
     credits: "600 credits/month",
     featured: true,
     cta: "Build Characters",
@@ -120,6 +123,7 @@ const pricingPlans = [
     name: "Studio",
     hook: "For agencies and operators at serious scale",
     price: "$149.99",
+    firstMonthDiscountPct: 31,
     credits: "2,000 credits/month",
     featured: false,
     cta: "Scale with Studio",
@@ -607,14 +611,27 @@ export default function DashboardPage() {
           {pricingPlans.map((plan) => {
             const basePrice = Number.parseFloat(plan.price.replace("$", ""));
 
-            // Display price = monthly base, or 20%-off-equivalent for 3-month plans.
-            // Intro-month discount UI was removed 2026-04-30 — Stripe checkout
-            // charges the full monthly price on day one, so showing a discounted
-            // "first month" was misleading.
+            // First-month coupon (real Stripe coupon, Duration: Once) for
+            // Creator + Studio. Source of truth lives on the plan object
+            // — see firstMonthDiscountPct in the pricingPlans definitions
+            // above.
+            const firstMonthPct =
+              pricingBilling === "monthly"
+                ? (plan as any).firstMonthDiscountPct as number | undefined
+                : undefined;
+            const firstMonthPrice =
+              firstMonthPct !== undefined
+                ? Number((basePrice * (1 - firstMonthPct / 100)).toFixed(2))
+                : null;
+
+            // Display price = monthly base, or 20%-off for 3-month plans,
+            // or first-month coupon price when applicable.
             const displayPrice =
               pricingBilling === "threeMonths" && plan.name !== "Free"
                 ? `$${(basePrice * 0.8).toFixed(2)}`
-                : plan.price;
+                : firstMonthPrice !== null
+                  ? `$${firstMonthPrice.toFixed(2)}`
+                  : plan.price;
 
             return (
             <div
@@ -633,7 +650,16 @@ export default function DashboardPage() {
               )}
               <div className="font-display text-xl font-bold mb-1 mt-4">{plan.name}</div>
               <div className="text-xs font-semibold uppercase tracking-wider text-[#d8ccff] mb-2">{plan.hook}</div>
+              {firstMonthPct !== undefined && firstMonthPrice !== null && (
+                <div className="text-[11px] text-zinc-300 mb-1">
+                  <span className="line-through text-zinc-400">{plan.price}/mo</span>{" "}
+                  <span className="text-pink-300">{firstMonthPct}% off 1st month</span>
+                </div>
+              )}
               <div className="font-display text-4xl font-extrabold tracking-tight mb-1">{displayPrice}<span className="text-base font-normal text-muted-foreground">/mo</span></div>
+              {firstMonthPct !== undefined && firstMonthPrice !== null && (
+                <div className="text-[11px] text-zinc-300 mb-1">First month ${firstMonthPrice.toFixed(2)}, then {plan.price}/mo</div>
+              )}
               <div className="text-sm font-semibold text-lime-300 mb-6">{plan.credits}</div>
               <ul className="space-y-2.5 mb-6">
                 {plan.features.map((f) => (
