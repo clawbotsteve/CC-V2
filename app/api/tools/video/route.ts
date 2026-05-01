@@ -165,12 +165,19 @@ export async function POST(req: Request) {
 
     console.log("[VIDEO TOOLS] POST - Submitting video generation request");
 
+    // /api/ai/video sits behind Clerk middleware (the route matcher in
+    // middleware.ts includes /api/ai*). When this route calls itself via
+    // axios server-side, the outgoing request has no session cookie unless
+    // we forward it — Clerk then sees an unauthed request and returns 401
+    // before our handler ever runs. Forwarding the original Cookie header
+    // keeps the inner auth() call happy.
     const falRes = await axios.post(
       absoluteUrl("/api/ai/video"),
       data,
       {
         headers: {
           "Content-Type": "application/json",
+          cookie: req.headers.get("cookie") ?? "",
         },
       }
     );
