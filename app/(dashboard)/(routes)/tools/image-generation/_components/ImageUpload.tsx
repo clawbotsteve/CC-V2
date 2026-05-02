@@ -128,7 +128,7 @@ const ImageUpload = React.forwardRef<ImageUploadHandle, Props>(
               onValueChange={setFiles}
               accept={accept}
               maxFiles={1}
-              maxSize={5 * 1024 * 1024} // 5 MB
+              maxSize={10 * 1024 * 1024} // 10 MB
               onFileReject={onFileReject}
               className="w-full max-w-md"
               disabled={uploading}
@@ -141,7 +141,7 @@ const ImageUpload = React.forwardRef<ImageUploadHandle, Props>(
                     </div>
                     <p className="font-medium text-sm">Drag & drop files here</p>
                     <p className="text-muted-foreground text-xs">
-                      Or click to browse (max 1 file, 5MB each). Must have a size bigger than 300x300px
+                      Or click to browse (max 1 file, 10MB each). Must have a size bigger than 300x300px
                     </p>
                   </div>
                   <FileUploadTrigger asChild>

@@ -65,7 +65,7 @@ const StepContentUpload = React.forwardRef<StepContentUploadHandle, Props>(
     const browseButtonRef = React.useRef<HTMLButtonElement>(null);
 
     const accept = "image/*";
-    const maxFileSize = 5 * 1024 * 1024; // 5 MB
+    const maxFileSize = 10 * 1024 * 1024; // 10 MB
 
     React.useImperativeHandle(ref, () => ({
       async upload() {
@@ -276,7 +276,7 @@ const StepContentUpload = React.forwardRef<StepContentUploadHandle, Props>(
                     </div>
                     <p className="font-medium text-sm">Drag & drop files here</p>
                     <p className="text-muted-foreground text-xs">
-                      Or click to browse (max 15 files, 5MB each)
+                      Or click to browse (max 15 files, 10MB each)
                     </p>
                   </div>
                   <FileUploadTrigger asChild>

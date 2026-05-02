@@ -124,7 +124,7 @@ const SwapImage = React.forwardRef<SwapImageUploadHandle, Props>(
               onValueChange={setFiles}
               accept={accept}
               maxFiles={1}
-              maxSize={5 * 1024 * 1024} // 5 MB
+              maxSize={10 * 1024 * 1024} // 10 MB
               onFileReject={onFileReject}
               className="w-full max-w-md"
               disabled={uploading}
@@ -136,7 +136,7 @@ const SwapImage = React.forwardRef<SwapImageUploadHandle, Props>(
                   </div>
                   <p className="font-medium text-sm">Drag & drop files here</p>
                   <p className="text-muted-foreground text-xs">
-                    Or click to browse (max 15 files, 5MB each)
+                    Or click to browse (max 15 files, 10MB each)
                   </p>
                 </div>
                 <FileUploadTrigger asChild>
