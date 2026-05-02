@@ -80,8 +80,12 @@ async function pollHiggsDirect(jobId: string) {
   const paths = [`/requests/${jobId}/status`, `/v1/requests/${jobId}/status`];
   for (const path of paths) {
     try {
+      // Higgsfield auth format: `Key {api_key_id}:{api_key_secret}` —
+      // operators store the combined "id:secret" string in HIGGSFIELD_API_KEY.
+      // Was Bearer here, which always returned 401 — so Soul 2.0 jobs
+      // would never report completion to the UI.
       const res = await fetch(`${HIGGS_BASE}${path}`, {
-        headers: { Authorization: `Bearer ${apiKey}`, Accept: "application/json" },
+        headers: { Authorization: `Key ${apiKey}`, Accept: "application/json" },
       });
       if (!res.ok) continue;
       const data: any = await res.json().catch(() => ({}));
