@@ -221,7 +221,7 @@ const ImageUpload = React.forwardRef<ImageUploadHandle, Props>(
               onValueChange={setFiles}
               accept={accept}
               maxFiles={maxFiles}
-              maxSize={5 * 1024 * 1024} // 5 MB
+              maxSize={10 * 1024 * 1024} // 10 MB (bumped from 5 — phone photos commonly exceed 5)
               onFileReject={onFileReject}
               className="w-full max-w-md"
               disabled={uploading}
@@ -266,7 +266,7 @@ const ImageUpload = React.forwardRef<ImageUploadHandle, Props>(
                         {files.length === 0 ? "Drag & drop files here" : "Add more images"}
                       </p>
                       <p className="text-muted-foreground text-xs">
-                        Or click to browse ({files.length}/{maxFiles}) - 5MB each. Must be bigger than 300x300px
+                        Or click to browse ({files.length}/{maxFiles}) - 10MB each. Must be bigger than 300x300px
                       </p>
                     </div>
                     <FileUploadTrigger asChild>

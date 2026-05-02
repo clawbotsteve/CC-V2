@@ -160,7 +160,7 @@ const StepOnboardingUpload = React.forwardRef<StepContentUploadHandle, Props>(
               onValueChange={setFiles}
               accept={accept}
               maxFiles={10}
-              maxSize={5 * 1024 * 1024} // 5 MB
+              maxSize={10 * 1024 * 1024} // 10 MB
               onFileReject={onFileReject}
               className="w-full max-w-full"
               multiple
@@ -173,7 +173,7 @@ const StepOnboardingUpload = React.forwardRef<StepContentUploadHandle, Props>(
                   </div>
                   <p className="text-white/70 font-medium text-sm">Drag & drop files here</p>
                   <p className="text-muted-foreground text-xs">
-                    Or click to browse (max 15 files, 5MB each)
+                    Or click to browse (max 15 files, 10MB each)
                   </p>
                 </div>
                 <FileUploadTrigger asChild>

@@ -28,7 +28,7 @@ export function FileSizeErrorModal({
   error,
   fileName,
   fileSize,
-  maxSize = 5 * 1024 * 1024, // Default 5MB
+  maxSize = 10 * 1024 * 1024, // Default 10MB
 }: FileSizeErrorModalProps) {
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;

@@ -42,7 +42,7 @@ const ImageUpload = React.forwardRef<ImageUploadHandle, Props>(
       onFilesChange,
       disabled = false,
       maxFiles = 1,
-      maxSizeMB = 5,
+      maxSizeMB = 10,
       accept = "image/*",
       required = true,
     },
