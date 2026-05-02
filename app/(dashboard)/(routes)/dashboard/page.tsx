@@ -71,43 +71,69 @@ const modelCloud = [
 
 const modelCloudLoop = [...modelCloud, ...modelCloud];
 
+// Plan capability source-of-truth (revised 2026-05-01) — keep in sync with
+// lib/plan-access.ts and app/pricing/page.tsx. Marketing copy reflects
+// what each tier actually unlocks server-side.
 const pricingPlans = [
   {
     name: "Free",
     hook: "Try the magic first",
     price: "$0",
-    credits: "3 credits/month",
+    credits: "2 credits/month",
     featured: false,
     cta: "Try Free",
-    features: ["5 Nano Banana Pro images", "Watermarked output", "Signup required"],
-    modelAccess: ["Nano Banana Pro (limited)"],
-    unlimited: ["—"],
+    features: [
+      "1 medium-quality GPT Image 2 generation",
+      "Text-to-image only",
+      "No credit card required",
+    ],
+    modelAccess: ["GPT Image 2 (medium)"],
+    unlimited: [],
   },
   {
     name: "Beginner",
-    hook: "Best first paid step",
+    hook: "All image tools, no video",
     price: "$9.99",
     credits: "80 credits/month",
     featured: false,
     cta: "Start Beginner",
-    features: ["Core image + video tools", "Prompt tools included", "Affordable monthly entry"],
-    modelAccess: ["Nano Banana Pro", "Nano Banana 2", "Kling 2.6 (core)"],
-    unlimited: ["Prompt optimizer"],
+    features: [
+      "All 4 image generation models",
+      "Up to 2K resolution",
+      "GPT Image 2 (medium quality)",
+      "Prompt tools included",
+    ],
+    modelAccess: [
+      "GPT Image 2 (medium)",
+      "Nano Banana 2 (1K + 2K)",
+      "Nano Banana 2 Edit (1K + 2K)",
+      "Flux LoRA",
+    ],
+    unlimited: [],
   },
   {
     name: "Starter",
-    hook: "Get moving fast",
+    hook: "Add video + 4K image quality",
     price: "$19.99",
     credits: "200 credits/month",
     featured: false,
     cta: "Start Starter",
-    features: ["Kling 2.6 + Motion Control", "1 AI influencer slot", "HD video export", "Prompt tools included"],
-    modelAccess: ["Kling 2.6", "Kling Motion Control", "Nano Banana Pro", "Nano Banana 2", "Topaz Upscale"],
-    unlimited: ["Image generations (fair use)", "Prompt optimizer"],
+    features: [
+      "Everything in Beginner — no quality caps",
+      "GPT Image 2 high quality + 4K Nano Banana",
+      "Kling 2.6 video (5s + 10s)",
+      "1 AI influencer slot",
+    ],
+    modelAccess: [
+      "All Beginner models, no caps",
+      "Kling 2.6",
+      "Topaz Upscale",
+    ],
+    unlimited: [],
   },
   {
     name: "Creator",
-    hook: "Best plan for AI character builders",
+    hook: "Power features for character builders",
     price: "$49.99",
     // First-month coupon is real (Stripe coupon, Duration: Once). Mirror in
     // app/pricing/page.tsx — both pages share the same source of truth here.
@@ -115,21 +141,37 @@ const pricingPlans = [
     credits: "600 credits/month",
     featured: true,
     cta: "Build Characters",
-    features: ["Everything in Starter", "3 AI influencer slots", "Advanced creator workflows", "Full edit suite", "Priority processing"],
-    modelAccess: ["Kling Motion Control", "SeedVR Upscale", "Video Upscale", "Nano Banana 2 Edit"],
-    unlimited: ["Image generations (fair use)", "Prompt optimizer", "Character consistency sessions"],
+    features: [
+      "Everything in Starter",
+      "Soul 2.0 character lock",
+      "Kling Motion Control",
+      "Seedance 2.0 reference-to-video",
+      "3 AI influencer slots + priority queue",
+    ],
+    modelAccess: [
+      "Soul 2.0",
+      "Kling Motion Control",
+      "Seedance 2.0 ref-to-video",
+      "SeedVR Image Upscale",
+    ],
+    unlimited: [],
   },
   {
     name: "Studio",
-    hook: "For agencies and operators at serious scale",
+    hook: "For agencies and operators at scale",
     price: "$149.99",
     firstMonthDiscountPct: 31,
     credits: "2,000 credits/month",
     featured: false,
     cta: "Scale with Studio",
-    features: ["Everything in Creator", "10 AI influencer slots", "Veo 3.1 access", "Highest concurrency", "Priority rendering"],
-    modelAccess: ["All Creator models", "Veo HQ 4s / 8s", "Click-to-Ad pipeline"],
-    unlimited: ["Image generations (fair use)", "Prompt optimizer", "Priority render queue"],
+    features: [
+      "Everything in Creator",
+      "10 AI influencer slots",
+      "Highest credit allowance",
+      "Highest priority queue",
+    ],
+    modelAccess: ["All Creator models, no caps"],
+    unlimited: [],
   },
 ];
 
