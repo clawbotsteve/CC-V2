@@ -60,6 +60,7 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
   const isNanoBanana2 = form.model === ImageGenerationModel.NanoBanana2;
   const isNanoBanana2Base = form.model === ImageGenerationModel.NanoBanana2Base;
   const isGptImage2 = form.model === ImageGenerationModel.GptImage2;
+  const isSoul2 = form.model === ImageGenerationModel.Soul2;
 
   // Quality / resolution caps:
   //   - Free + Beginner are locked to medium GPT Image 2 quality and 2K
@@ -72,8 +73,8 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
   const qualityLockedToMedium = isFreeTier || isBeginnerTier;
   const resolutionMax2K = isFreeTier || isBeginnerTier;
 
-  // Image-to-image models require a reference image
-  const isImageToImage = isNanoBanana2;
+  // Image-to-image / reference-to-image models require a reference image
+  const isImageToImage = isNanoBanana2 || isSoul2;
   // GPT Image 2 is text-to-image. Including it here surfaces the existing
   // aspect-ratio picker, which already maps to FAL's `image_size` enum
   // (square_hd / square / portrait_4_3 / portrait_16_9 / landscape_4_3 /
@@ -87,12 +88,14 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
 
   // Active picker — kept in display order. Nano Banana Pro and Flux Pro V1 were
   // removed 2026-04-29 (consolidated to gpt-image-2 + the existing nano/flux
-  // models). The enum values still exist so historical generations resolve.
+  // models). Soul 2.0 (Higgsfield) added 2026-05-02 — Creator+ tier.
+  // The deprecated enum values still exist so historical generations resolve.
   const modelOptions = [
     { value: ImageGenerationModel.GptImage2, label: "GPT Image 2", mode: "text", tag: "Text-to-Image" },
     { value: ImageGenerationModel.NanoBanana2Base, label: "Nano Banana 2", mode: "text", tag: "Text-to-Image" },
     { value: ImageGenerationModel.NanoBanana2, label: "Nano Banana 2 Edit", mode: "image", tag: "Image-to-Image" },
     { value: ImageGenerationModel.Lora, label: "Flux LoRA", mode: "text", tag: "Text-to-Image" },
+    { value: ImageGenerationModel.Soul2, label: "Soul 2.0 (Creator+)", mode: "image", tag: "Reference-to-Image" },
   ] as const;
 
   return (
@@ -277,7 +280,9 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
           <label className="text-sm font-medium text-foreground">
             {isNanoBanana2
               ? "Input Photos (optional, up to 5)"
-              : `Reference Image ${isNanoBannaPro ? "(required)" : "(optional)"}`}
+              : isSoul2
+                ? "Reference Image (required)"
+                : `Reference Image ${isNanoBannaPro ? "(required)" : "(optional)"}`}
           </label>
           <ImageUpload
             fieldName="referenceImage"
@@ -287,7 +292,12 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
             maxFiles={isNanoBanana2 ? 5 : 1}
           />
           <p className="text-xs text-muted-foreground flex items-center gap-1">
-            <Info className="w-3 h-3" /> {isNanoBanana2 ? "Upload up to 5 photos to guide Nano Banana 2." : "Upload an image to transform or edit"}
+            <Info className="w-3 h-3" />{" "}
+            {isNanoBanana2
+              ? "Upload up to 5 photos to guide Nano Banana 2."
+              : isSoul2
+                ? "Soul 2.0 uses your reference photo to lock the character's identity."
+                : "Upload an image to transform or edit"}
           </p>
         </div>
       )}
