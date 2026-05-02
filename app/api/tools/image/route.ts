@@ -349,12 +349,25 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Missing HIGGSFIELD_API_KEY" }, { status: 500 });
       }
 
-      // Soul Reference requires an input image. Reuse whichever the user
-      // uploaded — single image_url or first of image_urls.
-      const referenceImageUrl = body.image_url || body.image_urls?.[0];
-      if (!referenceImageUrl) {
+      // Soul Reference requires an input image AS AN ABSOLUTE PUBLIC URL —
+      // Higgsfield 422s on relative paths ("/uploads/..."). Mirror what
+      // Nano Banana 2 Edit does: hand-off the user's upload to FAL storage,
+      // which gives us a publicly fetchable URL Higgsfield can resolve.
+      const localReferenceUrl = body.image_url || body.image_urls?.[0];
+      if (!localReferenceUrl) {
         return NextResponse.json(
           { error: "Soul 2.0 requires a reference image. Upload one and try again." },
+          { status: 400 }
+        );
+      }
+
+      let referenceImageUrl: string;
+      try {
+        referenceImageUrl = await uploadImageUrlToFalStorage(localReferenceUrl);
+      } catch (err) {
+        console.error("[SOUL2] Failed to host reference on FAL:", localReferenceUrl, err);
+        return NextResponse.json(
+          { error: "Failed to process reference image. Re-upload and try again." },
           { status: 400 }
         );
       }
