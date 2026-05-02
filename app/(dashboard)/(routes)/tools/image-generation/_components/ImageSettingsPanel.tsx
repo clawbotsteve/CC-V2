@@ -61,10 +61,16 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
   const isNanoBanana2Base = form.model === ImageGenerationModel.NanoBanana2Base;
   const isGptImage2 = form.model === ImageGenerationModel.GptImage2;
 
-  // Free users can only use the "medium" quality of gpt-image-2 (their single
-  // trial credit). Lock the picker for them; paid users can pick low/medium/high.
+  // Quality / resolution caps:
+  //   - Free + Beginner are locked to medium GPT Image 2 quality and 2K
+  //     Nano Banana resolution. Server enforces this in /api/tools/image
+  //     too; this is the UI hint so users see why high / 4K isn't pickable.
+  //   - Starter+ has no caps.
   const { plan } = useUserContext();
   const isFreeTier = !plan || plan === "plan_free";
+  const isBeginnerTier = plan === "plan_beginner" || plan === "plan_beginner_3month";
+  const qualityLockedToMedium = isFreeTier || isBeginnerTier;
+  const resolutionMax2K = isFreeTier || isBeginnerTier;
 
   // Image-to-image models require a reference image
   const isImageToImage = isNanoBanana2;
@@ -182,13 +188,13 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
         </p>
       </div>
 
-      {/* GPT Image 2 — Quality picker. Free tier locked to "medium". */}
+      {/* GPT Image 2 — Quality picker. Free + Beginner locked to "medium". */}
       {isGptImage2 && (
         <div className="space-y-1 py-2">
           <label className="text-sm font-medium text-foreground">Quality</label>
           <Select
             value={form.quality ?? "medium"}
-            disabled={isFreeTier}
+            disabled={qualityLockedToMedium}
             onValueChange={(value) =>
               setForm((f) => ({ ...f, quality: value as "low" | "medium" | "high" }))
             }
@@ -221,7 +227,9 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
             <Info className="w-3 h-3" />
             {isFreeTier
               ? "Free plan is locked to medium. Upgrade to access higher quality."
-              : "Higher quality looks better but costs more credits per generation."}
+              : isBeginnerTier
+                ? "Beginner plan is locked to medium. Upgrade to Starter for high quality."
+                : "Higher quality looks better but costs more credits per generation."}
           </p>
         </div>
       )}
@@ -435,22 +443,34 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
             <span className="text-sm font-medium uppercase">{form.output_resolution ?? "1k"}</span>
           </div>
           <div className="flex gap-2">
-            {(["1k", "2k", "4k"] as NanoBananaResolution[]).map((res) => (
-              <button
-                key={res}
-                onClick={() => setForm((f) => ({ ...f, output_resolution: res }))}
-                className={`flex-1 px-3 py-1.5 rounded-md text-sm font-medium border ${
-                  (form.output_resolution ?? "1k") === res
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-muted text-muted-foreground border-muted"
-                }`}
-              >
-                {res.toUpperCase()}
-              </button>
-            ))}
+            {(["1k", "2k", "4k"] as NanoBananaResolution[]).map((res) => {
+              const lockedFor4K = res === "4k" && resolutionMax2K;
+              return (
+                <button
+                  key={res}
+                  disabled={lockedFor4K}
+                  onClick={() =>
+                    !lockedFor4K && setForm((f) => ({ ...f, output_resolution: res }))
+                  }
+                  className={`flex-1 px-3 py-1.5 rounded-md text-sm font-medium border transition ${
+                    (form.output_resolution ?? "1k") === res
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : lockedFor4K
+                        ? "bg-muted/30 text-muted-foreground/40 border-muted/30 cursor-not-allowed"
+                        : "bg-muted text-muted-foreground border-muted"
+                  }`}
+                  title={lockedFor4K ? "Upgrade to Starter for 4K" : undefined}
+                >
+                  {res.toUpperCase()}
+                </button>
+              );
+            })}
           </div>
           <p className="text-xs text-muted-foreground flex items-center gap-1">
-            <Info className="w-3 h-3" /> Credits by resolution: 1K = 2, 2K = 3, 4K = 4
+            <Info className="w-3 h-3" />
+            {resolutionMax2K
+              ? "4K is available on Starter and above. Beginner is capped at 2K."
+              : "Credits by resolution: 1K = 2, 2K = 3, 4K = 4"}
           </p>
         </div>
       )}

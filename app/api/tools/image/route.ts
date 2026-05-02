@@ -152,11 +152,25 @@ export async function POST(req: Request) {
     body.enable_safety_checker = true;
 
     // Quality enforcement for gpt-image-2:
-    //   - Free tier is locked to "medium" (their single trial credit).
-    //   - Paid tiers can pick low / medium / high; default to medium.
+    //   - Free + Beginner are locked to "medium". Beginner pays $9.99 for
+    //     all 4 models, but the entry-tier price floor needs the high
+    //     quality lever available to Starter+ to make the upgrade worth it.
+    //   - Starter+ can pick low / medium / high.
     if (data.model === ImageGenerationModel.GptImage2) {
       const requested = (data.quality ?? "medium");
-      body.quality = access === "free" ? "medium" : requested;
+      const isLockedToMedium = access === "free" || access === "beginner";
+      body.quality = isLockedToMedium ? "medium" : requested;
+    }
+
+    // Resolution cap for Beginner on the Nano Banana family. Beginner can
+    // request 1K / 2K but NOT 4K; Starter+ has no cap. Same justification
+    // as above — preserving an upgrade lever for Starter at $19.99.
+    const isNanoFamily =
+      data.model === ImageGenerationModel.NanoBanana2 ||
+      data.model === ImageGenerationModel.NanoBanana2Base ||
+      data.model === ImageGenerationModel.NanoBannaPro;
+    if (isNanoFamily && access === "beginner" && body.output_resolution === "4k") {
+      body.output_resolution = "2k";
     }
 
     let canUse = true;

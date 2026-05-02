@@ -37,6 +37,10 @@ type CardMeta = {
   unlimited: string[];
 };
 
+// Plan capability source-of-truth (revised 2026-05-01) — keep in sync with
+// lib/plan-access.ts. The marketing copy here describes what each tier
+// actually unlocks server-side; "fair use" / "unlimited" language was
+// dropped because credits are real and finite.
 const CARDS: CardMeta[] = [
   {
     key: "free",
@@ -48,43 +52,54 @@ const CARDS: CardMeta[] = [
     tierAnnual: "plan_free",
     wrapper: "from-slate-800/70 to-slate-950/80 border-slate-600/40",
     displayMonthlyPrice: 0,
-    creditsText: "3 credits/month",
-    fullAccess: ["Nano Banana Pro"],
-    unlimited: ["—"],
+    creditsText: "2 credits/month",
+    fullAccess: ["GPT Image 2 (medium)"],
+    unlimited: [],
   },
   {
     key: "beginner",
     name: "Beginner",
-    topBadge: "BEST FIRST PAID STEP",
-    subtitle: "START CREATING DAILY",
+    topBadge: "ENTRY-LEVEL CREATOR",
+    subtitle: "ALL IMAGE TOOLS, NO VIDEO",
     cta: "Start Beginner",
     tierMonthly: "plan_beginner",
     tierAnnual: "plan_beginner_3month",
     wrapper: "from-blue-900/55 to-slate-950/80 border-blue-500/35",
     displayMonthlyPrice: 9.99,
     creditsText: "80 credits/month",
-    fullAccess: ["Nano Banana Pro", "Nano Banana 2", "Kling 2.6 (core)"],
-    unlimited: ["Prompt optimizer"],
+    fullAccess: [
+      "GPT Image 2 (medium)",
+      "Nano Banana 2 (1K + 2K)",
+      "Nano Banana 2 Edit (1K + 2K)",
+      "Flux LoRA",
+    ],
+    unlimited: [],
   },
   {
     key: "starter",
     name: "Starter",
-    topBadge: "BEST FOR FIRST 30 DAYS",
-    subtitle: "GET MOVING FAST",
+    topBadge: "ADD VIDEO + 4K",
+    subtitle: "FIRST PAID STEP WITH KLING 2.6",
     cta: "Start Starter",
     tierMonthly: "plan_basic",
     tierAnnual: "plan_basic_3month",
     wrapper: "from-cyan-900/55 to-slate-950/80 border-cyan-500/35",
     displayMonthlyPrice: 19.99,
     creditsText: "200 credits/month",
-    fullAccess: ["Kling 2.6", "Kling Motion Control", "Nano Banana Pro", "Nano Banana 2", "Topaz Upscale"],
-    unlimited: ["Image generations (fair use)", "Prompt optimizer"],
+    fullAccess: [
+      "Everything in Beginner (no quality cap)",
+      "GPT Image 2 high quality",
+      "Nano Banana family up to 4K",
+      "Kling 2.6 video (5s + 10s)",
+      "1 AI influencer slot",
+    ],
+    unlimited: [],
   },
   {
     key: "creator",
     name: "Creator",
     topBadge: "MOST CREATORS CHOOSE THIS",
-    subtitle: "BEST PLAN FOR AI CHARACTER BUILDERS",
+    subtitle: "BEST FOR AI CHARACTER BUILDERS",
     cta: "Build Characters",
     tierMonthly: "plan_pro",
     tierAnnual: "plan_pro_3month",
@@ -94,8 +109,15 @@ const CARDS: CardMeta[] = [
     displayMonthlyPrice: 49.99,
     firstMonthCoupon: { id: "O79kBqPK", percentOff: 20 },
     creditsText: "600 credits/month",
-    fullAccess: ["Kling Motion Control", "SeedVR Image Upscale", "Bytedance Video Upscale", "Nano Banana 2 Edit"],
-    unlimited: ["Image generations (fair use)", "Prompt optimizer", "Advanced creator workflows"],
+    fullAccess: [
+      "Everything in Starter",
+      "Soul 2.0 character lock",
+      "Kling Motion Control",
+      "Seedance 2.0 reference-to-video",
+      "3 AI influencer slots",
+      "Priority queue",
+    ],
+    unlimited: [],
   },
   {
     key: "studio",
@@ -109,8 +131,13 @@ const CARDS: CardMeta[] = [
     displayMonthlyPrice: 149.99,
     firstMonthCoupon: { id: "abjQuA1g", percentOff: 31 },
     creditsText: "2,000 credits/month",
-    fullAccess: ["All Creator models", "Veo 3.1 (4s/8s)", "All upscale + all video"],
-    unlimited: ["Image generations (fair use)", "Prompt optimizer", "Priority render queue"],
+    fullAccess: [
+      "Everything in Creator",
+      "10 AI influencer slots",
+      "Highest credit allowance",
+      "Highest priority queue",
+    ],
+    unlimited: [],
   },
 ];
 
@@ -247,37 +274,39 @@ export default function PricingPage() {
               <div className="mt-4 space-y-1.5 text-zinc-200 text-[13px]">
                 {card.key === "free" ? (
                   <>
-                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> 3 Nano Banana Pro images</p>
-                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Watermarked output</p>
-                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Signup required</p>
+                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> 1 medium-quality GPT Image 2 generation</p>
+                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Text-to-image only</p>
+                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> No credit card required</p>
                   </>
                 ) : card.key === "beginner" ? (
                   <>
                     <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> 80 monthly credits</p>
-                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Nano Banana Pro + Nano Banana 2 + Kling 2.6 core</p>
-                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Prompt tools included</p>
-                    <p className="flex items-center gap-2 text-zinc-400">✕ Motion Control / Veo / premium upscale</p>
+                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> All 4 image models (GPT Image 2, Nano Banana 2, Edit, Flux LoRA)</p>
+                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Up to 2K resolution</p>
+                    <p className="flex items-center gap-2 text-zinc-400">✕ No video, no high-quality / 4K</p>
                   </>
                 ) : card.key === "starter" ? (
                   <>
-                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> 24h trial (50 credits)</p>
-                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Nano Banana Pro + Nano Banana 2 + Kling 2.6 + Kling Motion Control</p>
-                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Topaz Upscale + prompt tools included</p>
-                    <p className="flex items-center gap-2 text-zinc-400">✕ Veo 3.1 / highest-priority queue</p>
+                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> 200 monthly credits</p>
+                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Everything in Beginner — no quality caps</p>
+                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> High-quality GPT Image 2 + 4K Nano Banana</p>
+                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Kling 2.6 video (5s + 10s)</p>
+                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> 1 AI influencer slot</p>
                   </>
                 ) : card.key === "creator" ? (
                   <>
+                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> 600 monthly credits</p>
                     <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Everything in Starter</p>
-                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Nano Banana 2 Edit + advanced creator workflows</p>
-                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Full edit suite + priority processing</p>
-                    <p className="flex items-center gap-2 text-zinc-400">✕ Veo 3.1</p>
+                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Soul 2.0 character lock</p>
+                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Kling Motion Control + Seedance 2.0 ref-to-video</p>
+                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> 3 AI influencer slots + priority queue</p>
                   </>
                 ) : (
                   <>
+                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> 2,000 monthly credits</p>
                     <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Everything in Creator</p>
-                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Veo 3.1 access</p>
-                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Highest concurrency</p>
-                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Priority rendering</p>
+                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> 10 AI influencer slots</p>
+                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-lime-300" /> Highest credit allowance + priority</p>
                   </>
                 )}
               </div>
