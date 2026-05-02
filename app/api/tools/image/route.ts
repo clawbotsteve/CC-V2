@@ -338,14 +338,10 @@ export async function POST(req: Request) {
 
       requestId = resp?.request_id;
     } else if (data.model === ImageGenerationModel.Soul2) {
-      const data_ai: Soul2Input = {
-        prompt: body.prompt,
-        seed: body.seed,
-        num_images: body.num_images,
-        output_format: body.output_format,
-        aspect_ratio: body.aspect_ratio,
-      };
-
+      // Soul Reference (Higgsfield) is text + reference-image → image.
+      // Auth format per docs (https://docs.higgsfield.ai/how-to/introduction):
+      //   Authorization: Key {api_key_id}:{api_key_secret}
+      // Operators store the combined "id:secret" string in HIGGSFIELD_API_KEY.
       const apiKey = process.env.HIGGSFIELD_API_KEY;
       const baseUrl = (process.env.HIGGSFIELD_BASE_URL || "https://platform.higgsfield.ai").replace(/\/$/, "");
 
@@ -353,57 +349,55 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Missing HIGGSFIELD_API_KEY" }, { status: 500 });
       }
 
-      const payload = {
-        prompt: data_ai.prompt,
-        num_images: data_ai.num_images ?? 1,
-        seed: data_ai.seed,
-        output_format: data_ai.output_format ?? "png",
-        aspect_ratio: data_ai.aspect_ratio,
-      };
-
-      const candidatePaths = [
-        "/higgsfield-ai/soul/reference",
-        "/v1/higgsfield-ai/soul/reference",
-      ];
-
-      const authHeaderVariants: HeadersInit[] = [
-        { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-        { "Content-Type": "application/json", "x-api-key": apiKey },
-        { "Content-Type": "application/json", Authorization: apiKey },
-      ];
-
-      let lastStatus = 500;
-      let lastData: any = null;
-
-      for (const path of candidatePaths) {
-        for (const headers of authHeaderVariants) {
-          const response = await fetch(`${baseUrl}${path}`, {
-            method: "POST",
-            headers,
-            body: JSON.stringify(payload),
-          });
-
-          const json = await response.json().catch(() => ({}));
-          lastStatus = response.status;
-          lastData = json;
-
-          if (!response.ok) continue;
-
-          requestId = json?.request_id || json?.requestId || json?.id || json?.data?.request_id;
-          if (!requestId) {
-            return NextResponse.json({ error: "Missing request id from Soul 2.0 response", details: json }, { status: 500 });
-          }
-          break;
-        }
-        if (requestId) break;
-        if (lastStatus !== 401) break;
+      // Soul Reference requires an input image. Reuse whichever the user
+      // uploaded — single image_url or first of image_urls.
+      const referenceImageUrl = body.image_url || body.image_urls?.[0];
+      if (!referenceImageUrl) {
+        return NextResponse.json(
+          { error: "Soul 2.0 requires a reference image. Upload one and try again." },
+          { status: 400 }
+        );
       }
 
-      if (!requestId) {
+      // Map our internal aspect_ratio to Higgsfield's accepted enum. Their
+      // docs allow: 9:16, 16:9, 4:3, 3:4, 1:1, 2:3, 3:2 (default 4:3).
+      const allowedAspect = new Set(["9:16", "16:9", "4:3", "3:4", "1:1", "2:3", "3:2"]);
+      const aspect = body.aspect_ratio && allowedAspect.has(String(body.aspect_ratio))
+        ? String(body.aspect_ratio)
+        : "4:3";
+
+      const payload = {
+        prompt: body.prompt,
+        image_reference_url: referenceImageUrl,
+        aspect_ratio: aspect,
+        resolution: "720p",
+        batch_size: Math.min(Math.max(body.num_images ?? 1, 1), 4),
+        enhance_prompt: true,
+        style_strength: 1,
+        ...(body.seed !== undefined ? { seed: body.seed } : {}),
+      };
+
+      const response = await fetch(`${baseUrl}/higgsfield-ai/soul/reference`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Key ${apiKey}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const json = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        console.error("[SOUL2] submit failed", response.status, json);
         return NextResponse.json(
-          { error: lastData?.error || lastData?.message || "Soul 2.0 request failed", details: lastData },
-          { status: lastStatus || 500 }
+          { error: json?.detail || json?.error || `Soul 2.0 request failed (${response.status})` },
+          { status: response.status }
         );
+      }
+
+      requestId = json?.request_id;
+      if (!requestId) {
+        return NextResponse.json({ error: "Missing request id from Soul 2.0 response", details: json }, { status: 500 });
       }
     } else if (data.model === ImageGenerationModel.Lora) {
       const data_ai: LoraInput = {
