@@ -379,6 +379,14 @@ export async function POST(req: Request) {
         ? String(body.aspect_ratio)
         : "4:3";
 
+      // Higgsfield rejects seed > 1,000,000 (422 less_than_equal). Our form
+      // generates seeds in the 1M-10M range, so we mod-clamp into a valid
+      // range. Drop seed entirely if for some reason it's missing or zero.
+      const safeSeed =
+        body.seed && body.seed > 0
+          ? Math.floor(body.seed % 1_000_000)
+          : undefined;
+
       const payload = {
         prompt: body.prompt,
         image_reference_url: referenceImageUrl,
@@ -387,7 +395,7 @@ export async function POST(req: Request) {
         batch_size: Math.min(Math.max(body.num_images ?? 1, 1), 4),
         enhance_prompt: true,
         style_strength: 1,
-        ...(body.seed !== undefined ? { seed: body.seed } : {}),
+        ...(safeSeed !== undefined ? { seed: safeSeed } : {}),
       };
 
       const response = await fetch(`${baseUrl}/higgsfield-ai/soul/reference`, {
