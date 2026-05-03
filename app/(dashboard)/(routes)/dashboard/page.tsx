@@ -62,11 +62,11 @@ const vfxEffects = [
 ];
 
 const modelCloud = [
+  { name: "GPT Image 2", sub: "Image Model" },
   { name: "Nano Banana 2", sub: "Image Model" },
+  { name: "Soul 2.0", sub: "Character Lock" },
   { name: "Kling 2.6", sub: "Video Model" },
-  { name: "Veo 3.1", sub: "Premium Video" },
   { name: "Motion Control", sub: "Camera Control" },
-  { name: "Bytedance", sub: "Video Engine" },
 ];
 
 const modelCloudLoop = [...modelCloud, ...modelCloud];
@@ -195,29 +195,33 @@ const toolComparisonRows = [
   { tool: "White-label Export", free: false, starter: false, creator: false, studio: true },
 ];
 
+// Per-plan accent palette. Backgrounds use a very faint top-of-card tint
+// fading to the page bg; the glow color is reserved for the Featured plan's
+// outline ring only. Keeps each tier visually distinct without making the
+// cards feel like loud, spotlit panels.
 const planStyles: Record<string, { card: string; glow: string; save: string }> = {
   Free: {
-    card: "linear-gradient(180deg, rgba(40,44,62,0.75) 0%, rgba(17,17,24,1) 45%)",
+    card: "linear-gradient(180deg, rgba(148,163,184,0.06) 0%, rgba(17,17,24,0) 65%)",
     glow: "rgba(148,163,184,0.25)",
     save: "No commitment",
   },
   Beginner: {
-    card: "linear-gradient(180deg, rgba(30,64,175,0.62) 0%, rgba(17,17,24,1) 50%)",
+    card: "linear-gradient(180deg, rgba(59,130,246,0.08) 0%, rgba(17,17,24,0) 65%)",
     glow: "rgba(59,130,246,0.35)",
     save: "Best first paid step",
   },
   Starter: {
-    card: "linear-gradient(180deg, rgba(12,74,110,0.65) 0%, rgba(17,17,24,1) 50%)",
+    card: "linear-gradient(180deg, rgba(56,189,248,0.08) 0%, rgba(17,17,24,0) 65%)",
     glow: "rgba(56,189,248,0.35)",
     save: "Best for first 30 days",
   },
   Creator: {
-    card: "linear-gradient(180deg, rgba(70,95,20,0.72) 0%, rgba(17,17,24,1) 52%)",
+    card: "linear-gradient(180deg, rgba(163,230,53,0.10) 0%, rgba(17,17,24,0) 65%)",
     glow: "rgba(163,230,53,0.40)",
     save: "Most creators choose this",
   },
   Studio: {
-    card: "linear-gradient(180deg, rgba(131,24,67,0.72) 0%, rgba(17,17,24,1) 52%)",
+    card: "linear-gradient(180deg, rgba(244,114,182,0.10) 0%, rgba(17,17,24,0) 65%)",
     glow: "rgba(244,114,182,0.38)",
     save: "Built for serious scale",
   },
@@ -260,14 +264,23 @@ export default function DashboardPage() {
     <div className="min-h-screen">
       {/* ===== HERO ===== */}
       <section className="relative overflow-hidden py-20 md:py-24 text-center px-6">
-        {/* Glow */}
-        <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[800px] h-[600px] pointer-events-none" style={{ background: 'radial-gradient(ellipse, rgba(99,102,241,0.15) 0%, rgba(167,139,250,0.08) 40%, transparent 70%)' }} />
+        {/* Glow — uses inset-0 + percentage-based radial so it always fades to
+            fully transparent before hitting any section edge. Replaces the
+            previous fixed 800×600 box that got clipped by overflow-hidden,
+            producing a hard purple cut-off line at the top + sides. */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              'radial-gradient(ellipse 55% 45% at 50% 25%, rgba(99,102,241,0.18) 0%, rgba(167,139,250,0.07) 45%, transparent 75%)',
+          }}
+        />
         
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="relative z-10 max-w-[800px] mx-auto">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 bg-[#6366f1]/10 border border-[#6366f1]/20 rounded-full px-4 py-1.5 text-sm font-medium text-[#818cf8] mb-6">
             <span className="w-1.5 h-1.5 rounded-full bg-[#22c55e]" style={{ animation: 'pulse-dot 2s ease-in-out infinite' }} />
-            Powered by Flux Pro, Kling 3.0 & Veo 3
+            Powered by GPT Image 2, Nano Banana 2 & Soul 2.0
           </div>
 
           <div className="mb-5">
@@ -305,13 +318,15 @@ export default function DashboardPage() {
             onClose={() => setOnboardingOpen(false)}
           />
 
-          {/* Stats */}
+          {/* Capability strip — replaces the previous fabricated user-count
+              stats. Sourced from real product capabilities so we don't ship
+              made-up "50K+ creators" numbers for a brand-new product. */}
           <div className="flex gap-10 justify-center mt-12 pt-8 border-t border-border flex-wrap">
             {[
-              { num: "50K+", label: "Creators", color: "#818cf8" },
-              { num: "2M+", label: "Images Generated" },
-              { num: "500K+", label: "Videos Created", color: "#a78bfa" },
-              { num: "10+", label: "AI Models" },
+              { num: "5", label: "AI Models", color: "#818cf8" },
+              { num: "4K", label: "Max Resolution" },
+              { num: "10s", label: "Video Length", color: "#a78bfa" },
+              { num: "1-Click", label: "Character Lock" },
             ].map((s) => (
               <div key={s.label} className="text-center">
                 <div className="font-display text-2xl md:text-3xl font-bold" style={s.color ? { color: s.color } : {}}>{s.num}</div>
@@ -322,28 +337,34 @@ export default function DashboardPage() {
         </motion.div>
       </section>
 
-      {/* ===== MODEL CLOUD ===== */}
-      <section className="max-w-[1280px] mx-auto px-6 pt-12 pb-12">
-        <div className="rounded-2xl border border-white/10 bg-[linear-gradient(180deg,#0f1016_0%,#0b0c12_100%)] p-5 md:p-6 overflow-hidden">
-          <div className="mb-4 text-center">
-            <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Models we use</p>
-          </div>
+      {/* ===== MODEL CLOUD =====
+          Previously wrapped in a bordered card with a hardcoded dark gradient
+          bg, which read as a separate panel sitting on top of the page rather
+          than part of it. Removed the card entirely; edges now fade with a CSS
+          mask (transparency, not a solid color) so the marquee blends into
+          whatever page bg is behind it. */}
+      <section className="max-w-[1280px] mx-auto px-6 py-10">
+        <div className="mb-5 text-center">
+          <p className="text-xs uppercase tracking-[0.22em] text-zinc-500">Models we use</p>
+        </div>
 
-          <div className="relative">
-            <div className="pointer-events-none absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-[#0d0e14] to-transparent z-10" />
-            <div className="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-[#0d0e14] to-transparent z-10" />
-
-            <div className="flex w-max items-center gap-3 animate-[model-marquee_26s_linear_infinite] hover:[animation-play-state:paused]">
-              {modelCloudLoop.map((model, idx) => (
-                <div
-                  key={`${model.name}-${idx}`}
-                  className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-center min-w-[170px]"
-                >
-                  <p className="text-sm font-semibold text-white">{model.name}</p>
-                  <p className="text-[11px] text-zinc-400">{model.sub}</p>
-                </div>
-              ))}
-            </div>
+        <div
+          className="relative overflow-hidden"
+          style={{
+            maskImage: 'linear-gradient(to right, transparent, #000 8%, #000 92%, transparent)',
+            WebkitMaskImage: 'linear-gradient(to right, transparent, #000 8%, #000 92%, transparent)',
+          }}
+        >
+          <div className="flex w-max items-center gap-3 animate-[model-marquee_26s_linear_infinite] hover:[animation-play-state:paused]">
+            {modelCloudLoop.map((model, idx) => (
+              <div
+                key={`${model.name}-${idx}`}
+                className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 text-center min-w-[170px]"
+              >
+                <p className="text-sm font-semibold text-white">{model.name}</p>
+                <p className="text-[11px] text-zinc-400">{model.sub}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -408,9 +429,13 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* ===== TOOLS GRID ===== */}
-      <section className="w-full px-4 md:px-6 py-24">
-        <div className="rounded-3xl border border-[#6366f1]/25 bg-[linear-gradient(130deg,#111118_0%,#171332_42%,#111118_100%)] p-4 md:p-6 w-full">
+      {/* ===== TOOLS GRID =====
+          Removed the wrapping purple-tinted card — the inner tool cards
+          already have their own borders/glows/imagery, so the outer card
+          just produced a heavy panel-on-panel effect. Section now sits
+          flush against the page background. */}
+      <section className="w-full px-4 md:px-6 py-20">
+        <div className="w-full">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-stretch">
             <div className="lg:w-[280px] lg:pr-2">
               <h2 className="font-display text-4xl font-black uppercase leading-[1.02] tracking-tight text-white">
@@ -678,19 +703,38 @@ export default function DashboardPage() {
             return (
             <div
               key={plan.name}
-              className={`relative border rounded-[20px] p-8 transition-all hover:-translate-y-1 ${plan.featured ? 'border-lime-300/70' : 'border-white/15 hover:border-white/30'}`}
+              className={`relative flex flex-col border rounded-[20px] p-5 transition-all hover:-translate-y-1 ${plan.featured ? 'border-lime-300/60' : 'border-white/10 hover:border-white/20'}`}
               style={{
+                // Cards now sit on the page bg with a subtle accent tint at
+                // the top instead of a hard color block. Featured (Creator)
+                // keeps a soft inset ring; other tiers use just the border.
                 background: planStyles[plan.name].card,
-                boxShadow: `0 0 0 1px ${planStyles[plan.name].glow} inset, 0 10px 30px rgba(0,0,0,0.35)`,
+                boxShadow: plan.featured
+                  ? `0 0 0 1px ${planStyles[plan.name].glow} inset, 0 4px 18px rgba(0,0,0,0.20)`
+                  : `0 4px 18px rgba(0,0,0,0.18)`,
               }}
             >
-              <div className="absolute left-4 top-3 rounded-full border border-white/20 bg-black/25 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-200">
-                {planStyles[plan.name].save}
-              </div>
+              {/* Most Popular pill floats above the featured card. The save
+                  badge below is in normal flow so it can't collide with this
+                  pill (previous version had both as `absolute` and they
+                  overlapped on the Creator card). */}
               {plan.featured && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-[11px] font-bold uppercase tracking-wider px-4 py-1 rounded-full text-black bg-lime-300">Most Popular</div>
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 text-[11px] font-bold uppercase tracking-wider px-4 py-1 rounded-full text-black bg-lime-300 shadow-lg">
+                  Most Popular
+                </div>
               )}
-              <div className="font-display text-xl font-bold mb-1 mt-4">{plan.name}</div>
+
+              {/* Hide the save badge on the Featured card — its "MOST
+                  POPULAR" pill above already serves as the callout, and
+                  rendering both produced two near-identical "MOST..." badges
+                  stacked on top of each other. */}
+              {!plan.featured && (
+                <div className="inline-flex self-start items-center rounded-full border border-white/15 bg-black/30 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-300 mb-3">
+                  {planStyles[plan.name].save}
+                </div>
+              )}
+
+              <div className="font-display text-xl font-bold mb-1">{plan.name}</div>
               <div className="text-xs font-semibold uppercase tracking-wider text-[#d8ccff] mb-2">{plan.hook}</div>
               {firstMonthPct !== undefined && firstMonthPrice !== null && (
                 <div className="text-[11px] text-zinc-300 mb-1">
@@ -702,36 +746,48 @@ export default function DashboardPage() {
               {firstMonthPct !== undefined && firstMonthPrice !== null && (
                 <div className="text-[11px] text-zinc-300 mb-1">First month ${firstMonthPrice.toFixed(2)}, then {plan.price}/mo</div>
               )}
-              <div className="text-sm font-semibold text-lime-300 mb-6">{plan.credits}</div>
-              <ul className="space-y-2.5 mb-6">
+              <div className="text-sm font-semibold text-lime-300 mb-5">{plan.credits}</div>
+              <ul className="space-y-2 mb-5">
                 {plan.features.map((f) => (
-                  <li key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Check className="h-3.5 w-3.5 text-[#22c55e] flex-none" />
-                    {f}
+                  <li key={f} className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <Check className="h-3.5 w-3.5 text-[#22c55e] flex-none mt-0.5" />
+                    <span>{f}</span>
                   </li>
                 ))}
               </ul>
 
-              <div className="mb-4 rounded-xl border border-white/15 bg-black/20 p-3">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-300 mb-2">Full access to best models</div>
-                <div className="space-y-1.5">
+              {/* Models included — dropped the redundant per-row "FULL ACCESS"
+                  pills (the section header already conveys that). Names can
+                  now use the full card width without wrapping behind a pill. */}
+              <div className="mb-4 rounded-xl border border-white/10 bg-black/25 p-3">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">Models included</div>
+                <ul className="space-y-1.5">
                   {plan.modelAccess.map((m) => (
-                    <div key={m} className="flex items-center justify-between text-sm text-zinc-200">
+                    <li key={m} className="flex items-start gap-2 text-sm text-zinc-200">
+                      <Check className="h-3.5 w-3.5 text-lime-300 flex-none mt-0.5" />
                       <span>{m}</span>
-                      <span className="rounded-md bg-lime-300/90 px-2 py-0.5 text-[10px] font-bold text-black">FULL ACCESS</span>
-                    </div>
+                    </li>
                   ))}
-                </div>
+                </ul>
               </div>
 
-              <div className="mb-6">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-300 mb-2">Unlimited Access</div>
-                <div className="space-y-1.5">
-                  {plan.unlimited.map((u) => (
-                    <div key={u} className="text-sm text-zinc-300">• {u}</div>
-                  ))}
+              {/* Only render the Unlimited Access section when there's
+                  actually something to list — otherwise we ship an orphaned
+                  heading with no content underneath. */}
+              {plan.unlimited.length > 0 && (
+                <div className="mb-5">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-2">Unlimited Access</div>
+                  <ul className="space-y-1.5">
+                    {plan.unlimited.map((u) => (
+                      <li key={u} className="text-sm text-zinc-300">• {u}</li>
+                    ))}
+                  </ul>
                 </div>
-              </div>
+              )}
+
+              {/* Push CTA to the bottom of the card so all CTAs align across
+                  the row regardless of how much content sits above them. */}
+              <div className="mt-auto" />
 
               <Link
                 href="/pricing"
@@ -765,13 +821,31 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* ===== CTA BANNER ===== */}
+      {/* ===== CTA BANNER =====
+          Was a solid purple billboard (linear-gradient(#6366f1 → #a78bfa))
+          that read as a foreign element on the dark page. Replaced with a
+          near-black base + a contained purple radial glow behind the
+          headline — same pattern as the hero, so the whole page reads as
+          one continuous surface. */}
       <section className="max-w-[1280px] mx-auto px-6 pb-20">
-        <div className="relative rounded-3xl overflow-hidden text-center py-16 px-12" style={{ background: 'linear-gradient(135deg, #6366f1, #a78bfa)' }}>
-          <div className="absolute top-[-100px] right-[-100px] w-[400px] h-[400px] pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.1), transparent 60%)' }} />
-          <h2 className="font-display text-3xl md:text-4xl font-extrabold mb-3 relative z-10">Ready to create?</h2>
-          <p className="text-base opacity-85 mb-7 relative z-10">Join 50,000+ creators using Tavira Labs to generate stunning AI content every day.</p>
-          <Link href="/tools/image-generation" className="inline-block bg-white text-[#6366f1] px-9 py-3.5 rounded-xl text-[15px] font-bold hover:-translate-y-0.5 transition-all relative z-10" style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.2)' }}>
+        <div
+          className="relative rounded-3xl overflow-hidden text-center py-16 px-12 border border-white/10"
+          style={{ background: '#0d0e14' }}
+        >
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                'radial-gradient(ellipse 60% 70% at 50% 50%, rgba(99,102,241,0.22) 0%, rgba(167,139,250,0.08) 45%, transparent 75%)',
+            }}
+          />
+          <h2 className="font-display text-3xl md:text-4xl font-extrabold mb-3 relative z-10 text-white">Ready to create?</h2>
+          <p className="text-base text-zinc-300 mb-7 relative z-10">Generate stunning AI images, videos, and influencers — all in one TraviaLabs dashboard.</p>
+          <Link
+            href="/tools/image-generation"
+            className="inline-block bg-gradient-to-r from-[#6366f1] to-[#8b7bff] text-white px-9 py-3.5 rounded-xl text-[15px] font-bold hover:-translate-y-0.5 transition-all relative z-10"
+            style={{ boxShadow: '0 8px 24px rgba(99,102,241,0.35)' }}
+          >
             Start Creating Free
           </Link>
         </div>
@@ -804,7 +878,7 @@ export default function DashboardPage() {
                 <line x1="4" y1="24" x2="12" y2="24" stroke="url(#ft-lg)" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
                 <line x1="36" y1="24" x2="44" y2="24" stroke="url(#ft-lg)" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
               </svg>
-              <span className="font-display font-bold text-lg">Tavira Labs</span>
+              <span className="font-display font-bold text-lg">TraviaLabs</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-[280px]">AI Content Creation Platform. Generate professional photos, videos, and AI influencers with cutting-edge models.</p>
           </div>
@@ -825,7 +899,7 @@ export default function DashboardPage() {
           ))}
         </div>
         <div className="flex flex-col md:flex-row justify-between items-center pt-6 border-t border-border text-xs text-[#55556a] gap-2">
-          <span>© 2026 Tavira Labs. All rights reserved.</span>
+          <span>© 2026 TraviaLabs. All rights reserved.</span>
           <div className="flex gap-5">
             <a href="#" className="hover:text-muted-foreground">Privacy Policy</a>
             <a href="#" className="hover:text-muted-foreground">Terms of Use</a>
