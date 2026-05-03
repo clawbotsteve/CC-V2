@@ -375,6 +375,13 @@ model Influencer {
   isActive            Boolean          @default(true)
   isPublic            Boolean          @default(false)
   contentType         ContentType      @default(sfw)
+  // Per-job likeness consent captured at submission time. Required for
+  // every new training created on or after 2026-05-02. Old rows stay
+  // false / null and are read-only — UI gates new generations on these
+  // fields being set.
+  consentAccepted     Boolean          @default(false)
+  consentAcceptedAt   DateTime?
+  consentTermsVersion String?
   createdAt           DateTime         @default(now())
   updatedAt           DateTime         @updatedAt
 

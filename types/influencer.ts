@@ -24,6 +24,14 @@ export type InfluencerJobRest = {
   avatarImageurl: string;
   trainingPhoto: File[];
   trainingFileUrl: string;
+  /** Per-job likeness consent (3 affirmations all required by the modal).
+   *  The /api/influencers POST handler REJECTS any submission with
+   *  consentAccepted !== true. */
+  consentAccepted?: boolean;
+  /** ISO timestamp the user accepted the consent modal. Server stores its
+   *  own authoritative timestamp on Influencer.consentAcceptedAt at
+   *  persistence time; this is forwarded only as a hint. */
+  consentAcceptedAt?: string | null;
 };
 
 export type InfluencerJobInput = InfluencerBasicInfo & InfluencerJobRest;

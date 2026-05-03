@@ -9,6 +9,14 @@ export const INTERNAL_DASHBOARD_TOKEN = 'yebeud7dnj3nu3immmms';
  */
 export const CURRENT_TERMS_VERSION = "2026-05-01";
 
+/**
+ * Per-job consent version for avatar/influencer training. Captured on
+ * Influencer.consentTermsVersion at submit time. Bump when the consent
+ * checkboxes themselves change wording — old trainings keep their
+ * historical version on the row for audit.
+ */
+export const CURRENT_TRAINING_CONSENT_VERSION = "2026-05-02";
+
 export const SAFETY_LEVELS: Record<number, string> = {
   1: "Most Strict",
   2: "Strict",

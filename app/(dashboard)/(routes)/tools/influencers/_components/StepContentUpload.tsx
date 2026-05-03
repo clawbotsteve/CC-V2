@@ -43,6 +43,14 @@ export interface StepContentUploadHandle {
   }>;
   getFiles: () => File[];
   reset: () => void;
+  /** Three-way consent state captured by the likeness-consent modal. */
+  getConsent: () => {
+    self: boolean;
+    adult: boolean;
+    misuse: boolean;
+    accepted: boolean;
+    acceptedAt: string | null;
+  };
 }
 
 const StepContentUpload = React.forwardRef<StepContentUploadHandle, Props>(
@@ -60,8 +68,15 @@ const StepContentUpload = React.forwardRef<StepContentUploadHandle, Props>(
       error: "",
     });
     const [agreementOpen, setAgreementOpen] = React.useState(false);
-    const [agreementChecked, setAgreementChecked] = React.useState(false);
+    // Three-way per-job consent (replaces the single agreementChecked).
+    // All three must be ticked before we'll let the user upload, and the
+    // composite truth is exposed on `hasAcceptedAgreement` + sent with
+    // the training submission for server-side audit.
+    const [consentSelf, setConsentSelf] = React.useState(false);
+    const [consentAdult, setConsentAdult] = React.useState(false);
+    const [consentMisuse, setConsentMisuse] = React.useState(false);
     const [hasAcceptedAgreement, setHasAcceptedAgreement] = React.useState(false);
+    const [consentAcceptedAt, setConsentAcceptedAt] = React.useState<string | null>(null);
     const browseButtonRef = React.useRef<HTMLButtonElement>(null);
 
     const accept = "image/*";
@@ -202,7 +217,20 @@ const StepContentUpload = React.forwardRef<StepContentUploadHandle, Props>(
         console.log("[DEBUG] StepContentUpload.reset called");
         setFiles([]);
         setHasAcceptedAgreement(false);
-        setAgreementChecked(false);
+        setConsentSelf(false);
+        setConsentAdult(false);
+        setConsentMisuse(false);
+        setConsentAcceptedAt(null);
+      },
+
+      getConsent() {
+        return {
+          self: consentSelf,
+          adult: consentAdult,
+          misuse: consentMisuse,
+          accepted: hasAcceptedAgreement,
+          acceptedAt: consentAcceptedAt,
+        };
       },
     }));
 
@@ -242,7 +270,13 @@ const StepContentUpload = React.forwardRef<StepContentUploadHandle, Props>(
     };
 
     const handleAgreementContinue = () => {
+      // Defense-in-depth: even though the button is disabled until all
+      // three are checked, double-check before flipping accept state so
+      // a programmatic click can't bypass.
+      if (!consentSelf || !consentAdult || !consentMisuse) return;
+      const acceptedAtIso = new Date().toISOString();
       setHasAcceptedAgreement(true);
+      setConsentAcceptedAt(acceptedAtIso);
       setAgreementOpen(false);
 
       // Re-trigger browse after acceptance so user can continue seamlessly.
@@ -349,49 +383,76 @@ const StepContentUpload = React.forwardRef<StepContentUploadHandle, Props>(
           </form>
         </Form>
 
+        {/*
+          Likeness consent gate (revised 2026-05-02). Replaced the previous
+          generic 4-bullet copy with three specific affirmations that match
+          what we record on the Influencer row + what the AUP requires.
+          Each must be ticked individually — no single "I agree to all"
+          escape — so users can't auto-pilot through.
+        */}
         <Dialog open={agreementOpen} onOpenChange={setAgreementOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Training Upload Agreement</DialogTitle>
+              <DialogTitle>Likeness Consent — required to train</DialogTitle>
               <DialogDescription>
-                Before uploading training photos, please confirm the requirements below.
+                Avatar training creates a model that can reproduce a real person&apos;s
+                likeness. Confirm all three before uploading photos.
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-3 text-sm">
-              <div>
-                <p className="font-medium">1) I have permission to upload these images</p>
-                <p className="text-muted-foreground text-xs">I own the images or have consent from everyone clearly visible.</p>
-              </div>
-              <div>
-                <p className="font-medium">2) I’m uploading one person per training set</p>
-                <p className="text-muted-foreground text-xs">Each training set should represent a single person for quality and compliance.</p>
-              </div>
-              <div>
-                <p className="font-medium">3) I understand content and safety rules apply</p>
-                <p className="text-muted-foreground text-xs">Uploads that violate TraviaLabs Terms or Safety Policy may be rejected or removed.</p>
-              </div>
-              <div>
-                <p className="font-medium">4) I understand training uses credits</p>
-                <p className="text-muted-foreground text-xs">Training consumes compute/credits and may take time to complete.</p>
-              </div>
-            </div>
+            <div className="space-y-2.5 text-sm">
+              <label className="flex items-start gap-2.5 rounded-md border border-border p-3 cursor-pointer hover:border-foreground/30">
+                <input
+                  type="checkbox"
+                  checked={consentSelf}
+                  onChange={(e) => setConsentSelf(e.target.checked)}
+                  className="mt-0.5"
+                />
+                <span>
+                  <span className="font-medium">The person depicted is me</span>, OR I have
+                  explicit written consent from the person depicted in these images.
+                </span>
+              </label>
 
-            <label className="flex items-start gap-2 rounded-md border border-border p-3 text-sm">
-              <input
-                type="checkbox"
-                checked={agreementChecked}
-                onChange={(e) => setAgreementChecked(e.target.checked)}
-                className="mt-0.5"
-              />
-              <span>I&apos;ve read and agree with the above.</span>
-            </label>
+              <label className="flex items-start gap-2.5 rounded-md border border-border p-3 cursor-pointer hover:border-foreground/30">
+                <input
+                  type="checkbox"
+                  checked={consentAdult}
+                  onChange={(e) => setConsentAdult(e.target.checked)}
+                  className="mt-0.5"
+                />
+                <span>
+                  The person depicted is <span className="font-medium">at least 18 years old</span>.
+                </span>
+              </label>
+
+              <label className="flex items-start gap-2.5 rounded-md border border-border p-3 cursor-pointer hover:border-foreground/30">
+                <input
+                  type="checkbox"
+                  checked={consentMisuse}
+                  onChange={(e) => setConsentMisuse(e.target.checked)}
+                  className="mt-0.5"
+                />
+                <span>
+                  I will not use this trained model to{" "}
+                  <span className="font-medium">harass, deceive, impersonate, or generate sexual content</span>.
+                </span>
+              </label>
+
+              <p className="text-[11px] text-muted-foreground pt-1">
+                Your acceptance is logged with this training job and may be reviewed by
+                TraviaLabs in response to abuse reports.
+              </p>
+            </div>
 
             <DialogFooter className="gap-2 sm:justify-end">
               <Button variant="outline" onClick={() => setAgreementOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleAgreementContinue} disabled={!agreementChecked}>
+              <Button
+                onClick={handleAgreementContinue}
+                disabled={!consentSelf || !consentAdult || !consentMisuse}
+              >
                 Continue to Upload
               </Button>
             </DialogFooter>

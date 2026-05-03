@@ -110,11 +110,24 @@ export default function InfluencerCreateDialog({
 
       const { trainingDataUrl, firstImageUrl } = uploadResult;
 
+      // Read the per-job consent the user gave in the upload step. The
+      // server REQUIRES all three booleans to be true before queueing
+      // a training job — defense-in-depth on top of the modal in
+      // StepContentUpload that won't let users bypass without ticking.
+      const consent = contentUploadRef.current?.getConsent();
+      if (!consent?.accepted || !consent.self || !consent.adult || !consent.misuse) {
+        toast.error("Please confirm the likeness consent before training.");
+        setLoading(false);
+        return;
+      }
+
       const newForm = {
         ...form,
         trainingFileUrl: trainingDataUrl,
         avatarImageurl: firstImageUrl,
         plan: plan,
+        consentAccepted: true,
+        consentAcceptedAt: consent.acceptedAt,
       };
 
       setForm(newForm);
