@@ -97,12 +97,18 @@ export interface NanoBannaProInput {
   image_size?: ImageSize | CustomImageSize;
 }
 
+/** Soul Reference resolutions per Higgsfield's Playground UI (2026-05-02).
+ *  720p is default and cheapest; 1080p is the higher-fidelity option.
+ *  These are the only values their `resolution` enum accepts. */
+export type Soul2Resolution = "720p" | "1080p";
+
 export interface Soul2Input {
   prompt: string;
   num_images?: number;
   seed?: number;
   output_format?: OutputFormat;
   aspect_ratio?: AspectRatio;
+  resolution?: Soul2Resolution;
 }
 
 /**
@@ -160,6 +166,8 @@ export interface ImageGenerationInput {
   output_resolution?: NanoBananaResolution;
   /** GPT Image 2 quality tier (server-forced to "medium" for Free users). */
   quality?: GptImage2Quality;
+  /** Soul 2.0 (Higgsfield) resolution. 720p default; 1080p costs more credits. */
+  soul_resolution?: Soul2Resolution;
   prompt: string;
   safety_tolerance?: SafetyTolerance;
   seed: number;
@@ -188,6 +196,8 @@ export const defaultImageGenerationForm: ImageGenerationInput = {
   output_resolution: "1k",
   // gpt-image-2 default quality (also server-forced for Free tier).
   quality: "medium",
+  // Soul 2.0 default resolution.
+  soul_resolution: "720p",
   prompt: "",
   safety_tolerance: SafetyTolerance.Level6,
   seed: Math.floor(Math.random() * 9_000_000) + 1_000_000,
