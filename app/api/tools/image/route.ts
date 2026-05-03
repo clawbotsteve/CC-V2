@@ -22,6 +22,10 @@ function getImageCreditVariant(input: ImageGenerationInput): string {
     const res = input.output_resolution ?? "1k";
     return `nano_banana_2_${res}`;
   }
+  if (input.model === ImageGenerationModel.Soul2) {
+    const res = input.soul_resolution ?? "720p";
+    return `soul_2_${res}`;
+  }
   return input.enable_safety_checker ? "sfw" : "nsfw";
 }
 
@@ -387,11 +391,16 @@ export async function POST(req: Request) {
           ? Math.floor(body.seed % 1_000_000)
           : undefined;
 
+      // Resolution per Higgsfield's accepted enum (720p / 1080p only).
+      // Default to 720p (cheapest); 1080p costs more credits per the
+      // soul_2_1080p variant in the cost table.
+      const soulResolution = body.soul_resolution === "1080p" ? "1080p" : "720p";
+
       const payload = {
         prompt: body.prompt,
         image_reference_url: referenceImageUrl,
         aspect_ratio: aspect,
-        resolution: "720p",
+        resolution: soulResolution,
         batch_size: Math.min(Math.max(body.num_images ?? 1, 1), 4),
         enhance_prompt: true,
         style_strength: 1,

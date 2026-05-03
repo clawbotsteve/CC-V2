@@ -485,6 +485,39 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
         </div>
       )}
 
+      {/* Soul 2.0 — resolution picker (Higgsfield enum: 720p / 1080p only) */}
+      {isSoul2 && (
+        <div className="space-y-1 py-2">
+          <div className="flex justify-between">
+            <label className="text-sm font-medium">Resolution</label>
+            <span className="text-sm font-medium uppercase">{form.soul_resolution ?? "720p"}</span>
+          </div>
+          <div className="flex gap-2">
+            {(["720p", "1080p"] as const).map((res) => (
+              <button
+                key={res}
+                onClick={() => setForm((f) => ({ ...f, soul_resolution: res }))}
+                className={`flex-1 px-3 py-1.5 rounded-md text-sm font-medium border transition ${
+                  (form.soul_resolution ?? "720p") === res
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-muted text-muted-foreground border-muted hover:border-foreground/30"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span>{res.toUpperCase()}</span>
+                  <span className="text-[10px] opacity-70">
+                    {res === "720p" ? "5 cr" : "8 cr"}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <Info className="w-3 h-3" /> 1080p produces sharper output but costs more credits per generation.
+          </p>
+        </div>
+      )}
+
       {/* Number of Images */}
       <div className="space-y-1 py-2">
         <div className="flex justify-between items-center">
