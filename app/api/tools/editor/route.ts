@@ -63,13 +63,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: moderation.reason }, { status: 400 });
     }
 
-    // Correct axios POST call
+    // Forward the original Cookie header so Clerk middleware on /api/ai*
+    // sees the session and authenticates the inner request. Without this,
+    // the internal hop returns 401 and the outer catch shows
+    // "Internal Server Error". Same fix as PR #20 for video-gen.
     const falRes = await axios.post(
       absoluteUrl("/api/ai/image-edit"),
       data,
       {
         headers: {
           "Content-Type": "application/json",
+          cookie: req.headers.get("cookie") ?? "",
         },
       }
     );
