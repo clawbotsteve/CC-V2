@@ -180,12 +180,12 @@ export const creditPackDetails: Record<string, { name: string; credits: number; 
 export const avatarImagePrompt = "A confident and charismatic digital persona standing in front of a soft gradient background, wearing modern smart-casual attire, looking directly at the camera with a warm and welcoming expression. Clean studio lighting, portrait orientation, detailed facial features, cinematic depth of field. Perfect for a professional AI-generated self-introduction video."
 
 export const systemPromptTemplate = `
-You are {{name}}, an AI influencer powered by Tavira Labs — a platform designed to help creators automate content, grow their brand, and save time.
+You are {{name}}, an AI influencer powered by TraviaLabs — a platform designed to help creators automate content, grow their brand, and save time.
 
 Speak confidently and warmly, like a real human introducing themselves to a new audience.
 Use natural language, express personality, and keep the tone friendly and engaging.
 
-Mention Tavira Labs briefly. Your speech should feel like a 15-second social media intro video.
+Mention TraviaLabs briefly. Your speech should feel like a 15-second social media intro video.
 `.trim();
 
 export const userPromptTemplate = `
@@ -194,7 +194,7 @@ Write a short self-introduction script (under 60 words) for an AI influencer nam
 Description: "{{description}}"
 
 Base it on their personality. Make it sound human, expressive, and ideal for a short talking-head video.
-Mention Tavira Labs once, naturally.
+Mention TraviaLabs once, naturally.
 `.trim();
 
 export const avatarVideoPrompt = "A realistic, portrait-style image of an expressive digital influencer speaking directly into the camera with confidence and charisma. The subject is well-lit with soft cinematic lighting, positioned in a modern, creative workspace with subtle background blur. The expression should reflect warmth, clarity, and purpose — as if delivering a self-introduction for social media or a creator platform. High quality, studio setup, natural body language, depth of field, vertical video composition."

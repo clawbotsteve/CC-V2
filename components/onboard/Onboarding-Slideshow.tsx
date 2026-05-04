@@ -124,7 +124,7 @@ export default function OnboardingSlideshow({
 
               <div className="text-center space-y-4">
                 <h2 className="text-white text-3xl font-bold">
-                  Welcome to Tavira Labs
+                  Welcome to TraviaLabs
                 </h2>
                 <p className="text-white/70 text-lg max-w-lg mx-auto">
                   Your all-in-one AI content studio. Generate images, create
