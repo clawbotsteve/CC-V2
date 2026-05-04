@@ -119,19 +119,29 @@ export const CREDIT_COSTS = {
   // FAL charges by resolution: $0.1345/$0.3024/$0.6804 per sec at 480p/720p/1080p.
   // We charge per-second credits → total = perSec * duration.
   //
-  // Margin policy (mirrors how we price Veo): 480p and 720p target ≥120% gross
-  // margin (the standard floor). 1080p is intentionally priced for ACCESSIBILITY
-  // over margin (~54%), same approach as Veo 8s — premium models become
-  // unusable if a single 10s clip eats a third of a Creator's monthly budget.
-  // Studio buyers pay the same per-second rate; their value is volume.
+  // Margin policy: 480p and 720p target ≥120% gross margin (the standard
+  // floor — they're cheap to compute so we leave plenty of headroom).
+  // 1080p is intentionally priced for ACCESSIBILITY over margin (~44% at
+  // 14 cr/sec — a hair above the 40% floor we set for premium tiers) so
+  // a single 10s 1080p clip doesn't burn ~25% of a Creator's monthly
+  // budget. Studio buyers pay the same per-second rate; their value is
+  // volume.
+  //
+  // 1080p revision history:
+  //   - PR #33 (initial ship): 22 cr/sec, ~26% margin → too steep, eaten
+  //     credit budgets too fast
+  //   - PR #33 (post-review): 15 cr/sec, ~54% margin → still felt high vs
+  //     competitors (Higgsfield charges ~12 cr/sec)
+  //   - PR #36 (current):     14 cr/sec, ~44% margin → bottom-of-band
+  //     while staying above our 40% premium-tier floor
   //
   // Sanity-check (Creator 600 cr/mo):
   //   480p × 10s =  50 cr  → 12 videos/mo
   //   720p × 10s = 100 cr  →  6 videos/mo
-  //   1080p × 10s = 150 cr →  4 videos/mo
+  //   1080p × 10s = 140 cr →  4.3 videos/mo  (was 4 at 15 cr/sec)
   SEEDANCE_V2_REF_480P_PER_SEC: 5,
   SEEDANCE_V2_REF_720P_PER_SEC: 10,
-  SEEDANCE_V2_REF_1080P_PER_SEC: 15,
+  SEEDANCE_V2_REF_1080P_PER_SEC: 14,
   CLICK_TO_AD: 40,
   SOUL_ID: 30,
   AVATAR_TRAINING: 80,
