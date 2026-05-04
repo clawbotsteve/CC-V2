@@ -1,6 +1,10 @@
 "use client";
 
 import Link from "next/link";
+// Aliased to NextImage because lucide-react also exports an `Image` icon
+// component that is imported below — keeping the names distinct prevents
+// the two from colliding.
+import NextImage from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useUser, SignOutButton } from "@clerk/nextjs";
 import {
@@ -121,22 +125,24 @@ const mobileNavItems = [
   { label: "Pricing", icon: CreditCard, href: "/pricing" },
 ];
 
+// Header logo — replaces the old inline atom-style SVG with the brand
+// mark stored at /public/brand/travialabs-mark.jpg. Source image is a
+// dark-on-dark composition (purple-gradient T + face silhouette on a
+// near-black background), which blends naturally into the nav's
+// rgba(10,10,15,0.85) backdrop. Wrapping in `rounded-md overflow-hidden`
+// hides the JPG corners against any non-matching backgrounds (e.g. the
+// blurred backdrop edge).
 const LogoIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 48 48" fill="none">
-    <defs>
-      <linearGradient id="nav-lg" x1="8" y1="8" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stopColor="#6366f1"/>
-        <stop offset="100%" stopColor="#c084fc"/>
-      </linearGradient>
-    </defs>
-    <circle cx="24" cy="24" r="20" stroke="url(#nav-lg)" strokeWidth="1.5" fill="none" opacity="0.3"/>
-    <circle cx="24" cy="24" r="12" stroke="url(#nav-lg)" strokeWidth="1.5" fill="none" opacity="0.5"/>
-    <circle cx="24" cy="24" r="5" fill="url(#nav-lg)"/>
-    <line x1="24" y1="4" x2="24" y2="12" stroke="url(#nav-lg)" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
-    <line x1="24" y1="36" x2="24" y2="44" stroke="url(#nav-lg)" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
-    <line x1="4" y1="24" x2="12" y2="24" stroke="url(#nav-lg)" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
-    <line x1="36" y1="24" x2="44" y2="24" stroke="url(#nav-lg)" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
-  </svg>
+  <span className="inline-flex h-7 w-7 items-center justify-center overflow-hidden rounded-md">
+    <NextImage
+      src="/brand/travialabs-mark.jpg"
+      alt="TraviaLabs"
+      width={56}
+      height={56}
+      priority
+      className="h-full w-full object-cover"
+    />
+  </span>
 );
 
 export default function TopNavbar() {
@@ -172,7 +178,7 @@ export default function TopNavbar() {
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2.5">
             <LogoIcon />
-            <span className="font-display font-bold text-xl tracking-tight text-foreground">Tavira Labs</span>
+            <span className="font-display font-bold text-xl tracking-tight text-foreground">TraviaLabs</span>
           </Link>
 
           {/* Center nav links (desktop) */}

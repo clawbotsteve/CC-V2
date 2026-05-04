@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 
 export function constructMetadata({
-  title = "Tavira Labs",
+  title = "TraviaLabs",
   description = "AI-Powered Creative Studio",
 
   noIndex = false,
@@ -14,7 +14,7 @@ export function constructMetadata({
   return {
     title,
     description,
-    applicationName: "Tavira Labs",
+    applicationName: "TraviaLabs",
     keywords: [
       "AI",
       "AI Content Creation",
@@ -26,8 +26,8 @@ export function constructMetadata({
     icons: {
       icon: '/favicon.ico',
     },
-    authors: { name: "Tavira Labs", url: "https://taviralabs.ai" },
-    creator: "Tavira Labs",
+    authors: { name: "TraviaLabs", url: "https://taviralabs.ai" },
+    creator: "TraviaLabs",
 
     ...(noIndex && {
       robots: {

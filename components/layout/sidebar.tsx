@@ -30,7 +30,7 @@ import ThemeToggle from "./theme-toggle";
 import { PlanLabel } from "../plan-label";
 
 export const company = {
-  name: "Tavira Labs",
+  name: "TraviaLabs",
   logo: logo,
   plan: "Creator",
 };
@@ -83,7 +83,7 @@ export default function AppSidebar({
             <div className="flex gap-2">
               <Link href="/">
                 <span className="font-display font-bold text-xl tracking-tight flex items-center">
-                  Tavira Labs
+                  TraviaLabs
                   <span className="font-semibold bg-primary rounded-[2px] px-1 py-0 text-black text-sm ml-0.5 inline-flex items-center">
                     AI
                   </span>
