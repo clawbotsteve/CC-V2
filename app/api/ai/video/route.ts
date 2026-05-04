@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { getWebhookUrl } from "@/lib/utils";
-import { VideoGenerationInput } from "@/types/video";
-import { VideoModel } from "@/types/types";
+import { VideoGenerationInput, clampSeedanceDuration, SEEDANCE_DEFAULT_RESOLUTION } from "@/types/video";
+import { SeedanceResolution, VideoModel } from "@/types/types";
 import { submitFalJob, uploadImageUrlToFalStorage } from "@/lib/fal-client";
 import { moderateAndLog } from "@/lib/content-moderation";
 
@@ -171,14 +171,23 @@ export async function POST(req: NextRequest) {
 
     // 🔹 Bytedance Seedance 2.0 reference-to-video (Creator+, added 2026-04-29)
     // FAL endpoint: fal-ai/bytedance/seedance-2.0/reference-to-video
+    //
+    // Updated 2026-05-04 (#33): replaced fixed 5/10s + locked 720p with full
+    // 4-15s range + 480p/720p/1080p picker. FAL accepts any int 4-15 as
+    // a stringified `duration`. We clamp server-side because the client
+    // slider could be tampered with — defensive auth + cost control.
     if (data.model === VideoModel.Seedance2Ref) {
+      const seedanceDur = clampSeedanceDuration(data.duration);
+      const seedanceRes: SeedanceResolution =
+        data.seedance_resolution === "480p" || data.seedance_resolution === "1080p"
+          ? data.seedance_resolution
+          : SEEDANCE_DEFAULT_RESOLUTION;
+
       const input: Record<string, unknown> = {
         prompt: data.prompt,
         image_urls: [falHostedImageUrl],
-        // Map our internal "5"/"10" duration to FAL's expected format.
-        duration: duration === Duration.Ten ? "10" : "5",
-        // Seedance 2.0 fixes resolution at 720p (only option per FAL docs).
-        resolution: "720p",
+        duration: String(seedanceDur),
+        resolution: seedanceRes,
         ...(data.aspect_ratio ? { aspect_ratio: data.aspect_ratio } : {}),
         ...(data.generate_audio !== undefined ? { generate_audio: data.generate_audio } : {}),
       };

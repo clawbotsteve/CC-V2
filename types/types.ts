@@ -71,10 +71,17 @@ export enum WorkflowType {
   TargetHair = "target_hair",
 }
 
+// Kept as numeric enum so Duration.Five === 5 and ===10 comparisons stay
+// type-safe. Seedance 2.0 supports 4-15s and uses raw `number` instead of
+// this enum (see `seedance_duration` on VideoGenerationInput).
 export enum Duration {
   Five = 5,
   Ten = 10,
 }
+
+/** Seedance 2.0 reference-to-video supports these three resolutions per FAL.
+ *  Higher = more expensive (see CREDIT_COSTS.SEEDANCE_V2_REF_*_PER_SEC). */
+export type SeedanceResolution = "480p" | "720p" | "1080p";
 
 export enum VideoModel {
   Wan = 'wan',

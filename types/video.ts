@@ -1,5 +1,11 @@
 import { VideoVariant } from "@prisma/client";
-import { Duration, ErrorPayload, VideoModel } from "./types";
+import { Duration, ErrorPayload, SeedanceResolution, VideoModel } from "./types";
+
+// Seedance 2.0 supported duration range (per FAL: 4-15 seconds).
+export const SEEDANCE_DURATION_MIN = 4;
+export const SEEDANCE_DURATION_MAX = 15;
+export const SEEDANCE_DEFAULT_DURATION = 5;
+export const SEEDANCE_DEFAULT_RESOLUTION: SeedanceResolution = "720p";
 
 interface Video {
   video: {
@@ -48,7 +54,9 @@ export enum VideoAspectRatio {
 
 export type VideoGenerationInput = {
   cfg_scale?: number;
-  duration?: Duration;
+  // Most models use Duration.Five|Ten. Seedance 2.0 supports any int 4-15
+  // (validated server-side); we widen the type to `number` to allow that.
+  duration?: number;
   enable_safety_checker?: boolean;
   generate_audio?: boolean;
   keep_original_sound?: boolean;
@@ -63,6 +71,9 @@ export type VideoGenerationInput = {
   seed?: number;
   variant: VideoVariant;
   character_orientation?: "image" | "video"; // For Kling Motion Control
+  /** Seedance 2.0 only — output resolution. Drives both the FAL request
+   *  and the credit-cost variant lookup (see getVideoCreditVariant). */
+  seedance_resolution?: SeedanceResolution;
 };
 
 export type VideoGenerationForm = VideoGenerationInput;
@@ -84,6 +95,7 @@ export const defaultVideoGenerationForm: VideoGenerationForm = {
   seed: Math.floor(Math.random() * 9_000_000) + 1_000_000,
   variant: VideoVariant.standard_5s,
   character_orientation: "image",
+  seedance_resolution: SEEDANCE_DEFAULT_RESOLUTION,
 };
 
 /**
@@ -113,16 +125,35 @@ export function getVideoVariant(model: VideoModel, duration?: Duration): VideoVa
 }
 
 export function getVideoCreditVariant(
-  input: Pick<VideoGenerationInput, "model" | "duration" | "generate_audio" | "variant">
+  input: Pick<
+    VideoGenerationInput,
+    "model" | "duration" | "generate_audio" | "variant" | "seedance_resolution"
+  >
 ): string {
   if (input.model === VideoModel.Kling) {
     const d = input.duration === Duration.Ten ? "10s" : "5s";
     return input.generate_audio === false ? `kling_silent_${d}` : `kling_audio_${d}`;
   }
   if (input.model === VideoModel.Seedance2Ref) {
-    return input.duration === Duration.Ten ? "seedance_v2_ref_10s" : "seedance_v2_ref_5s";
+    // Resolution-aware variant. Cost is computed dynamically as
+    // (perSecondCost × duration) — see lib/get-credit-cost.ts.
+    const res: SeedanceResolution = input.seedance_resolution ?? SEEDANCE_DEFAULT_RESOLUTION;
+    const dur = clampSeedanceDuration(input.duration);
+    return `seedance_v2_ref_${res}_${dur}s`;
   }
   return input.variant;
+}
+
+/** Defensive clamp — UI slider already restricts 4-15, but server must
+ *  validate too. Falls back to default if duration is missing/invalid. */
+export function clampSeedanceDuration(duration?: number): number {
+  if (typeof duration !== "number" || !Number.isFinite(duration)) {
+    return SEEDANCE_DEFAULT_DURATION;
+  }
+  const rounded = Math.round(duration);
+  if (rounded < SEEDANCE_DURATION_MIN) return SEEDANCE_DURATION_MIN;
+  if (rounded > SEEDANCE_DURATION_MAX) return SEEDANCE_DURATION_MAX;
+  return rounded;
 }
 
 // Re-export VideoModel for convenience
