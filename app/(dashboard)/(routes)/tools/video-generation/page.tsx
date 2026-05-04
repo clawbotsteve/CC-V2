@@ -133,10 +133,17 @@ export default function GenerateVideoPage() {
         generationTime: new Date(),
         reason: {},
         status: "queued",
-        creditUsed: (typeof creditCosts?.[ToolType.VIDEO_GENERATOR] === 'number'
-          ? creditCosts[ToolType.VIDEO_GENERATOR] as number
-          : (creditCosts?.[ToolType.VIDEO_GENERATOR] as Record<string, number>)?.[form.variant]
-        ) ?? 0,
+        // Use the credit-variant (which is resolution-aware for Seedance —
+        // e.g. seedance_v2_ref_720p_5s) so the optimistic history row shows
+        // the same cost the user is actually charged. The legacy `form.variant`
+        // (Prisma VideoVariant enum) doesn't carry resolution and would map to
+        // the wrong cost for Seedance.
+        creditUsed: (() => {
+          const tv = creditCosts?.[ToolType.VIDEO_GENERATOR];
+          if (typeof tv === "number") return tv;
+          const creditVariant = getVideoCreditVariant(form);
+          return (tv as Record<string, number> | undefined)?.[creditVariant] ?? 0;
+        })(),
         createdAt: new Date(),
         updatedAt: new Date(),
       };

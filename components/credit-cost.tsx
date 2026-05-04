@@ -26,6 +26,29 @@ function fallbackCost(toolType: ToolType, variant: string): number | undefined {
   }
 
   if (toolType === ToolType.VIDEO_GENERATOR) {
+    // Seedance 2.0 reference-to-video — resolution-aware variants follow
+    //   seedance_v2_ref_{480p|720p|1080p}_{4..15}s
+    // Cost is computed dynamically as perSec × duration. This MUST mirror
+    // the server-side fallback in lib/get-credit-cost.ts; if they drift the
+    // displayed cost on the Generate button won't match what the user is
+    // actually charged via the webhook.
+    if (variant?.startsWith("seedance_v2_ref_")) {
+      const match = variant.match(/^seedance_v2_ref_(480p|720p|1080p)_(\d+)s$/);
+      if (match) {
+        const [, res, durStr] = match;
+        const duration = Number(durStr);
+        if (duration >= 4 && duration <= 15) {
+          const perSec =
+            res === "480p" ? CREDIT_COSTS.SEEDANCE_V2_REF_480P_PER_SEC :
+            res === "720p" ? CREDIT_COSTS.SEEDANCE_V2_REF_720P_PER_SEC :
+            CREDIT_COSTS.SEEDANCE_V2_REF_1080P_PER_SEC;
+          return perSec * duration;
+        }
+      }
+      // Legacy variants — kept for historical rows.
+      if (variant === "seedance_v2_ref_5s") return 38;
+      if (variant === "seedance_v2_ref_10s") return 76;
+    }
     if (variant === "kling_audio_10s") return CREDIT_COSTS.VIDEO_10S;
     if (variant === "kling_audio_5s") return CREDIT_COSTS.VIDEO_5S_KLING;
     if (variant === "kling_silent_10s") return Math.max(1, CREDIT_COSTS.VIDEO_10S - 4);
@@ -68,7 +91,17 @@ export function CreditCost({ toolType, creditCosts, variant = "" }: CreditCostPr
   if (typeof costs === "number") {
     cost = costs;
   } else if (costs && typeof costs === "object") {
-    cost = costs[variant] ?? costs["default"] ?? Object.values(costs)[0];
+    // Priority: exact-variant DB hit → fallback function (handles dynamic
+    // patterns like seedance_v2_ref_*_*s) → "default" entry → last-resort
+    // first value. The previous order skipped the fallback when costs was
+    // a non-empty object, so dynamic variants returned an arbitrary cost
+    // (e.g. seedance_v2_ref_720p_5s rendered as 22 because that was the
+    // first value in the map).
+    cost =
+      costs[variant] ??
+      fallbackCost(toolType, variant) ??
+      costs["default"] ??
+      Object.values(costs)[0];
   }
 
   if (cost === undefined) {
