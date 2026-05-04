@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { ToolType, type GeneratedVideo } from "@prisma/client";
-import { Video, } from "lucide-react";
+import { Video, ImageUp, Sliders } from "lucide-react";
+import { ToolHowItWorks, ToolStep } from "@/components/tool-how-it-works";
 import { useUserContext } from "@/components/layout/user-context";
 import { defaultVideoGenerationForm, VideoGenerationForm, getVideoVariant, getVideoCreditVariant } from "@/types/video";
 import { updateForm } from "@/lib/utils";
@@ -21,6 +22,33 @@ import { ImageUploadHandle } from "@/components/image-upload";
 import { VideoUploadHandle } from "@/components/video-upload";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { VideoModel } from "@/types/types";
+
+// Empty-state onboarding step config for the video generator. Step 3
+// uses an actual generated video so first-time users see the kind of
+// output they can expect — way more compelling than an icon. Sample
+// lives in /public/cc-content/ and is used elsewhere on the dashboard
+// landing page, so swapping in a Seedance-specific clip later is just
+// a one-line change here.
+const VIDEO_GEN_STEPS: ToolStep[] = [
+  {
+    number: 1,
+    title: "Upload Reference",
+    description: "Drop an image of your subject — face, model, product, or scene.",
+    icon: ImageUp,
+  },
+  {
+    number: 2,
+    title: "Configure",
+    description: "Pick your model, resolution, duration, and aspect ratio. Add a prompt describing the action.",
+    icon: Sliders,
+  },
+  {
+    number: 3,
+    title: "Generate",
+    description: "Click Generate Video. Your finished clip lands here in seconds.",
+    videoSrc: "/cc-content/video-2-landing.mp4",
+  },
+];
 
 export default function GenerateVideoPage() {
   const endpoint = "/api/tools/video"
@@ -253,12 +281,25 @@ export default function GenerateVideoPage() {
             </aside>
 
             <div>
-              <VideoList
-                videos={generations}
-                isLoading={isloadingVideos}
-                onDelete={fetchVideos}
-                pollingRefs={pollingRefs}
-              />
+              {/* Empty-state onboarding guide — shown only when the user
+                  has no generations yet AND we're not still loading
+                  (avoids a flash of the guide before the user's history
+                  resolves). Disappears the moment they've made one
+                  video, so returning users aren't visually nagged. */}
+              {!isloadingVideos && generations.length === 0 ? (
+                <ToolHowItWorks
+                  title="Make videos in three clicks"
+                  subtitle="Upload a reference image, set your shot, and generate. Your video lands in seconds."
+                  steps={VIDEO_GEN_STEPS}
+                />
+              ) : (
+                <VideoList
+                  videos={generations}
+                  isLoading={isloadingVideos}
+                  onDelete={fetchVideos}
+                  pollingRefs={pollingRefs}
+                />
+              )}
             </div>
           </div>
         </div>
