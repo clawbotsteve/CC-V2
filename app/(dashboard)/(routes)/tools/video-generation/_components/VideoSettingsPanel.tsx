@@ -1,10 +1,19 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
-import { VideoAspectRatio, VideoGenerationForm, getVideoVariant } from "@/types/video";
+import {
+  VideoAspectRatio,
+  VideoGenerationForm,
+  getVideoVariant,
+  SEEDANCE_DURATION_MIN,
+  SEEDANCE_DURATION_MAX,
+  SEEDANCE_DEFAULT_DURATION,
+  SEEDANCE_DEFAULT_RESOLUTION,
+} from "@/types/video";
 import ImageUpload, { ImageUploadHandle } from "@/components/image-upload";
 import VideoUpload, { VideoUploadHandle } from "@/components/video-upload";
-import { VideoModel, Duration } from "@/types/types";
+import { VideoModel, Duration, SeedanceResolution } from "@/types/types";
 import { Info, Video } from "lucide-react";
 
 interface VideoSettingsPanelProps {
@@ -39,12 +48,38 @@ export default function VideoSettingsPanel({
         <label className="text-sm font-medium text-foreground">AI Model</label>
         <Select value={form.model} onValueChange={(value) => {
           const newModel = value as VideoModel;
-          const newVariant = getVideoVariant(newModel, form.duration);
+          // When switching to/from Seedance the duration semantics change
+          // (Seedance allows 4-15s; other models are locked to 5/10). Snap
+          // duration into a safe range so the user never lands on an
+          // invalid combo just from changing the model dropdown.
+          const isSwitchingToSeedance = newModel === VideoModel.Seedance2Ref;
+          const wasSeedance = form.model === VideoModel.Seedance2Ref;
+          let newDuration = form.duration ?? Duration.Five;
+          if (isSwitchingToSeedance) {
+            // Seedance default is 5s (matches old picker behavior).
+            newDuration = SEEDANCE_DEFAULT_DURATION;
+          } else if (wasSeedance) {
+            // Coming back from Seedance — clamp to the 5/10 the other
+            // models support.
+            newDuration = newDuration <= 7 ? Duration.Five : Duration.Ten;
+          }
+          const newVariant = getVideoVariant(newModel, newDuration);
           // All available models enforce safety (platform is SFW-only as of 2026-04-29).
           const enable_safety_checker = true;
           const generate_audio = newModel === VideoModel.Kling ? (form.generate_audio ?? true) : false;
           const keep_original_sound = newModel === VideoModel.KlingMotionControl ? (form.keep_original_sound ?? true) : form.keep_original_sound;
-          updateForm(setForm, { model: newModel, variant: newVariant, enable_safety_checker, generate_audio, keep_original_sound });
+          const seedance_resolution = isSwitchingToSeedance
+            ? (form.seedance_resolution ?? SEEDANCE_DEFAULT_RESOLUTION)
+            : form.seedance_resolution;
+          updateForm(setForm, {
+            model: newModel,
+            variant: newVariant,
+            duration: newDuration,
+            enable_safety_checker,
+            generate_audio,
+            keep_original_sound,
+            seedance_resolution,
+          });
         }}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Select a model" />
@@ -176,27 +211,82 @@ export default function VideoSettingsPanel({
         />
       </div>
 
-      {/* Duration (hidden for Kling Motion Control) */}
-      {form.model !== VideoModel.KlingMotionControl && (
+      {/* Resolution picker — Seedance 2.0 only.
+          480p / 720p / 1080p map to dramatically different FAL costs
+          (~$0.13 / $0.30 / $0.68 per second), so this is also the primary
+          credit-cost lever for the user. See CREDIT_COSTS.SEEDANCE_V2_REF_*. */}
+      {form.model === VideoModel.Seedance2Ref && (
         <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Duration</label>
-          <div className="flex gap-2">
-            {([5, 10] as const).map((d) => (
+          <label className="text-sm font-medium text-foreground">Resolution</label>
+          <div className="grid grid-cols-3 gap-2">
+            {(["480p", "720p", "1080p"] as const).map((res) => (
               <Button
-                key={d}
-                variant={form.duration === d ? "default" : "outline"}
+                key={res}
+                variant={form.seedance_resolution === res ? "default" : "outline"}
                 className="flex-1"
                 onClick={() => {
-                  const newDuration = d as Duration;
-                  const newVariant = getVideoVariant(form.model, newDuration);
-                  updateForm(setForm, { duration: newDuration, variant: newVariant });
+                  updateForm(setForm, { seedance_resolution: res as SeedanceResolution });
                 }}
               >
-                {d}s
+                {res}
               </Button>
             ))}
           </div>
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <Info className="h-3 w-3" />
+            Higher resolution costs more credits per second.
+          </p>
         </div>
+      )}
+
+      {/* Duration — Seedance gets a 4-15s slider; other models stay on
+          5s / 10s buttons. Hidden for Kling Motion Control entirely. */}
+      {form.model !== VideoModel.KlingMotionControl && (
+        form.model === VideoModel.Seedance2Ref ? (
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <label className="text-sm font-medium text-foreground">Duration</label>
+              <span className="text-sm font-medium tabular-nums">
+                {form.duration ?? SEEDANCE_DEFAULT_DURATION}s
+              </span>
+            </div>
+            <Slider
+              value={[form.duration ?? SEEDANCE_DEFAULT_DURATION]}
+              min={SEEDANCE_DURATION_MIN}
+              max={SEEDANCE_DURATION_MAX}
+              step={1}
+              onValueChange={(val) => {
+                const newDuration = val[0];
+                const newVariant = getVideoVariant(form.model, newDuration);
+                updateForm(setForm, { duration: newDuration, variant: newVariant });
+              }}
+            />
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>{SEEDANCE_DURATION_MIN}s</span>
+              <span>{SEEDANCE_DURATION_MAX}s</span>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">Duration</label>
+            <div className="flex gap-2">
+              {([5, 10] as const).map((d) => (
+                <Button
+                  key={d}
+                  variant={form.duration === d ? "default" : "outline"}
+                  className="flex-1"
+                  onClick={() => {
+                    const newDuration = d as Duration;
+                    const newVariant = getVideoVariant(form.model, newDuration);
+                    updateForm(setForm, { duration: newDuration, variant: newVariant });
+                  }}
+                >
+                  {d}s
+                </Button>
+              ))}
+            </div>
+          </div>
+        )
       )}
 
 

@@ -32,7 +32,34 @@ function getFallbackCreditCost(tool: ToolType, variant?: string): number {
         case "nano_banana_2_1k": return 1;
         default: return CREDIT_COSTS.IMAGE_GENERATION;
       }
-    case ToolType.VIDEO_GENERATOR:
+    case ToolType.VIDEO_GENERATOR: {
+      // Seedance 2.0 ref-to-video variants follow the pattern
+      //   seedance_v2_ref_{resolution}_{duration}s
+      // e.g. "seedance_v2_ref_720p_8s". Cost is computed dynamically as
+      //   perSecondCost * duration
+      // because we support 4-15s × 3 resolutions = 36 combos and shipping
+      // 36 static entries per plan would be unmaintainable. Resolution and
+      // duration are validated from the parsed variant; anything malformed
+      // falls through to the default.
+      if (variant?.startsWith("seedance_v2_ref_")) {
+        const match = variant.match(/^seedance_v2_ref_(480p|720p|1080p)_(\d+)s$/);
+        if (match) {
+          const [, res, durStr] = match;
+          const duration = Number(durStr);
+          if (duration >= 4 && duration <= 15) {
+            const perSec =
+              res === "480p" ? CREDIT_COSTS.SEEDANCE_V2_REF_480P_PER_SEC :
+              res === "720p" ? CREDIT_COSTS.SEEDANCE_V2_REF_720P_PER_SEC :
+              CREDIT_COSTS.SEEDANCE_V2_REF_1080P_PER_SEC;
+            return perSec * duration;
+          }
+        }
+        // Legacy variants (seedance_v2_ref_5s / _10s) — kept for any old DB
+        // rows that still reference them. New code uses the resolution-aware
+        // form above. These stay at the original Apr-2026 pricing.
+        if (variant === "seedance_v2_ref_5s") return 38;
+        if (variant === "seedance_v2_ref_10s") return 76;
+      }
       switch (variant) {
         case "kling_audio_5s": return CREDIT_COSTS.VIDEO_5S_KLING;
         case "kling_audio_10s": return CREDIT_COSTS.VIDEO_10S;
@@ -47,6 +74,7 @@ function getFallbackCreditCost(tool: ToolType, variant?: string): number {
         case "veo_8s": return CREDIT_COSTS.VEO_8S;
         default: return CREDIT_COSTS.VIDEO_5S_KLING;
       }
+    }
     case ToolType.FACE_ENHANCE:
       return CREDIT_COSTS.FACE_ENHANCE;
     case ToolType.IMAGE_UPSCALER:
