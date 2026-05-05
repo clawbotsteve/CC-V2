@@ -47,7 +47,7 @@ export const INTERNAL_DASHBOARD_TOKEN: string =
  *
  * Format: ISO date of the legal change. Easy to read and never collides.
  */
-export const CURRENT_TERMS_VERSION = "2026-05-01";
+export const CURRENT_TERMS_VERSION = "2026-05-04";
 
 /**
  * Per-job consent version for avatar/influencer training. Captured on
