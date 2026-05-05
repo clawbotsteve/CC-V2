@@ -858,55 +858,15 @@ export default function DashboardPage() {
         }
       `}</style>
 
-      {/* ===== FOOTER ===== */}
-      <footer className="border-t border-border max-w-[1280px] mx-auto px-6 pt-16 pb-8">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-10 mb-12">
-          <div className="col-span-2 md:col-span-1">
-            <div className="flex items-center gap-2.5 mb-3">
-              <svg width="28" height="28" viewBox="0 0 48 48" fill="none">
-                <defs>
-                  <linearGradient id="ft-lg" x1="8" y1="8" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#6366f1"/>
-                    <stop offset="100%" stopColor="#c084fc"/>
-                  </linearGradient>
-                </defs>
-                <circle cx="24" cy="24" r="20" stroke="url(#ft-lg)" strokeWidth="1.5" fill="none" opacity="0.3"/>
-                <circle cx="24" cy="24" r="12" stroke="url(#ft-lg)" strokeWidth="1.5" fill="none" opacity="0.5"/>
-                <circle cx="24" cy="24" r="5" fill="url(#ft-lg)"/>
-                <line x1="24" y1="4" x2="24" y2="12" stroke="url(#ft-lg)" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
-                <line x1="24" y1="36" x2="24" y2="44" stroke="url(#ft-lg)" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
-                <line x1="4" y1="24" x2="12" y2="24" stroke="url(#ft-lg)" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
-                <line x1="36" y1="24" x2="44" y2="24" stroke="url(#ft-lg)" strokeWidth="1.5" strokeLinecap="round" opacity="0.6"/>
-              </svg>
-              <span className="font-display font-bold text-lg">TraviaLabs</span>
-            </div>
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-[280px]">AI Content Creation Platform. Generate professional photos, videos, and AI influencers with cutting-edge models.</p>
-          </div>
-          {[
-            { title: "Product", links: ["Create Image", "Create Video", "AI Influencer", "Face Swap", "Upscale"] },
-            { title: "Features", links: ["Camera Presets", "Visual Effects", "Prompt Generator", "Face Enhance", "Image Editor"] },
-            { title: "Company", links: ["About", "Pricing", "Blog", "Contact"] },
-            { title: "Resources", links: ["Tutorials", "API Docs", "Community", "Support", "Discord"] },
-          ].map((col) => (
-            <div key={col.title}>
-              <h4 className="text-xs font-bold uppercase tracking-widest mb-4">{col.title}</h4>
-              <div className="space-y-1">
-                {col.links.map((link) => (
-                  <a key={link} href="#" className="block text-sm text-muted-foreground hover:text-foreground transition-colors py-0.5">{link}</a>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="flex flex-col md:flex-row justify-between items-center pt-6 border-t border-border text-xs text-[#55556a] gap-2">
-          <span>© 2026 TraviaLabs. All rights reserved.</span>
-          <div className="flex gap-5">
-            <a href="#" className="hover:text-muted-foreground">Privacy Policy</a>
-            <a href="#" className="hover:text-muted-foreground">Terms of Use</a>
-            <a href="#" className="hover:text-muted-foreground">Cookie Notice</a>
-          </div>
-        </div>
-      </footer>
+      {/* ===== FOOTER =====
+          Removed the marketing-style 4-column footer (Product/Features/Company/
+          Resources) — every link in it was an `href="#"` placeholder pointing
+          nowhere ("API Docs", "Tutorials", "Cookie Notice", etc.). It also
+          duplicated the Terms / Privacy / Acceptable Use links that already
+          live in the global thin compliance bar in `app/(dashboard)/layout.tsx`,
+          which appears on every dashboard route. Two stacked footers with a
+          mostly-broken nav looked worse than no footer at all; the thin bar
+          handles all required legal links uniformly across the dashboard. */}
     </div>
   );
 }
