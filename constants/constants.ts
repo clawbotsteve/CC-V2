@@ -1,4 +1,44 @@
-export const INTERNAL_DASHBOARD_TOKEN = 'yebeud7dnj3nu3immmms';
+/**
+ * Bearer token guarding the internal admin / Retool dashboard webhooks
+ * under /api/webhook/dashboard/*. Powers operations like setting any
+ * user's credit balance, changing any user's plan tier, editing tool
+ * costs, and reading bulk user/analytics data — i.e. effectively
+ * superuser endpoints. Compromise of this token is equivalent to
+ * full admin access.
+ *
+ * Sourced from the INTERNAL_DASHBOARD_TOKEN environment variable.
+ *
+ * **Security notes**
+ * - This file is committed to source control, so we must NEVER hardcode
+ *   the real token here. (It used to be hardcoded as a 20-char string;
+ *   that value lives in git history forever and is considered burned —
+ *   was rotated 2026-05-04.)
+ * - When the env var is unset we use an unguessable per-process
+ *   sentinel rather than an empty string. This guarantees an attacker
+ *   sending `Authorization: Bearer ` (empty) cannot pass the
+ *   `token === INTERNAL_DASHBOARD_TOKEN` check — the routes fail
+ *   closed instead of fail open.
+ * - Loud error log in production if the env var is missing so this
+ *   doesn't degrade silently into a "no admin access works" outage
+ *   without a clear cause.
+ */
+const _INTERNAL_DASHBOARD_TOKEN_FROM_ENV = process.env.INTERNAL_DASHBOARD_TOKEN;
+
+if (!_INTERNAL_DASHBOARD_TOKEN_FROM_ENV && process.env.NODE_ENV === "production") {
+  // eslint-disable-next-line no-console
+  console.error(
+    "[CRITICAL] INTERNAL_DASHBOARD_TOKEN env var is not set in production. " +
+      "All /api/webhook/dashboard/* routes will reject every request until " +
+      "this is configured in Railway and the Retool connection."
+  );
+}
+
+export const INTERNAL_DASHBOARD_TOKEN: string =
+  _INTERNAL_DASHBOARD_TOKEN_FROM_ENV ||
+  // Sentinel value used when the env var is missing. Any real Bearer token
+  // (and especially the empty string from `Authorization: Bearer `) will
+  // fail to match this, which is the desired fail-closed behavior.
+  "__UNCONFIGURED_INTERNAL_DASHBOARD_TOKEN__DO_NOT_USE__";
 
 /**
  * Bump this when the Terms / Privacy Policy / AUP change in a way that
