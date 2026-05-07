@@ -37,9 +37,10 @@ import {
 const GPT2_SHOWCASE_TILES: ShowcaseTile[] = [
   { src: "/cc-content/T-4.jpg", type: "image", aspectRatio: "16/9", alt: "MAVEN magazine cover — The New Models, Issue 12 Winter 2026" },
   { src: "/cc-content/T-1.jpg", type: "image", aspectRatio: "9/16", alt: "IRIS MGMT modeling agency comp card for digital talent Kai Vex" },
+  { src: "/cc-content/T-6.jpg", type: "image", aspectRatio: "9/16", alt: "AS IT SHOULD HAVE BEEN — theatrical movie poster" },
   { src: "/cc-content/T-7.jpg", type: "image", aspectRatio: "1/1",  alt: "VEIDA — Slow Wire single artwork, December 2026" },
-  { src: "/cc-content/T-5.jpg", type: "image", aspectRatio: "9/16", alt: "ECHO STATIC — Drop 09 streetwear campaign poster" },
   { src: "/cc-content/T-3.jpg", type: "image", aspectRatio: "1/1",  alt: "AI character editorial portrait, Manhattan penthouse at blue hour" },
+  { src: "/cc-content/T-5.jpg", type: "image", aspectRatio: "9/16", alt: "ECHO STATIC — Drop 09 streetwear campaign poster" },
   { src: "/cc-content/T-8.jpg", type: "image", aspectRatio: "16/9", alt: "VESPER beauty serum print ad — 'Skin remembers what time forgets'" },
   { src: "/cc-content/T-2.jpg", type: "image", aspectRatio: "9/16", alt: "AI character lifestyle photo at a Bali infinity pool" },
 ];
