@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useUserContext } from "@/components/layout/user-context";
 import OnboardingQuestionnaire from "@/components/onboard/OnboardingQuestionnaire";
 import { GlowingEffect } from "@/components/ui/glowing-effect";
+import { ModelShowcase, ShowcaseTile } from "@/components/model-showcase";
 import { TypingAnimation } from "@/components/ui/typing-animation";
 import { motion } from "framer-motion";
 import { useRef } from "react";
@@ -25,13 +26,24 @@ import {
   Star,
 } from "lucide-react";
 
-const contentExamples = [
-  { type: "video", title: "UGC Video Ad", desc: "Scroll-stopping short-form ad creative", src: "/cc-content/video-3.mp4" },
-  { type: "beforeAfter", title: "Before / After Upgrade", desc: "Show raw input transformed into premium output", beforeSrc: "/cc-content/before.png", afterSrc: "/cc-content/after.png" },
-  { type: "image", title: "Product Marketing", desc: "Branded visuals for ads, promos, and launches", src: "/cc-content/image-2.png" },
-  { type: "video", title: "Fashion Reel", desc: "AI model motion clip for beauty + fashion", src: "/cc-content/video-2-landing.mp4" },
-  { type: "video", title: "Talking Head", desc: "Direct-to-camera content for offers and updates", src: "/cc-content/talking-head-model1.mp4" },
-] as const;
+// Tiles for the "Meet GPT Image 2" showcase section. Mixed-aspect demo
+// wall in the spirit of Higgsfield's model showcase, but built from
+// real GPT Image 2 outputs that double as TraviaLabs brand collateral —
+// magazine covers, streetwear posters, an album single, an agency comp
+// card, an editorial beauty ad, and two photoreal AI-character lifestyle
+// shots. Each file lives at /public/cc-content/T-N.jpg. The aspect ratio
+// per tile drives masonry sizing in <ModelShowcase>; values match the
+// actual generated file dimensions (verified via sips before wiring).
+const GPT2_SHOWCASE_TILES: ShowcaseTile[] = [
+  { src: "/cc-content/T-4.jpg", type: "image", aspectRatio: "16/9", alt: "MAVEN magazine cover — The New Models, Issue 12 Winter 2026" },
+  { src: "/cc-content/T-1.jpg", type: "image", aspectRatio: "9/16", alt: "IRIS MGMT modeling agency comp card for digital talent Kai Vex" },
+  { src: "/cc-content/T-6.jpg", type: "image", aspectRatio: "9/16", alt: "AS IT SHOULD HAVE BEEN — theatrical movie poster" },
+  { src: "/cc-content/T-7.jpg", type: "image", aspectRatio: "1/1",  alt: "VEIDA — Slow Wire single artwork, December 2026" },
+  { src: "/cc-content/T-3.jpg", type: "image", aspectRatio: "1/1",  alt: "AI character editorial portrait, Manhattan penthouse at blue hour" },
+  { src: "/cc-content/T-5.jpg", type: "image", aspectRatio: "9/16", alt: "ECHO STATIC — Drop 09 streetwear campaign poster" },
+  { src: "/cc-content/T-8.jpg", type: "image", aspectRatio: "16/9", alt: "VESPER beauty serum print ad — 'Skin remembers what time forgets'" },
+  { src: "/cc-content/T-2.jpg", type: "image", aspectRatio: "9/16", alt: "AI character lifestyle photo at a Bali infinity pool" },
+];
 
 const tools = [
   { emoji: "🧠", name: "Nano Banana Pro", desc: "Best 4K image model ever", href: "/tools/image-generation", badge: "Most Popular", badgeClass: "bg-[#6366f1] text-white", preview: "/cc-content/gen-ugc-1-rev1.png", previewType: "image" },
@@ -229,7 +241,6 @@ const planStyles: Record<string, { card: string; glow: string; save: string }> =
 
 export default function DashboardPage() {
   const toolsScrollRef = useRef<HTMLDivElement | null>(null);
-  const contentScrollRef = useRef<HTMLDivElement | null>(null);
   const [pricingBilling, setPricingBilling] = useState<"monthly" | "threeMonths">("monthly");
 
   // Onboarding flow: triggered by the "Create Your First Image" CTA.
@@ -250,14 +261,6 @@ export default function DashboardPage() {
 
   const scrollToolsRight = () => {
     toolsScrollRef.current?.scrollBy({ left: 260, behavior: "smooth" });
-  };
-
-  const scrollContentLeft = () => {
-    contentScrollRef.current?.scrollBy({ left: -520, behavior: "smooth" });
-  };
-
-  const scrollContentRight = () => {
-    contentScrollRef.current?.scrollBy({ left: 520, behavior: "smooth" });
   };
 
   return (
@@ -369,65 +372,26 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* ===== CONTENT EXAMPLES ===== */}
-      <section className="max-w-[1920px] mx-auto px-2 md:px-6 pb-24 pt-4">
-        <div className="mb-8 text-center">
-          <h2 className="font-display text-4xl md:text-5xl font-black tracking-tight text-white">The New Era of Content Creation</h2>
-          <p className="mt-5 text-base md:text-xl font-semibold text-zinc-200">AI is changing how stories are created — faster, more visual, and more personal.</p>
-        </div>
-
-        <div className="relative">
-          <button
-            type="button"
-            aria-label="Previous examples"
-            onClick={scrollContentLeft}
-            className="absolute left-2 top-1/2 z-20 hidden -translate-y-1/2 rounded-full border border-white/20 bg-black/60 p-2 text-white backdrop-blur transition hover:bg-black/80 md:inline-flex"
-          >
-            <ArrowRight className="h-5 w-5 rotate-180" />
-          </button>
-
-          <button
-            type="button"
-            aria-label="Next examples"
-            onClick={scrollContentRight}
-            className="absolute right-2 top-1/2 z-20 hidden -translate-y-1/2 rounded-full border border-white/20 bg-black/60 p-2 text-white backdrop-blur transition hover:bg-black/80 md:inline-flex"
-          >
-            <ArrowRight className="h-5 w-5" />
-          </button>
-
-          <div ref={contentScrollRef} className="flex gap-3 overflow-x-auto no-scrollbar px-1 md:px-10 snap-x snap-mandatory">
-            {contentExamples.map((item) => (
-              <motion.div
-                key={item.title}
-                whileHover={{ y: -4 }}
-                className="relative snap-start min-w-[92vw] sm:min-w-[70vw] lg:min-w-[44vw] xl:min-w-[36vw] rounded-2xl overflow-hidden border border-border hover:border-[#6366f1] transition-all"
-                style={{ aspectRatio: "16 / 9" }}
-              >
-                <GlowingEffect disabled={false} proximity={72} spread={32} borderWidth={2} />
-                <div className="relative h-full w-full bg-black/60">
-                  {item.type === "image" ? (
-                    <Image src={item.src} alt={item.title} fill className="object-contain" />
-                  ) : item.type === "beforeAfter" ? (
-                    <div className="grid h-full w-full grid-cols-2">
-                      <div className="relative h-full">
-                        <Image src={item.beforeSrc} alt={`${item.title} before`} fill className="object-contain" />
-                        <span className="absolute left-2 top-2 rounded bg-black/70 px-2 py-0.5 text-[10px] font-semibold text-white">Before</span>
-                      </div>
-                      <div className="relative h-full">
-                        <Image src={item.afterSrc} alt={`${item.title} after`} fill className="object-contain" />
-                        <span className="absolute right-2 top-2 rounded bg-indigo-600/80 px-2 py-0.5 text-[10px] font-semibold text-white">After</span>
-                      </div>
-                    </div>
-                  ) : (
-                    <video src={item.src} className="h-full w-full object-contain" autoPlay muted loop playsInline />
-                  )}
-                </div>
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/60 to-transparent" />
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* ===== MEET GPT IMAGE 2 SHOWCASE =====
+          Replaces the previous generic 5-card "New Era of Content Creation"
+          carousel. The carousel was: (a) showing only 5 generic stock-feel
+          examples, (b) letterboxing vertical 9:16 outputs into 16:9 cards
+          with black bars, and (c) had a stale "Before / After" tile of two
+          different people that actively undermined the character-consistency
+          message. Replaced with a Higgsfield-style "Meet GPT Image 2" wall
+          of 12 mixed-aspect demo pieces — magazine covers, posters, brand
+          ads, and photoreal AI portraits — to demonstrate GPT Image 2's
+          range and TraviaLabs' creator-economy positioning. */}
+      <ModelShowcase
+        badge="New Model"
+        title="Meet GPT Image 2"
+        subtitle="4K image generation with the cleanest typography in the game. Magazine covers, posters, packaging, streetwear drops, photoreal portraits — actual readable text where every other model gives you garbled letters."
+        ctaText="Generate with GPT Image 2"
+        ctaHref="/tools/image-generation?model=gpt-image-2"
+        tiles={GPT2_SHOWCASE_TILES}
+        viewAllText="View all GPT Image 2 examples"
+        viewAllHref="/tools/image-generation?model=gpt-image-2"
+      />
 
       {/* ===== TOOLS GRID =====
           Removed the wrapping purple-tinted card — the inner tool cards
