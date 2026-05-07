@@ -61,8 +61,12 @@ export function ModelShowcase({
   viewAllText,
   viewAllHref,
 }: ModelShowcaseProps) {
+  // Container is intentionally wider than the rest of the page (which
+  // sits at max-w-[1280px]) so the masonry has room to fan out across
+  // 4 columns at xl: instead of 3, cutting the section's vertical
+  // height roughly in half without dropping any tiles.
   return (
-    <section className="max-w-[1280px] mx-auto px-4 md:px-6 py-16">
+    <section className="max-w-[1480px] mx-auto px-4 md:px-6 py-16">
       <div
         className="relative rounded-3xl border border-white/10 overflow-hidden p-6 md:p-10"
         style={{
@@ -81,7 +85,11 @@ export function ModelShowcase({
           }}
         />
 
-        <div className="relative grid grid-cols-1 lg:grid-cols-[minmax(280px,1fr)_2fr] gap-8 lg:gap-12">
+        {/* Grid: intro on the left (fixed-ish min-width), masonry on the
+            right takes the rest. The right column is significantly wider
+            than the intro at lg+ (~3:1 ratio) so the masonry has room to
+            spread into 4 columns instead of being squeezed into 3. */}
+        <div className="relative grid grid-cols-1 lg:grid-cols-[minmax(260px,320px)_1fr] gap-8 lg:gap-10">
           {/* ===== LEFT — intro panel ===== */}
           <div className="flex flex-col">
             <div className="inline-flex self-start items-center gap-2 rounded-full border border-[#a78bfa]/30 bg-[#6366f1]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#c4b5fd] mb-5">
@@ -112,7 +120,14 @@ export function ModelShowcase({
               CSS columns gives natural masonry behavior — variable-height
               tiles slot in without us computing heights manually. Each
               tile uses break-inside-avoid so it never splits across cols. */}
-          <div className="columns-2 md:columns-3 gap-3 md:gap-4 [&>*]:mb-3 md:[&>*]:mb-4">
+          {/* CSS columns count breakpoints:
+                - mobile (default): 2 columns
+                - md (≥768px):     3 columns
+                - xl (≥1280px):    4 columns
+              At 4 cols × ~2.25 tiles per col, total height drops by ~⅓
+              vs the 3-col layout. Mobile and tablet stay 2/3 cols so
+              tiles don't get postage-stamp small. */}
+          <div className="columns-2 md:columns-3 xl:columns-4 gap-3 md:gap-4 [&>*]:mb-3 md:[&>*]:mb-4">
             {tiles.map((tile, i) => (
               <ShowcaseTileCard key={tile.src + i} tile={tile} />
             ))}
