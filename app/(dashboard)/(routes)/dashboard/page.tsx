@@ -298,13 +298,30 @@ export default function DashboardPage() {
             <h1 className="font-display text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.05]">
               This is where you build
             </h1>
-            {/* Cycling word — rotates through the kinds of AI characters
-                a creator can build on the platform. Communicates range
-                without bloating the headline. The fixed-height span keeps
-                vertical layout stable across the type/erase phases so
-                the subhead and CTA below never jump. */}
+            {/* Cycling word — desktop renders the typing animation that
+                rotates through 3 character types; mobile renders a static
+                gradient phrase ("your AI influencer.") instead.
+                Why the split:
+                  - Mobile reports were showing the cycling word as
+                    invisible empty space (gradient + animation
+                    interaction failed silently in some mobile browsers).
+                  - Animations on mobile burn battery and CPU when the
+                    user is most likely scrolling fast — the static
+                    version reads instantly and fails closed.
+                  - Both versions use identical typography + gradient so
+                    the visual identity is preserved across breakpoints. */}
+
+            {/* Mobile: static gradient text. */}
+            <h1 className="md:hidden font-display text-5xl font-extrabold leading-[1.05] tracking-tight">
+              <span className="bg-gradient-to-r from-[#6366f1] to-[#a78bfa] bg-clip-text text-transparent">
+                your AI influencer.
+              </span>
+            </h1>
+
+            {/* Desktop: cycling typing animation. minHeight keeps the
+                subhead + CTA stable as the word types/erases. */}
             <h1
-              className="font-display text-5xl md:text-7xl font-extrabold leading-[1.05] tracking-tight"
+              className="hidden md:block font-display text-7xl font-extrabold leading-[1.05] tracking-tight"
               style={{ minHeight: "1.2em" }}
             >
               <span className="bg-gradient-to-r from-[#6366f1] to-[#a78bfa] bg-clip-text text-transparent">
