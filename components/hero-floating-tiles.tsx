@@ -27,6 +27,9 @@ import { motion } from "framer-motion";
 interface FloatingTile {
   src: string;
   alt: string;
+  /** "image" renders <Image>, "video" renders an autoplaying muted
+   *  <video>. Default "image". */
+  type?: "image" | "video";
   /** Tailwind position classes for the tile container. */
   positionClass: string;
   /** Width of the tile in pixels. Different per tile so the wall feels
@@ -45,11 +48,14 @@ interface FloatingTile {
 
 const TILES: FloatingTile[] = [
   // ── LEFT side — 3 tiles, top to bottom ──
+  // Top tiles start at 18% (below the "Powered by" badge area which sits
+  // around 5-12%) so they decorate the headline without colliding with
+  // copy. Positions are tuned for the typical hero height (~720-800px).
   {
     src: "/cc-content/T-3.jpg",
     alt: "AI character in Manhattan penthouse at blue hour",
-    positionClass: "top-[8%] left-[3%] lg:left-[6%]",
-    width: 130,
+    positionClass: "top-[18%] left-[2%] lg:left-[5%]",
+    width: 120,
     aspect: "1 / 1",
     rotate: -7,
     delay: 0.1,
@@ -58,8 +64,8 @@ const TILES: FloatingTile[] = [
   {
     src: "/cc-content/T-7.jpg",
     alt: "VEIDA — Slow Wire single artwork",
-    positionClass: "top-[42%] left-[1%] lg:left-[3%]",
-    width: 120,
+    positionClass: "top-[48%] left-[0%] lg:left-[2%]",
+    width: 110,
     aspect: "1 / 1",
     rotate: 9,
     delay: 0.4,
@@ -68,8 +74,8 @@ const TILES: FloatingTile[] = [
   {
     src: "/cc-content/T-2.jpg",
     alt: "AI character at Bali infinity pool",
-    positionClass: "top-[72%] left-[5%] lg:left-[8%]",
-    width: 110,
+    positionClass: "bottom-[6%] left-[4%] lg:left-[7%]",
+    width: 100,
     aspect: "9 / 16",
     rotate: -5,
     delay: 0.7,
@@ -77,31 +83,36 @@ const TILES: FloatingTile[] = [
   },
 
   // ── RIGHT side — 3 tiles, top to bottom ──
+  // All right-side tiles are now M-X assets (user's curated set, 2 videos
+  // + 1 image). All vertical 9:16 aspect, so the right column reads as a
+  // unified "real character output" stack.
   {
-    src: "/cc-content/T-9.png",
-    alt: "AI male character lifestyle portrait",
-    positionClass: "top-[10%] right-[3%] lg:right-[6%]",
-    width: 115,
+    src: "/cc-content/M-1.mp4",
+    alt: "AI character lifestyle video",
+    type: "video",
+    positionClass: "top-[18%] right-[2%] lg:right-[5%]",
+    width: 110,
     aspect: "9 / 16",
     rotate: 6,
     delay: 0.2,
     floatDuration: 8.5,
   },
   {
-    src: "/cc-content/T-4.jpg",
-    alt: "MAVEN magazine cover",
-    positionClass: "top-[40%] right-[1%] lg:right-[3%]",
-    width: 145,
-    aspect: "16 / 9",
+    src: "/cc-content/M-2.mp4",
+    alt: "AI character lifestyle video",
+    type: "video",
+    positionClass: "top-[46%] right-[0%] lg:right-[2%]",
+    width: 105,
+    aspect: "9 / 16",
     rotate: -8,
     delay: 0.5,
     floatDuration: 7.5,
   },
   {
-    src: "/cc-content/T-6.jpg",
-    alt: "AS IT SHOULD HAVE BEEN movie poster",
-    positionClass: "top-[70%] right-[5%] lg:right-[8%]",
-    width: 105,
+    src: "/cc-content/M-3.jpg",
+    alt: "AI character lifestyle portrait",
+    positionClass: "bottom-[8%] right-[4%] lg:right-[7%]",
+    width: 100,
     aspect: "9 / 16",
     rotate: 11,
     delay: 0.8,
@@ -136,21 +147,34 @@ export function HeroFloatingTiles() {
               keeping the rotate on the parent and the float on the child
               avoids having them fight each other. */}
           <div
-            className="overflow-hidden rounded-xl border border-white/10 bg-[#111118] shadow-[0_8px_24px_rgba(0,0,0,0.45)]"
+            className="relative overflow-hidden rounded-xl border border-white/10 bg-[#111118] shadow-[0_8px_24px_rgba(0,0,0,0.45)]"
             style={{
               aspectRatio: tile.aspect,
               animation: `hero-tile-float ${tile.floatDuration}s ease-in-out infinite`,
               animationDelay: `${tile.delay}s`,
             }}
           >
-            <NextImage
-              src={tile.src}
-              alt={tile.alt}
-              fill
-              sizes="150px"
-              className="object-cover"
-              priority={i < 2}
-            />
+            {tile.type === "video" ? (
+              <video
+                src={tile.src}
+                className="absolute inset-0 h-full w-full object-cover"
+                autoPlay
+                muted
+                loop
+                playsInline
+                disablePictureInPicture
+                controlsList="nodownload noplaybackrate noremoteplayback"
+              />
+            ) : (
+              <NextImage
+                src={tile.src}
+                alt={tile.alt}
+                fill
+                sizes="150px"
+                className="object-cover"
+                priority={i < 2}
+              />
+            )}
           </div>
         </motion.div>
       ))}
