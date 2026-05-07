@@ -8,7 +8,8 @@ import { useUserContext } from "@/components/layout/user-context";
 import OnboardingQuestionnaire from "@/components/onboard/OnboardingQuestionnaire";
 import { GlowingEffect } from "@/components/ui/glowing-effect";
 import { ModelShowcase, ShowcaseTile } from "@/components/model-showcase";
-import { TypingAnimation } from "@/components/ui/typing-animation";
+import { CyclingTypingAnimation } from "@/components/ui/typing-animation";
+import { HeroFloatingTiles } from "@/components/hero-floating-tiles";
 import { motion } from "framer-motion";
 import { useRef } from "react";
 import {
@@ -280,6 +281,12 @@ export default function DashboardPage() {
           }}
         />
         
+        {/* Decorative floating AI-character thumbnails (3 left + 3 right).
+            Rendered before the centered headline column and given z-0 so
+            the headline (z-10 below) always sits on top. Hidden below
+            md: where there's no horizontal room. See HeroFloatingTiles. */}
+        <HeroFloatingTiles />
+
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="relative z-10 max-w-[800px] mx-auto">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 bg-[#6366f1]/10 border border-[#6366f1]/20 rounded-full px-4 py-1.5 text-sm font-medium text-[#818cf8] mb-6">
@@ -291,11 +298,25 @@ export default function DashboardPage() {
             <h1 className="font-display text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.05]">
               This is where you build
             </h1>
-            <TypingAnimation
-              text="your AI influencer."
-              duration={90}
-              className="font-display text-center text-5xl md:text-7xl font-extrabold leading-[1.05] bg-gradient-to-r from-[#6366f1] to-[#a78bfa] bg-clip-text text-transparent"
-            />
+            {/* Cycling word — rotates through the kinds of AI characters
+                a creator can build on the platform. Communicates range
+                without bloating the headline. The fixed-height span keeps
+                vertical layout stable across the type/erase phases so
+                the subhead and CTA below never jump. */}
+            <h1
+              className="font-display text-5xl md:text-7xl font-extrabold leading-[1.05] tracking-tight"
+              style={{ minHeight: "1.2em" }}
+            >
+              <span className="bg-gradient-to-r from-[#6366f1] to-[#a78bfa] bg-clip-text text-transparent">
+                <CyclingTypingAnimation
+                  words={[
+                    "your AI influencer.",
+                    "your AI fitness coach.",
+                    "your AI UGC creator.",
+                  ]}
+                />
+              </span>
+            </h1>
           </div>
 
           <p className="text-lg text-muted-foreground max-w-[560px] mx-auto mb-9 leading-relaxed">
