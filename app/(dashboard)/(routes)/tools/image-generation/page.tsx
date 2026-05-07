@@ -86,7 +86,24 @@ export default function GenerateImagePage() {
           if (isFreePlan) setOutOfFreeCreditsOpen(true);
         },
       },
-      preserveFields: ["model"],
+      // Preserve form settings the user actively chose so they don't have
+      // to reselect them every generation. Without this, switching a user
+      // who picked 4K and a 9:16 aspect would reset back to 1K + the
+      // default aspect on the next click — which is what they reported.
+      // Seed and uploaded reference image are deliberately NOT preserved
+      // (seed must change to give a new generation; refs are handled by
+      // the upload component's own reset).
+      preserveFields: [
+        "model",
+        "aspect_ratio",
+        "image_size",
+        "output_format",
+        "output_resolution", // Nano Banana 2 (1k / 2k / 4k)
+        "quality",           // GPT Image 2 (low / medium / high)
+        "soul_resolution",   // Soul 2.0 (720p / 1080p)
+        "lora_id",
+        "prompt",            // most users iterate on the same prompt
+      ],
     });
 
     if (newGen) {
