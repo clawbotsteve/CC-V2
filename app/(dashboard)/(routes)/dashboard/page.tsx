@@ -43,6 +43,7 @@ const GPT2_SHOWCASE_TILES: ShowcaseTile[] = [
   { src: "/cc-content/T-5.jpg", type: "image", aspectRatio: "9/16", alt: "ECHO STATIC — Drop 09 streetwear campaign poster" },
   { src: "/cc-content/T-8.jpg", type: "image", aspectRatio: "16/9", alt: "VESPER beauty serum print ad — 'Skin remembers what time forgets'" },
   { src: "/cc-content/T-2.jpg", type: "image", aspectRatio: "9/16", alt: "AI character lifestyle photo at a Bali infinity pool" },
+  { src: "/cc-content/T-9.png", type: "image", aspectRatio: "9/16", alt: "AI male character lifestyle mirror selfie portrait" },
 ];
 
 const tools = [
