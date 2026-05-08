@@ -94,14 +94,15 @@ const navLinks = [
   },
   {
     label: "Character",
-    href: "/tools/influencers",
+    href: "/tools/character-studio",
     panel: {
       features: [
+        { name: "Character Studio", desc: "End-to-end AI character builder" },
         { name: "Influencer Builder", desc: "Create custom AI personas" },
         { name: "Soul ID", desc: "Consistent identity setup" },
-        { name: "UGC Factory", desc: "Scale creator-style content" },
       ],
       models: [
+        { name: "Character Studio", desc: "Niche → reference → variations → LoRA → 15 prompts", href: "/tools/character-studio", badge: "NEW" },
         { name: "LoRA Training", desc: "Train your custom character", href: "/tools/influencers?model=lora-training" },
         { name: "Avatar to Video", desc: "Turn avatars into clips", href: "/tools/influencers?model=avatar-to-video" },
       ],
