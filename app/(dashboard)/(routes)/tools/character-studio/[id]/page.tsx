@@ -654,7 +654,31 @@ function StepTrainingAndPack({
   onRefresh: () => void;
 }) {
   const trainingDone = character.lora?.status === "completed" && !!character.lora?.loraUrl;
+  const trainingFailed = character.status === "failed";
   const promptPack = (character.characterStudioPromptPack as Array<any>) || [];
+
+  // Tick the elapsed clock so the user can see SOMETHING moving while
+  // they wait. FAL doesn't expose mid-training progress percentages
+  // for flux-lora training, so a live "Started X min ago" is the most
+  // honest signal we can give. Re-renders every 10s; that's enough
+  // for "X min Y sec" feel without hammering React.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (trainingDone || trainingFailed) return;
+    const t = setInterval(() => setNow(Date.now()), 10_000);
+    return () => clearInterval(t);
+  }, [trainingDone, trainingFailed]);
+
+  // Training row was created when /finalize swapped the draft, so
+  // updatedAt is a reasonable proxy for "training started." If it
+  // pre-dates the swap (legacy rows) we just hide the elapsed time.
+  const trainingStartedAt = character.updatedAt ? new Date(character.updatedAt).getTime() : null;
+  const elapsedMs = trainingStartedAt ? Math.max(0, now - trainingStartedAt) : null;
+  const elapsedLabel = elapsedMs != null ? formatElapsed(elapsedMs) : null;
+  // FAL flux-lora at 2000 steps usually finishes in 5–10 min; we
+  // bump the upper bound to 15 min for slack. If we're past 15 min,
+  // start nudging the user that something's probably wrong.
+  const stale = elapsedMs != null && elapsedMs > 15 * 60_000;
 
   const launchPromptPack = async () => {
     setWorking(true);
@@ -688,22 +712,74 @@ function StepTrainingAndPack({
       </p>
 
       <div className="mt-5 rounded-xl border border-border bg-black/30 p-4">
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
             <p className="text-sm font-medium">LoRA training</p>
             <p className="text-xs text-muted-foreground mt-0.5">
               {trainingDone
                 ? "Trained. Use this character anywhere in TraviaLabs."
-                : character.status === "failed"
-                  ? "Training failed — try re-rolling variations."
-                  : "Training in progress…"}
+                : trainingFailed
+                  ? "Training failed. Re-roll variations and try again, or contact support if this keeps happening."
+                  : stale
+                    ? "Training is taking longer than usual. FAL may be backed up — refresh in a couple minutes, and we'll reach out if it doesn't complete."
+                    : "FAL is training your LoRA. This usually takes 5–10 minutes (max 15). The page will auto-update — feel free to leave and come back."}
             </p>
+            {!trainingDone && !trainingFailed && elapsedLabel && (
+              <p className="text-[11px] text-muted-foreground mt-2 flex items-center gap-1.5">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                <span>Started {elapsedLabel} ago · est. {stale ? "any moment" : "5–10 min total"}</span>
+              </p>
+            )}
           </div>
-          <div className="text-xs px-2.5 py-1 rounded-full bg-card/40 border border-border">
-            {trainingDone ? "✓ Done" : working ? "Queued" : "Running"}
+          <div
+            className={`text-xs px-2.5 py-1 rounded-full border whitespace-nowrap ${
+              trainingDone
+                ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300"
+                : trainingFailed
+                  ? "border-red-500/40 bg-red-500/10 text-red-300"
+                  : "border-[#6366f1]/40 bg-[#6366f1]/10 text-[#c4b5fd]"
+            }`}
+          >
+            {trainingDone ? "✓ Trained" : trainingFailed ? "Failed" : stale ? "Stalled?" : "Training"}
           </div>
         </div>
+
+        {/* Indeterminate progress bar — visual reassurance only.
+            FAL's training endpoint doesn't surface step-by-step
+            progress for flux-lora, so we can't show a real %.
+            The shimmer is enough to communicate "still alive." */}
+        {!trainingDone && !trainingFailed && (
+          <div className="mt-3 h-1 rounded-full bg-white/5 overflow-hidden">
+            <div
+              className="h-full w-1/3 rounded-full bg-gradient-to-r from-[#6366f1] to-[#a78bfa]"
+              style={{ animation: "cs-shimmer 1.6s ease-in-out infinite" }}
+            />
+          </div>
+        )}
       </div>
+      <style jsx>{`
+        @keyframes cs-shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(400%); }
+        }
+      `}</style>
+
+      {/* Honest disclaimer: prompt-pack images are zero-shot from the
+          description, NOT the trained LoRA. Once training finishes,
+          users can re-run any prompt with the LoRA loaded for
+          actual likeness consistency. Surfacing this avoids the
+          "why don't the faces match?" confusion. */}
+      {promptPack.length > 0 && !trainingDone && (
+        <div className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 flex items-start gap-2">
+          <Sparkles className="h-4 w-4 text-amber-300 mt-0.5 shrink-0" />
+          <p className="text-xs text-amber-100/80">
+            <span className="font-semibold text-amber-200">Heads up: </span>
+            Prompt-pack images below are previews from your description — they
+            won't all look like the same person yet. Once training finishes,
+            re-run any of these prompts with the trained LoRA for full likeness consistency.
+          </p>
+        </div>
+      )}
 
       {/* Prompt pack section */}
       <div className="mt-5">
@@ -820,4 +896,17 @@ async function startTraining(
   } finally {
     setWorking(false);
   }
+}
+
+/** "Started 3 min ago" / "Started 12 sec ago". Capped at 99 min so we
+ *  don't render a wall of text on stuck rows. */
+function formatElapsed(ms: number): string {
+  const totalSec = Math.floor(ms / 1000);
+  if (totalSec < 60) return `${totalSec} sec`;
+  const min = Math.floor(totalSec / 60);
+  if (min < 60) {
+    const sec = totalSec % 60;
+    return sec === 0 ? `${min} min` : `${min} min ${sec} sec`;
+  }
+  return `${Math.min(min, 99)}+ min`;
 }
