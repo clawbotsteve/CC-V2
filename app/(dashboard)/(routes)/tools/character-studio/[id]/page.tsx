@@ -720,14 +720,11 @@ function StepTrainingAndPack({
 
 /* ─────────────────────────────────────── helpers ─────────────────────────────────────── */
 
-import JSZip from "jszip";
-
 /**
- * Build the training ZIP from the base reference + the 6 variations,
- * upload it via /api/upload, and POST the resulting URL to /finalize.
- *
- * Defined as a free helper rather than a hook so it can be triggered
- * by the consent modal's onConfirm without re-rendering.
+ * Kick off LoRA training. The server-side /finalize endpoint now
+ * builds the training ZIP itself (fetches the FAL CDN images
+ * server-side, where there's no browser-CORS dance), so the client
+ * just confirms consent and POSTs.
  */
 async function startTraining(
   character: CharacterStudioInfluencer,
@@ -736,61 +733,10 @@ async function startTraining(
 ) {
   setWorking(true);
   try {
-    const urls = [
-      character.characterStudioRef!,
-      ...(character.characterStudioVariations || []),
-    ].filter(Boolean);
-
-    // Variations are stored as JOB IDs in the DB. We need the actual
-    // image URLs — fetch the GeneratedImage rows so we can pull them.
-    const refDetail = await fetch(`/api/character-studio/${character.id}`).then((r) => r.json());
-    const variationUrls: string[] = (refDetail.jobImages || [])
-      .filter((j: JobImage) => character.characterStudioVariations.includes(j.id))
-      .map((j: JobImage) => j.imageUrl)
-      .filter(Boolean);
-
-    const trainingUrls = [character.characterStudioRef!, ...variationUrls].filter(Boolean);
-    if (trainingUrls.length < 4) {
-      toast.error("Not enough variations finished yet — wait a moment and retry.");
-      return;
-    }
-
-    const zip = new JSZip();
-    for (let i = 0; i < trainingUrls.length; i++) {
-      const url = trainingUrls[i];
-      const blob = await fetch(url).then((r) => r.blob());
-      const ext = blob.type.includes("png") ? "png" : blob.type.includes("webp") ? "webp" : "jpg";
-      zip.file(`image-${i}.${ext}`, blob);
-    }
-
-    const zipBlob = await zip.generateAsync({
-      type: "blob",
-      compression: "DEFLATE",
-      compressionOptions: { level: 6 },
-    });
-    const zipFile = new File([zipBlob], `${crypto.randomUUID()}.zip`, {
-      type: "application/zip",
-    });
-
-    const upload = await uploadFiles({
-      files: [zipFile],
-      maxFiles: 1,
-      allowedTypes: ["application/zip"],
-    });
-    if ("error" in upload) {
-      toast.error(upload.error);
-      return;
-    }
-    const trainingFileUrl = (upload as any)?.urls?.[0] || (upload as any)?.url;
-    if (!trainingFileUrl) {
-      toast.error("ZIP upload failed.");
-      return;
-    }
-
     const res = await fetch(`/api/character-studio/${character.id}/finalize`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ trainingFileUrl, consentAccepted: true }),
+      body: JSON.stringify({ consentAccepted: true }),
     });
     const data = await res.json();
     if (!res.ok) {
