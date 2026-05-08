@@ -478,8 +478,23 @@ function StepVariations({
   onRefresh: () => void;
 }) {
   const variationIds = character.characterStudioVariations || [];
-  const completed = variationIds.filter((id) => jobImages[id]?.status === "completed");
-  const allDone = variationIds.length > 0 && completed.length === variationIds.length;
+  // A tile is "usable" when its GeneratedImage row is completed AND
+  // has a non-empty imageUrl. Some FAL jobs come back with status
+  // completed but no URL (filtered output, edge-case failure) — those
+  // must NOT count toward the LoRA training set.
+  const usable = variationIds.filter((id) => {
+    const img = jobImages[id];
+    return img?.status === "completed" && !!img?.imageUrl;
+  });
+  const failed = variationIds.filter((id) => {
+    const img = jobImages[id];
+    return img?.status === "failed" || (img?.status === "completed" && !img?.imageUrl);
+  });
+  const allSettled = usable.length + failed.length === variationIds.length && variationIds.length > 0;
+  // LoRA training needs ≥4 references to converge. Server-side ZIP
+  // build also enforces this floor — keep the client gate matched so
+  // users aren't stuck if one tile fails.
+  const canContinue = usable.length >= 4 && allSettled;
 
   const reroll = async () => {
     setWorking(true);
@@ -493,6 +508,29 @@ function StepVariations({
         return;
       }
       toast.success("Variations queued.");
+      onRefresh();
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong.");
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  const retryOne = async (idx: number) => {
+    setWorking(true);
+    try {
+      const res = await fetch(`/api/character-studio/${character.id}/variations/retry`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ index: idx }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data?.error || "Retry failed.");
+        return;
+      }
+      toast.success("Retrying that tile…");
       onRefresh();
     } catch (err) {
       console.error(err);
@@ -530,6 +568,12 @@ function StepVariations({
           const jobId = variationIds[idx];
           const img = jobId ? jobImages[jobId] : undefined;
           const url = img?.imageUrl;
+          // "completed but no URL" is a soft failure (model produced
+          // nothing usable). Distinguish it from "still processing"
+          // so the user gets a retry button instead of an indefinite
+          // spinner.
+          const isFailed =
+            img?.status === "failed" || (img?.status === "completed" && !img?.imageUrl);
           return (
             <div
               key={v.number}
@@ -543,6 +587,19 @@ function StepVariations({
                   sizes="(max-width: 768px) 50vw, 33vw"
                   className="object-cover"
                 />
+              ) : isFailed ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-3 text-center">
+                  <span className="text-xs text-red-300 font-medium">Couldn't generate</span>
+                  <span className="text-[10px] text-muted-foreground line-clamp-2">{v.label}</span>
+                  <button
+                    type="button"
+                    onClick={() => retryOne(idx)}
+                    disabled={working}
+                    className="mt-2 inline-flex items-center gap-1 rounded-full border border-[#6366f1]/50 bg-[#6366f1]/10 px-3 py-1 text-[11px] font-medium text-[#c4b5fd] hover:bg-[#6366f1]/20 disabled:opacity-50"
+                  >
+                    <RefreshCw className="h-3 w-3" /> Retry this tile
+                  </button>
+                </div>
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-xs text-muted-foreground p-3 text-center">
                   <Loader2 className="h-5 w-5 animate-spin" />
@@ -566,11 +623,15 @@ function StepVariations({
         </Button>
         <Button
           onClick={onStartTraining}
-          disabled={!allDone || working}
+          disabled={!canContinue || working}
           className="bg-gradient-to-r from-[#6366f1] to-[#8b7bff] text-white"
         >
-          {allDone ? "Continue to training" : `Waiting (${completed.length}/${variationIds.length})…`}
-          {allDone && <ArrowRight className="h-4 w-4 ml-2" />}
+          {canContinue
+            ? `Continue to training (${usable.length}/6 ready)`
+            : allSettled
+              ? `Need at least 4 — retry tiles below (${usable.length}/6)`
+              : `Waiting (${usable.length}/${variationIds.length})…`}
+          {canContinue && <ArrowRight className="h-4 w-4 ml-2" />}
         </Button>
       </div>
     </div>
