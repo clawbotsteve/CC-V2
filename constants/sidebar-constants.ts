@@ -16,6 +16,7 @@ import {
   ScanFace,
   Brush,
   Layers,
+  UserPlus,
 } from 'lucide-react';
 
 export const routes = [
@@ -32,6 +33,12 @@ export const routes = [
         label: "Influencers",
         icon: Users,
         href: "/tools/influencers",
+        color: "text-foreground",
+      },
+      {
+        label: "Character Studio",
+        icon: UserPlus,
+        href: "/tools/character-studio",
         color: "text-foreground",
       },
       {
