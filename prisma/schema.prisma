@@ -382,6 +382,29 @@ model Influencer {
   consentAccepted     Boolean          @default(false)
   consentAcceptedAt   DateTime?
   consentTermsVersion String?
+
+  // Character Studio fields (added 2026-05-07). Set when an Influencer
+  // is created via the guided Character Studio wizard rather than the
+  // direct upload-train flow. All optional so legacy rows are unaffected.
+  // - niche                       which niche pack the prompts are pulled from
+  // - characterStudioCharType     "female" | "male" | "animated" (visual-only)
+  // - characterStudioBrand        optional brand / show / agency name
+  // - characterStudioProduct      optional featured product / book / topic
+  // - characterStudioRef          base reference image URL (Step 2 output)
+  // - characterStudioVariations   the 6 variation URLs (Step 3 output)
+  // - characterStudioPromptPack   array of {number, label, prompt, imageUrl, status}
+  //                               for the 15 niche prompts generated in Step 5
+  // - characterStudioStep         wizard progress: setup | reference | variations
+  //                                                | training | prompts | complete
+  niche                     String?
+  characterStudioCharType   String?
+  characterStudioBrand      String?
+  characterStudioProduct    String?
+  characterStudioRef        String?
+  characterStudioVariations String[]  @default([])
+  characterStudioPromptPack Json?
+  characterStudioStep       String?
+
   createdAt           DateTime         @default(now())
   updatedAt           DateTime         @updatedAt
 

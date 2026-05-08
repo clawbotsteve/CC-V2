@@ -113,6 +113,21 @@ export function requiredPlanForVideoModel(model?: string): string {
   return "Starter";
 }
 
+/**
+ * Character Studio (the guided AI-character builder) is gated to
+ * Creator+ for the MVP. The flow burns ~30 generations per character
+ * (1 base ref + 6 variations + 15 prompt-pack + LoRA training) so
+ * Free / Beginner / Starter would chew through their monthly credits
+ * in a single character. Revisit once we have ad-hoc credit packs.
+ */
+export function canUseCharacterStudio(access: AccessTier): boolean {
+  return access === "creator" || access === "studio";
+}
+
+export function requiredPlanForCharacterStudio(): string {
+  return "Creator";
+}
+
 export function requiredPlanForImageModel(model?: string): string {
   // gpt-image-2 is the only model Free can use; "Free" is what the picker
   // labels it with so users on Free don't see an "upgrade required" badge
