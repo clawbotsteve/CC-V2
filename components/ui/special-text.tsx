@@ -195,11 +195,15 @@ export function SpecialText({
   return (
     <span
       ref={containerRef}
-      // Defaults match the original component (font-mono compact size);
-      // cn() lets callers override with their own font + sizing for
-      // bigger contexts (we override with font-display in the hero).
+      // Original component hardcoded `h-4.5 leading-5` which is body-
+      // text sizing (18px). At hero scale (text-7xl = 72px) those
+      // pinned the container to ~18px and clipped the text to nothing
+      // visible — that's what bit us on first ship to prod. Defaults
+      // now leave height/leading unset so they inherit the parent's
+      // typography. Consumers can still pass an explicit font / size
+      // via className.
       className={cn(
-        "h-4.5 leading-5 inline-flex font-mono font-medium",
+        "inline-flex font-mono font-medium",
         className,
       )}
     >
@@ -251,15 +255,30 @@ export function CyclingSpecialText({
     return () => clearTimeout(t);
   }, [current, speed, holdMs, phrases.length]);
 
-  // Reserve width for the longest phrase so the heading doesn't reflow.
+  // Reserve width for the longest phrase so the heading doesn't
+  // reflow. Uses inline-grid stacking instead of absolute positioning
+  // because absolute-position breaks the parent's `bg-clip-text` —
+  // the text inherits `color: transparent` from the gradient parent
+  // but doesn't get the gradient background, so it renders invisible.
+  // (That's exactly what bit us on first ship — saw the row blank.)
+  // inline-grid keeps both the sizer and the live text in the normal
+  // flow; both share grid-area "stack" so they overlap visually but
+  // size to the larger child.
   const longest = phrases.reduce((a, b) => (a.length >= b.length ? a : b), "");
 
   return (
-    <span className="relative inline-block">
-      <span aria-hidden className="invisible whitespace-pre">
+    <span
+      className="inline-grid"
+      style={{ gridTemplateAreas: '"stack"' }}
+    >
+      <span
+        aria-hidden
+        className="invisible whitespace-pre"
+        style={{ gridArea: "stack" }}
+      >
         {longest}
       </span>
-      <span className="absolute inset-0 whitespace-pre">
+      <span className="whitespace-pre" style={{ gridArea: "stack" }}>
         <SpecialText key={`${idx}-${run}`} speed={speed} className={className}>
           {current}
         </SpecialText>

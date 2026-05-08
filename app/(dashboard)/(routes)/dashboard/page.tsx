@@ -337,10 +337,11 @@ export default function DashboardPage() {
                   ]}
                   speed={28}
                   holdMs={2400}
-                  // Override SpecialText's defaults (font-mono + small
-                  // h-4.5 sizing) so the scramble inherits the hero's
-                  // font-display / 7xl / extrabold styling.
-                  className="!font-display !h-auto !leading-[1.05] text-7xl font-extrabold"
+                  // Override SpecialText's `font-mono` default — the
+                  // hero needs to stay in the brand display font. The
+                  // rest of typography (size, weight, leading) cascades
+                  // from the parent h1.
+                  className="!font-display"
                 />
               </span>
             </h1>
