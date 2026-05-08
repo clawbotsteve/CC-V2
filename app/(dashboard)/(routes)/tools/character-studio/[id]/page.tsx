@@ -7,8 +7,10 @@ import { ArrowLeft, ArrowRight, Loader2, Sparkles, Upload, Wand2, RefreshCw } fr
 import { toast } from "sonner";
 import PageContainer from "@/components/page-container";
 import { Button } from "@/components/ui/button";
-import { Influencer } from "@prisma/client";
+import { Influencer, ToolType } from "@prisma/client";
 import { uploadFiles } from "@/lib/utils";
+import { useUserContext } from "@/components/layout/user-context";
+import { CreditCost } from "@/components/credit-cost";
 import { ConsentModal } from "./_components/ConsentModal";
 import { ProgressBar } from "./_components/ProgressBar";
 import { VARIATION_PROMPTS } from "@/lib/character-studio/variation-prompts";
@@ -477,6 +479,7 @@ function StepVariations({
   onStartTraining: () => void;
   onRefresh: () => void;
 }) {
+  const { creditCosts } = useUserContext();
   const variationIds = character.characterStudioVariations || [];
   // A tile is "usable" when its GeneratedImage row is completed AND
   // has a non-empty imageUrl. Some FAL jobs come back with status
@@ -631,7 +634,16 @@ function StepVariations({
             : allSettled
               ? `Need at least 4 — retry tiles below (${usable.length}/6)`
               : `Waiting (${usable.length}/${variationIds.length})…`}
-          {canContinue && <ArrowRight className="h-4 w-4 ml-2" />}
+          {canContinue && (
+            <>
+              <CreditCost
+                toolType={ToolType.AVATAR_TRAINING}
+                creditCosts={creditCosts}
+                variant="default"
+              />
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </>
+          )}
         </Button>
       </div>
     </div>
@@ -653,6 +665,7 @@ function StepTrainingAndPack({
   setWorking: (b: boolean) => void;
   onRefresh: () => void;
 }) {
+  const { creditCosts } = useUserContext();
   const trainingDone = character.lora?.status === "completed" && !!character.lora?.loraUrl;
   const trainingFailed = character.status === "failed";
   const promptPack = (character.characterStudioPromptPack as Array<any>) || [];
@@ -721,8 +734,8 @@ function StepTrainingAndPack({
                 : trainingFailed
                   ? "Training failed. Re-roll variations and try again, or contact support if this keeps happening."
                   : stale
-                    ? "Training is taking longer than usual. FAL may be backed up — refresh in a couple minutes, and we'll reach out if it doesn't complete."
-                    : "FAL is training your LoRA. This usually takes 5–10 minutes (max 15). The page will auto-update — feel free to leave and come back."}
+                    ? "Training is taking longer than usual. Tavira AI may be backed up — refresh in a couple minutes, and we'll reach out if it doesn't complete."
+                    : "Tavira AI is training your LoRA. This usually takes 5–10 minutes (max 15). The page will auto-update — feel free to leave and come back."}
             </p>
             {!trainingDone && !trainingFailed && elapsedLabel && (
               <p className="text-[11px] text-muted-foreground mt-2 flex items-center gap-1.5">
@@ -794,6 +807,12 @@ function StepTrainingAndPack({
             >
               {working ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
               Generate 15 prompts
+              {/* Per-image cost shown next to the CTA. Total = 15× this. */}
+              <CreditCost
+                toolType={ToolType.IMAGE_GENERATOR}
+                creditCosts={creditCosts}
+                variant="gpt_image_2_medium"
+              />
             </Button>
           )}
         </div>
@@ -801,6 +820,7 @@ function StepTrainingAndPack({
         {promptPack.length === 0 ? (
           <p className="mt-2 text-xs text-muted-foreground">
             15 niche-specific images you can post immediately. Saved to your image library.
+            <span className="ml-1 text-[#c4b5fd]">15 × per-image cost shown on the button.</span>
           </p>
         ) : (
           <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
