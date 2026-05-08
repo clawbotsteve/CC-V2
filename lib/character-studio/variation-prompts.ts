@@ -59,9 +59,14 @@ export const VARIATION_PROMPTS: VariationPrompt[] = [
   },
   {
     number: 6,
-    label: "Wildcard: different outfit + different lighting",
+    label: "Wildcard: outdoor golden hour",
+    // Specific concrete scene > vague "pick the contrast that differs."
+    // Nano Banana 2 Edit is much more reliable when we tell it what to
+    // produce instead of asking it to make creative decisions. The
+    // earlier prompt left too much to the model and was the only one
+    // of the six that didn't reliably complete.
     prompt:
-      "Same person from the reference image, full reset of outfit and environment: now wearing a fully different wardrobe (different color palette, different garment type than the reference), in a different location (e.g. outdoor at golden-hour OR a darker interior with dramatic warm tungsten lighting — pick the contrast that differs most from the reference), different time of day, different overall color temperature, candid mid-action pose, photoreal skin and clothing texture, identical face and identity to the reference image, 9:16.",
+      "Same person from the reference image, now standing on a city sidewalk at golden hour, wearing a denim jacket over a cream tank top and faded blue jeans, soft warm late-afternoon sunlight from camera-right casting long shadows, candid mid-stride caught looking back over the shoulder at camera with a small natural smile, blurred warm-toned urban background (out-of-focus brick storefront, string lights), photoreal skin texture and hair backlit by the sun, identical face and identity to the reference image, 9:16.",
     isWildcard: true,
   },
 ];
