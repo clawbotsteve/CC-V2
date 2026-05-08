@@ -154,18 +154,32 @@ export async function POST(
       logs: false,
     });
 
+    // FAL response shapes vary by model + by sync vs. async path. Try
+    // every known location for the URL — same defensive helper the
+    // image-tool's status route uses for queue results.
+    const r = result as any;
     const imageUrl =
-      (result?.data as any)?.images?.[0]?.url ||
-      (result?.data as any)?.image?.url ||
+      r?.data?.images?.[0]?.url ||
+      r?.data?.images?.[0]?.image_url ||
+      r?.data?.image?.url ||
+      r?.images?.[0]?.url ||
+      r?.images?.[0]?.image_url ||
+      r?.image?.url ||
+      r?.output?.images?.[0]?.url ||
+      r?.payload?.images?.[0]?.url ||
       "";
 
     if (!imageUrl) {
-      console.error("[CHARACTER-STUDIO] reference: no image url in fal result", result);
+      console.error(
+        "[CHARACTER-STUDIO] reference: no image url in fal result",
+        JSON.stringify(result, null, 2).slice(0, 1000),
+      );
       return NextResponse.json(
         { error: "Reference generation failed — please try again." },
         { status: 502 }
       );
     }
+    console.log("[CHARACTER-STUDIO] reference: imageUrl =", imageUrl);
 
     // Charge credits AFTER successful generation so failed jobs don't
     // burn the user's balance. deductCredit is the right helper for

@@ -67,6 +67,22 @@ const nextConfig = {
         hostname: "v3.fal.media",
         pathname: "/**",
       },
+      // FAL serves generated images from multiple subdomains depending
+      // on the model (v2.fal.media, cdn.fal.media, fal.media bare).
+      // Whitelisting the wildcard covers all of them without us having
+      // to chase every model's specific CDN. Came up first when
+      // Character Studio's GPT Image 2 + Nano Banana 2 Edit outputs
+      // failed to render in the wizard (#46 follow-up).
+      {
+        protocol: "https",
+        hostname: "**.fal.media",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "fal.media",
+        pathname: "/**",
+      },
     ],
   },
   async headers() {
