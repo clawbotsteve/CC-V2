@@ -8,7 +8,7 @@ import { useUserContext } from "@/components/layout/user-context";
 import OnboardingQuestionnaire from "@/components/onboard/OnboardingQuestionnaire";
 import { GlowingEffect } from "@/components/ui/glowing-effect";
 import { ModelShowcase, ShowcaseTile } from "@/components/model-showcase";
-import { CyclingTypingAnimation } from "@/components/ui/typing-animation";
+import { CyclingSpecialText } from "@/components/ui/special-text";
 import { HeroFloatingTiles } from "@/components/hero-floating-tiles";
 import { motion } from "framer-motion";
 import { useRef } from "react";
@@ -318,19 +318,29 @@ export default function DashboardPage() {
               </span>
             </h1>
 
-            {/* Desktop: cycling typing animation. minHeight keeps the
-                subhead + CTA stable as the word types/erases. */}
+            {/* Desktop: scramble-decoder cycling text. Each phrase
+                glitches in (random chars → resolves), holds, then we
+                re-mount with the next phrase via a key change so
+                SpecialText runs the scramble enter animation again.
+                minHeight keeps the subhead + CTA stable as phrases
+                of different lengths cycle. */}
             <h1
               className="hidden md:block font-display text-7xl font-extrabold leading-[1.05] tracking-tight"
               style={{ minHeight: "1.2em" }}
             >
               <span className="bg-gradient-to-r from-[#6366f1] to-[#a78bfa] bg-clip-text text-transparent">
-                <CyclingTypingAnimation
-                  words={[
+                <CyclingSpecialText
+                  phrases={[
                     "your AI influencer.",
                     "your AI fitness coach.",
                     "your AI UGC creator.",
                   ]}
+                  speed={28}
+                  holdMs={2400}
+                  // Override SpecialText's defaults (font-mono + small
+                  // h-4.5 sizing) so the scramble inherits the hero's
+                  // font-display / 7xl / extrabold styling.
+                  className="!font-display !h-auto !leading-[1.05] text-7xl font-extrabold"
                 />
               </span>
             </h1>
