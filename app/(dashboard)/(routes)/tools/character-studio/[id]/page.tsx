@@ -16,8 +16,14 @@ import { ProgressBar } from "./_components/ProgressBar";
 import { VARIATION_PROMPTS } from "@/lib/character-studio/variation-prompts";
 import { NICHES, Niche } from "@/lib/character-studio/prompt-scaffolds";
 
+// Influencer + the optional Lora marketplace relation. Note the
+// Influencer model itself ALSO has its own loraUrl/configUrl — those
+// are what the webhook + manual recovery write to. The Lora relation
+// is only populated for influencers explicitly listed for sale.
 type CharacterStudioInfluencer = Influencer & {
   lora?: { status: string; loraUrl?: string | null } | null;
+  loraUrl?: string | null;
+  configUrl?: string | null;
 };
 
 type JobImage = { id: string; status: string; imageUrl: string; prompt: string };
@@ -82,9 +88,17 @@ export default function CharacterStudioWizardPage() {
     const hasInflightJobs = Object.values(jobImages).some(
       (j) => j.status === "queued" || j.status === "processing"
     );
-    const isTraining =
-      character?.characterStudioStep === "training" &&
-      (character?.lora?.status !== "completed" || !character?.lora?.loraUrl);
+    // Training is "still happening" when:
+    //   - we're in step="training" AND
+    //   - the LoRA isn't ready yet on EITHER signal source
+    //     (Influencer.loraUrl set by webhook/recovery, OR the optional
+    //      Lora marketplace relation). Same fix as the trainingDone
+    //     check below — earlier versions only checked Lora relation,
+    //     which made polling never stop after recovery.
+    const trainedNow =
+      (character?.status === "completed" && !!character?.loraUrl) ||
+      (character?.lora?.status === "completed" && !!character?.lora?.loraUrl);
+    const isTraining = character?.characterStudioStep === "training" && !trainedNow;
 
     if (!hasInflightJobs && !isTraining) {
       if (pollRef.current) clearInterval(pollRef.current);
@@ -109,9 +123,17 @@ export default function CharacterStudioWizardPage() {
   // waiting on training, never burns network when not needed.
   const trainingPollRef = useRef<NodeJS.Timeout | null>(null);
   useEffect(() => {
-    const isTraining =
-      character?.characterStudioStep === "training" &&
-      (character?.lora?.status !== "completed" || !character?.lora?.loraUrl);
+    // Training is "still happening" when:
+    //   - we're in step="training" AND
+    //   - the LoRA isn't ready yet on EITHER signal source
+    //     (Influencer.loraUrl set by webhook/recovery, OR the optional
+    //      Lora marketplace relation). Same fix as the trainingDone
+    //     check below — earlier versions only checked Lora relation,
+    //     which made polling never stop after recovery.
+    const trainedNow =
+      (character?.status === "completed" && !!character?.loraUrl) ||
+      (character?.lora?.status === "completed" && !!character?.lora?.loraUrl);
+    const isTraining = character?.characterStudioStep === "training" && !trainedNow;
 
     if (!isTraining || !id) {
       if (trainingPollRef.current) clearInterval(trainingPollRef.current);
@@ -710,7 +732,20 @@ function StepTrainingAndPack({
   onRefresh: () => void;
 }) {
   const { creditCosts } = useUserContext();
-  const trainingDone = character.lora?.status === "completed" && !!character.lora?.loraUrl;
+  // "Done" can be signaled two different ways:
+  //   1. Influencer.loraUrl is set + Influencer.status is "completed"
+  //      — this is what BOTH the webhook handler and the manual
+  //      training-status recovery endpoint write to. It's the source
+  //      of truth for Character Studio rows.
+  //   2. The Lora marketplace relation reports completed — only
+  //      populated for influencers explicitly listed for sale; null
+  //      for Character Studio rows.
+  // Earlier versions only checked (2), so recovered-via-status-check
+  // rows showed as "Stalled?" forever even after the API saved the
+  // LoRA. Now we accept either signal.
+  const trainingDone =
+    (character.status === "completed" && !!character.loraUrl) ||
+    (character.lora?.status === "completed" && !!character.lora?.loraUrl);
   const trainingFailed = character.status === "failed";
   const promptPack = (character.characterStudioPromptPack as Array<any>) || [];
 
