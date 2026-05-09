@@ -714,6 +714,41 @@ function StepTrainingAndPack({
     }
   };
 
+  /**
+   * Manually re-poll Tavira AI for the LoRA training status. Used when
+   * the webhook didn't fire (or was dropped) and the row has been
+   * stuck in "queued" longer than the user's patience. Server-side
+   * patches the row to completed/failed if Tavira AI knows the result;
+   * we just refetch the character to surface the new state.
+   */
+  const checkStatusNow = async () => {
+    setWorking(true);
+    try {
+      const res = await fetch(
+        `/api/character-studio/${character.id}/training-status`,
+        { method: "POST" }
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data?.error || "Status check failed.");
+        return;
+      }
+      if (data.outcome === "completed") {
+        toast.success("Training was actually done — recovered the LoRA.");
+      } else if (data.outcome === "failed") {
+        toast.error("Tavira AI reports this training failed. Re-roll variations and try again.");
+      } else {
+        toast.info("Still in progress. Hang tight or check back in a few minutes.");
+      }
+      onRefresh();
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong.");
+    } finally {
+      setWorking(false);
+    }
+  };
+
   return (
     <div>
       <h2 className="text-xl font-semibold">
@@ -767,6 +802,31 @@ function StepTrainingAndPack({
               className="h-full w-1/3 rounded-full bg-gradient-to-r from-[#6366f1] to-[#a78bfa]"
               style={{ animation: "cs-shimmer 1.6s ease-in-out infinite" }}
             />
+          </div>
+        )}
+
+        {/* Recovery actions when training appears stalled. The
+            webhook is supposed to update the row when training
+            completes — if it didn't (FAL hiccup, dropped delivery,
+            etc.) the row sits in "queued" forever. "Check status
+            now" pulls the result directly from Tavira AI; if the
+            training actually completed, the LoRA is recovered and
+            we patch the row. */}
+        {!trainingDone && !trainingFailed && stale && (
+          <div className="mt-4 flex flex-col sm:flex-row gap-2">
+            <Button
+              onClick={checkStatusNow}
+              disabled={working}
+              variant="outline"
+              size="sm"
+            >
+              {working ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" />
+              ) : (
+                <RefreshCw className="h-3.5 w-3.5 mr-2" />
+              )}
+              Check status now
+            </Button>
           </div>
         )}
       </div>
