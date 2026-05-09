@@ -163,7 +163,15 @@ function CharacterCard({
 
 function computeStatus(c: CharacterStudioInfluencer): { label: string; tone: string } {
   const step = c.characterStudioStep;
-  if (step === "complete" || (c.lora?.status === "completed" && c.lora?.loraUrl)) {
+  // "Ready" can be signaled by the Influencer's own loraUrl/status
+  // (what the webhook + recovery endpoint write to) OR the optional
+  // Lora marketplace relation. Earlier versions only checked the Lora
+  // relation, so recovered Character Studio rows showed as "Training"
+  // forever in the library.
+  const trainedNow =
+    (c.status === "completed" && !!c.loraUrl) ||
+    (c.lora?.status === "completed" && !!c.lora?.loraUrl);
+  if (step === "complete" || trainedNow) {
     return { label: "Ready", tone: "text-emerald-400" };
   }
   if (step === "training" || c.status === "queued" || c.status === "processing") {
