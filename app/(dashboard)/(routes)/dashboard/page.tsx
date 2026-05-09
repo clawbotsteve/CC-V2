@@ -329,14 +329,21 @@ export default function DashboardPage() {
               style={{ minHeight: "1.2em" }}
             >
               <span className="bg-gradient-to-r from-[#6366f1] to-[#a78bfa] bg-clip-text text-transparent">
+                {/* Single phrase that re-scrambles every ~8s. The
+                    "cycle" is back to the same phrase; the run-counter
+                    in CyclingSpecialText still increments and re-mounts
+                    SpecialText with a new key, which retriggers the
+                    decoder animation.
+
+                    Timing math (so the rhythm is intentional, not
+                    arbitrary): scramble of a 19-char phrase at speed=28
+                    takes ~2.1s (text.length × 2 × speed × 2 covers
+                    Phase 1 + Phase 2). holdMs=5900 gives ~5.9s of
+                    settled-text hold, summing to ~8s per scramble. */}
                 <CyclingSpecialText
-                  phrases={[
-                    "your AI influencer.",
-                    "your AI fitness coach.",
-                    "your AI UGC creator.",
-                  ]}
+                  phrases={["your AI influencer."]}
                   speed={28}
-                  holdMs={2400}
+                  holdMs={5900}
                   // Override SpecialText's `font-mono` default — the
                   // hero needs to stay in the brand display font. The
                   // rest of typography (size, weight, leading) cascades
