@@ -100,6 +100,50 @@ export default function CharacterStudioWizardPage() {
     };
   }, [jobImages, character, fetchCharacter]);
 
+  // Auto-recover stuck trainings: while a row is in step="training"
+  // and the webhook hasn't updated the LoRA yet, manually poll Tavira
+  // AI's queue every 30 seconds. The /training-status endpoint
+  // mirrors the webhook's update path (saves loraUrl, marks completed,
+  // charges credits) so the wizard self-heals even if our webhook
+  // delivery is lost. Polling lazily — only when we're actually
+  // waiting on training, never burns network when not needed.
+  const trainingPollRef = useRef<NodeJS.Timeout | null>(null);
+  useEffect(() => {
+    const isTraining =
+      character?.characterStudioStep === "training" &&
+      (character?.lora?.status !== "completed" || !character?.lora?.loraUrl);
+
+    if (!isTraining || !id) {
+      if (trainingPollRef.current) clearInterval(trainingPollRef.current);
+      trainingPollRef.current = null;
+      return;
+    }
+
+    if (trainingPollRef.current) return;
+    const tick = async () => {
+      try {
+        const res = await fetch(`/api/character-studio/${id}/training-status`, {
+          method: "POST",
+        });
+        if (res.ok) {
+          // Server-side already patched the row if Tavira AI says
+          // completed — refetch to surface the new state.
+          fetchCharacter();
+        }
+      } catch {
+        // Silent — the next 30s tick will retry.
+      }
+    };
+    // Fire once immediately so users who land on a long-stuck row see
+    // the resolution within seconds rather than waiting 30s.
+    void tick();
+    trainingPollRef.current = setInterval(tick, 30_000);
+    return () => {
+      if (trainingPollRef.current) clearInterval(trainingPollRef.current);
+      trainingPollRef.current = null;
+    };
+  }, [character?.characterStudioStep, character?.lora?.status, character?.lora?.loraUrl, id, fetchCharacter]);
+
   if (loading || !character) {
     return (
       <PageContainer>

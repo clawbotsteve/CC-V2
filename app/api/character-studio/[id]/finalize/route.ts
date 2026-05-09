@@ -178,6 +178,17 @@ export async function POST(
     const isCreatorPlus = planTier === PLAN_CREATOR || planTier === PLAN_STUDIO;
     const trainSteps = isCreatorPlus ? 2000 : 1000;
 
+    console.log(
+      `[CHARACTER-STUDIO_FINALIZE] submitting training`,
+      JSON.stringify({
+        characterId: character.id,
+        userId,
+        trainingFileUrl,
+        variationCount: variationUrls.length,
+        steps: trainSteps,
+      })
+    );
+
     const trainRes = await axios.post(
       absoluteUrl("/api/ai/train"),
       {
@@ -196,6 +207,15 @@ export async function POST(
     );
 
     const requestId: string | undefined = trainRes.data?.requestId;
+    console.log(
+      `[CHARACTER-STUDIO_FINALIZE] train response`,
+      JSON.stringify({
+        characterId: character.id,
+        requestId,
+        success: trainRes.data?.success,
+      })
+    );
+
     if (!requestId) {
       return NextResponse.json(
         { error: "Training failed to start (no requestId)." },
