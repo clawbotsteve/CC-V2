@@ -221,6 +221,14 @@ export const TOOL_COSTS_BY_TIER: Record<
     { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_low", creditCost: 1 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_medium", creditCost: 2 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_high", creditCost: 5 },
+    // Nano Banana 2 (text → image and edit). Variant key is
+    // "nano_banana_2_{1k|2k|4k}" set by /api/tools/image. Mirrors the
+    // fallback in lib/get-credit-cost.ts so DB lookups don't 404 in
+    // the webhook (which was eating the variation jobs' charge step
+    // on Character Studio while the URL save still went through).
+    { tool: ToolType.IMAGE_GENERATOR, variant: "nano_banana_2_1k", creditCost: 1 },
+    { tool: ToolType.IMAGE_GENERATOR, variant: "nano_banana_2_2k", creditCost: 3 },
+    { tool: ToolType.IMAGE_GENERATOR, variant: "nano_banana_2_4k", creditCost: 4 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "soul_2_720p", creditCost: 5 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "soul_2_1080p", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_5s", creditCost: 11 },
@@ -252,6 +260,14 @@ export const TOOL_COSTS_BY_TIER: Record<
     { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_low", creditCost: 1 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_medium", creditCost: 2 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_high", creditCost: 5 },
+    // Nano Banana 2 (text → image and edit). Variant key is
+    // "nano_banana_2_{1k|2k|4k}" set by /api/tools/image. Mirrors the
+    // fallback in lib/get-credit-cost.ts so DB lookups don't 404 in
+    // the webhook (which was eating the variation jobs' charge step
+    // on Character Studio while the URL save still went through).
+    { tool: ToolType.IMAGE_GENERATOR, variant: "nano_banana_2_1k", creditCost: 1 },
+    { tool: ToolType.IMAGE_GENERATOR, variant: "nano_banana_2_2k", creditCost: 3 },
+    { tool: ToolType.IMAGE_GENERATOR, variant: "nano_banana_2_4k", creditCost: 4 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "soul_2_720p", creditCost: 5 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "soul_2_1080p", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_5s", creditCost: 11 },
@@ -283,6 +299,14 @@ export const TOOL_COSTS_BY_TIER: Record<
     { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_low", creditCost: 1 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_medium", creditCost: 2 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_high", creditCost: 5 },
+    // Nano Banana 2 (text → image and edit). Variant key is
+    // "nano_banana_2_{1k|2k|4k}" set by /api/tools/image. Mirrors the
+    // fallback in lib/get-credit-cost.ts so DB lookups don't 404 in
+    // the webhook (which was eating the variation jobs' charge step
+    // on Character Studio while the URL save still went through).
+    { tool: ToolType.IMAGE_GENERATOR, variant: "nano_banana_2_1k", creditCost: 1 },
+    { tool: ToolType.IMAGE_GENERATOR, variant: "nano_banana_2_2k", creditCost: 3 },
+    { tool: ToolType.IMAGE_GENERATOR, variant: "nano_banana_2_4k", creditCost: 4 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "soul_2_720p", creditCost: 5 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "soul_2_1080p", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_5s", creditCost: 11 },
@@ -314,6 +338,14 @@ export const TOOL_COSTS_BY_TIER: Record<
     { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_low", creditCost: 1 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_medium", creditCost: 2 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_high", creditCost: 5 },
+    // Nano Banana 2 (text → image and edit). Variant key is
+    // "nano_banana_2_{1k|2k|4k}" set by /api/tools/image. Mirrors the
+    // fallback in lib/get-credit-cost.ts so DB lookups don't 404 in
+    // the webhook (which was eating the variation jobs' charge step
+    // on Character Studio while the URL save still went through).
+    { tool: ToolType.IMAGE_GENERATOR, variant: "nano_banana_2_1k", creditCost: 1 },
+    { tool: ToolType.IMAGE_GENERATOR, variant: "nano_banana_2_2k", creditCost: 3 },
+    { tool: ToolType.IMAGE_GENERATOR, variant: "nano_banana_2_4k", creditCost: 4 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "soul_2_720p", creditCost: 5 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "soul_2_1080p", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_5s", creditCost: 11 },
@@ -345,6 +377,14 @@ export const TOOL_COSTS_BY_TIER: Record<
     { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_low", creditCost: 1 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_medium", creditCost: 2 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_high", creditCost: 5 },
+    // Nano Banana 2 (text → image and edit). Variant key is
+    // "nano_banana_2_{1k|2k|4k}" set by /api/tools/image. Mirrors the
+    // fallback in lib/get-credit-cost.ts so DB lookups don't 404 in
+    // the webhook (which was eating the variation jobs' charge step
+    // on Character Studio while the URL save still went through).
+    { tool: ToolType.IMAGE_GENERATOR, variant: "nano_banana_2_1k", creditCost: 1 },
+    { tool: ToolType.IMAGE_GENERATOR, variant: "nano_banana_2_2k", creditCost: 3 },
+    { tool: ToolType.IMAGE_GENERATOR, variant: "nano_banana_2_4k", creditCost: 4 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "soul_2_720p", creditCost: 5 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "soul_2_1080p", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_5s", creditCost: 11 },
@@ -376,6 +416,14 @@ export const TOOL_COSTS_BY_TIER: Record<
     { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_low", creditCost: 1 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_medium", creditCost: 2 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_high", creditCost: 5 },
+    // Nano Banana 2 (text → image and edit). Variant key is
+    // "nano_banana_2_{1k|2k|4k}" set by /api/tools/image. Mirrors the
+    // fallback in lib/get-credit-cost.ts so DB lookups don't 404 in
+    // the webhook (which was eating the variation jobs' charge step
+    // on Character Studio while the URL save still went through).
+    { tool: ToolType.IMAGE_GENERATOR, variant: "nano_banana_2_1k", creditCost: 1 },
+    { tool: ToolType.IMAGE_GENERATOR, variant: "nano_banana_2_2k", creditCost: 3 },
+    { tool: ToolType.IMAGE_GENERATOR, variant: "nano_banana_2_4k", creditCost: 4 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "soul_2_720p", creditCost: 5 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "soul_2_1080p", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_5s", creditCost: 11 },
@@ -407,6 +455,14 @@ export const TOOL_COSTS_BY_TIER: Record<
     { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_low", creditCost: 1 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_medium", creditCost: 2 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_high", creditCost: 5 },
+    // Nano Banana 2 (text → image and edit). Variant key is
+    // "nano_banana_2_{1k|2k|4k}" set by /api/tools/image. Mirrors the
+    // fallback in lib/get-credit-cost.ts so DB lookups don't 404 in
+    // the webhook (which was eating the variation jobs' charge step
+    // on Character Studio while the URL save still went through).
+    { tool: ToolType.IMAGE_GENERATOR, variant: "nano_banana_2_1k", creditCost: 1 },
+    { tool: ToolType.IMAGE_GENERATOR, variant: "nano_banana_2_2k", creditCost: 3 },
+    { tool: ToolType.IMAGE_GENERATOR, variant: "nano_banana_2_4k", creditCost: 4 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "soul_2_720p", creditCost: 5 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "soul_2_1080p", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_5s", creditCost: 11 },
@@ -438,6 +494,14 @@ export const TOOL_COSTS_BY_TIER: Record<
     { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_low", creditCost: 1 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_medium", creditCost: 2 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_high", creditCost: 5 },
+    // Nano Banana 2 (text → image and edit). Variant key is
+    // "nano_banana_2_{1k|2k|4k}" set by /api/tools/image. Mirrors the
+    // fallback in lib/get-credit-cost.ts so DB lookups don't 404 in
+    // the webhook (which was eating the variation jobs' charge step
+    // on Character Studio while the URL save still went through).
+    { tool: ToolType.IMAGE_GENERATOR, variant: "nano_banana_2_1k", creditCost: 1 },
+    { tool: ToolType.IMAGE_GENERATOR, variant: "nano_banana_2_2k", creditCost: 3 },
+    { tool: ToolType.IMAGE_GENERATOR, variant: "nano_banana_2_4k", creditCost: 4 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "soul_2_720p", creditCost: 5 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "soul_2_1080p", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_5s", creditCost: 11 },
@@ -469,6 +533,14 @@ export const TOOL_COSTS_BY_TIER: Record<
     { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_low", creditCost: 1 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_medium", creditCost: 2 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "gpt_image_2_high", creditCost: 5 },
+    // Nano Banana 2 (text → image and edit). Variant key is
+    // "nano_banana_2_{1k|2k|4k}" set by /api/tools/image. Mirrors the
+    // fallback in lib/get-credit-cost.ts so DB lookups don't 404 in
+    // the webhook (which was eating the variation jobs' charge step
+    // on Character Studio while the URL save still went through).
+    { tool: ToolType.IMAGE_GENERATOR, variant: "nano_banana_2_1k", creditCost: 1 },
+    { tool: ToolType.IMAGE_GENERATOR, variant: "nano_banana_2_2k", creditCost: 3 },
+    { tool: ToolType.IMAGE_GENERATOR, variant: "nano_banana_2_4k", creditCost: 4 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "soul_2_720p", creditCost: 5 },
     { tool: ToolType.IMAGE_GENERATOR, variant: "soul_2_1080p", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "standard_5s", creditCost: 11 },
