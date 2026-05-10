@@ -40,8 +40,23 @@ interface HeroMultiverseProps {
 export function HeroMultiverse({ onPrimaryCta, ctaHref }: HeroMultiverseProps) {
   return (
     <section className="relative w-full overflow-hidden bg-black">
-      {/* ===== Image stage ===== */}
-      <div className="relative w-full" style={{ aspectRatio: "1920 / 1072" }}>
+      {/* ===== Image stage =====
+          Sized to fill the visible viewport BELOW the top navbar (~56px).
+          On wide / ultra-wide displays the 1920×1072 image gets scaled
+          UP to fill the height, with the bottom-center focal point
+          (creator + lower windows) preserved via object-position.
+          On portrait/mobile, the image gets cropped horizontally —
+          object-position keeps the creator centered.
+
+          Switched from aspect-ratio-locked (which left black bars
+          above/below on tall viewports) to min-h-[calc(100vh-56px)]
+          so the hero is genuinely above-the-fold no matter the screen.
+          Keeps a min-height of 600px so the layout doesn't collapse
+          on weird short browser windows. */}
+      <div
+        className="relative w-full"
+        style={{ height: "calc(100vh - 56px)", minHeight: "600px" }}
+      >
         {/* Ken Burns wrap — slow zoom-in/out so the static image
             breathes. Pure CSS keyframes, no JS, no extra assets. */}
         <div className="absolute inset-0 [animation:hero-kenburns_28s_ease-in-out_infinite]">
@@ -52,6 +67,11 @@ export function HeroMultiverse({ onPrimaryCta, ctaHref }: HeroMultiverseProps) {
             priority
             sizes="100vw"
             className="object-cover"
+            // Bias the crop toward the lower-center: keeps the creator
+            // and the lower row of floating windows in frame on
+            // ultra-wide and portrait viewports where the image gets
+            // letterboxed by object-cover.
+            style={{ objectPosition: "50% 65%" }}
           />
         </div>
 
