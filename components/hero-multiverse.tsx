@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ScanFace, LayoutGrid, TrendingUp } from "lucide-react";
 
 /**
  * Multiverse hero — full-bleed cinematic hero for the dashboard.
@@ -53,128 +53,107 @@ export function HeroMultiverse({ onPrimaryCta, ctaHref }: HeroMultiverseProps) {
           so the hero is genuinely above-the-fold no matter the screen.
           Keeps a min-height of 600px so the layout doesn't collapse
           on weird short browser windows. */}
-      <div
-        className="relative w-full"
-        style={{ height: "calc(100vh - 56px)", minHeight: "600px" }}
-      >
-        {/* Ken Burns wrap — slow zoom-in/out so the static image
-            breathes. Pure CSS keyframes, no JS, no extra assets. */}
-        <div className="absolute inset-0 [animation:hero-kenburns_28s_ease-in-out_infinite]">
-          <Image
-            src="/hero/hero-multiverse.jpg"
-            alt="Travia — your AI influencer. A solo creator on a hilltop with their laptop, surrounded by floating holographic windows each showing the same AI character in a different scene: fitness coach, fashion model, podcast host, lifestyle creator."
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover"
-            // Bias the crop toward the lower-center: keeps the creator
-            // and the lower row of floating windows in frame on
-            // ultra-wide and portrait viewports where the image gets
-            // letterboxed by object-cover.
-            style={{ objectPosition: "50% 65%" }}
-          />
-        </div>
+      {/* Aspect-ratio-locked again. The earlier full-viewport
+          (calc(100vh - 56px) + object-cover + Ken Burns scale)
+          produced ugly horizontal cropping that ate the baked
+          headline on the left edge. Anchoring back to 1920×1072
+          shows the entire image cleanly with no cropping games. */}
+      <div className="relative w-full" style={{ aspectRatio: "1920 / 1072" }}>
+        <Image
+          src="/hero/hero-multiverse.jpg"
+          alt="Travia — your AI influencer. A solo creator on a hilltop with their laptop, surrounded by floating holographic windows each showing the same AI character in a different scene: fitness coach, fashion model, podcast host, lifestyle creator."
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
 
-        {/* Bottom-half darkening gradient — gives the headline + CTA
-            enough contrast against the cityscape without graying out
-            the upper sky / floating windows. */}
+        {/* OPAQUE BLACKOUT band across the bottom 36% of the hero —
+            covers the baked-into-pixels typography (Travia headline,
+            tagline, "One face. Infinite possibilities", trust marks,
+            and the amber CTA) so we can render fresh HTML overlays
+            on top of it as the single source of truth.
+
+            Why blackout, not just gradient: the baked typo
+            ("possiibilities", "IDENITTY") would still read through
+            a soft gradient. A near-opaque band hides it completely
+            and gives us a clean canvas. Top edge fades to transparent
+            so the join into the cityscape isn't a hard line. */}
         <div
-          className="absolute inset-0 pointer-events-none"
+          className="absolute inset-x-0 bottom-0 pointer-events-none"
           style={{
+            height: "36%",
             background:
-              "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.45) 30%, rgba(0,0,0,0.05) 55%, rgba(0,0,0,0) 75%)",
+              "linear-gradient(to top, rgba(8,8,12,0.96) 0%, rgba(8,8,12,0.94) 50%, rgba(8,8,12,0.78) 75%, rgba(8,8,12,0.4) 92%, rgba(8,8,12,0) 100%)",
           }}
         />
 
-        {/* Subtle vignette + slow breathe — barely perceptible but
-            adds depth and a "scene is alive" cue. */}
+        {/* Subtle vignette + slow breathe — barely perceptible. */}
         <div
           className="absolute inset-0 pointer-events-none [animation:hero-vignette-breathe_12s_ease-in-out_infinite]"
           style={{
             background:
-              "radial-gradient(ellipse 90% 70% at 50% 50%, transparent 50%, rgba(0,0,0,0.45) 100%)",
+              "radial-gradient(ellipse 90% 70% at 50% 45%, transparent 55%, rgba(0,0,0,0.4) 100%)",
           }}
         />
 
-        {/* Drifting dust-mote particles via canvas. ~40 motes drifting
-            upward — implies the scene is generating something. */}
+        {/* Drifting dust-mote particles via canvas. */}
         <HeroParticles />
 
-        {/*
-          IMPORTANT — current hero image has the headline ("Travia*"),
-          italic tagline, "One face. Infinite possibilities..." subhead,
-          three trust marks, and the "Powered by GPT Image 2..." badge
-          all BAKED INTO THE PIXELS. So we deliberately do NOT render
-          HTML overlays for those — they'd double-stack on top of the
-          baked text and look broken.
-
-          The ONE HTML overlay we keep is the CTA, positioned to sit
-          directly over (and cover) the baked amber "CREATE YOUR AI
-          INFLUENCER" button. The HTML CTA is in brand purple, larger
-          and bolder, with a darkening backdrop behind it so any pixel
-          peek-through from the baked button is suppressed.
-
-          When/if the hero image is regenerated WITHOUT baked text,
-          re-enable the headline + trust marks blocks below this.
-        */}
-
-        {/* ===== HTML CTA only — covers the baked amber button ===== */}
-        <div className="absolute bottom-[6%] md:bottom-[8%] right-[3%] md:right-[5%] lg:right-[6%] z-10 flex flex-col items-end gap-3">
-          {/* Dark blurred backdrop sized to the CTA + a bit of padding,
-              so any baked-button pixels around the edges of our HTML
-              button get blurred away. Behind the CTA in the stack. */}
-          <div className="relative">
-            <div
-              aria-hidden
-              className="absolute -inset-3 rounded-[1.25rem] bg-black/45 backdrop-blur-md"
-            />
-            {ctaHref ? (
-              <Link href={ctaHref} className="hero-cta relative">
-                <span>GENERATE YOUR FIRST IMAGE</span>
-                <ArrowRight className="h-5 w-5 md:h-6 md:w-6" />
-              </Link>
-            ) : (
-              <button
-                type="button"
-                onClick={onPrimaryCta}
-                className="hero-cta relative"
-              >
-                <span>GENERATE YOUR FIRST IMAGE</span>
-                <ArrowRight className="h-5 w-5 md:h-6 md:w-6" />
-              </button>
-            )}
+        {/* ===== Top-center badge ===== */}
+        <div className="absolute top-4 md:top-8 left-1/2 -translate-x-1/2 z-10">
+          <div className="inline-flex items-center gap-2 bg-black/40 backdrop-blur-sm border border-white/15 rounded-full px-3 md:px-4 py-1 md:py-1.5 text-[11px] md:text-sm font-medium text-white/90">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 [animation:pulse-dot_2s_ease-in-out_infinite]" />
+            <span className="hidden sm:inline">Powered by GPT Image 2 · Nano Banana 2 · Soul 2.0</span>
+            <span className="sm:hidden">GPT Image 2 · Nano Banana 2 · Soul 2.0</span>
           </div>
         </div>
 
-        {/* === Disabled overlays — re-enable when hero image has no
-              baked text. Keeping the JSX colocated so the next
-              non-baked image swap is a one-line guard flip. ===
+        {/* ===== Lower-left: HTML headline + tagline (single source of truth) ===== */}
+        <div className="absolute bottom-[6%] md:bottom-[8%] left-[4%] md:left-[5%] lg:left-[6%] z-10 max-w-[60%] md:max-w-[55%] lg:max-w-[55%]">
+          <h1 className="font-display font-bold leading-[0.92] tracking-tight text-[#f5f0e6]">
+            <span className="block text-4xl sm:text-6xl md:text-7xl lg:text-9xl">
+              Travia<span className="text-[#a78bfa]">*</span>
+            </span>
+          </h1>
+          <p className="font-display italic text-sm sm:text-lg md:text-xl lg:text-2xl text-[#f5f0e6]/95 mt-1">
+            your AI influencer<span className="text-[#a78bfa] not-italic">*</span>
+          </p>
+          <p className="text-[10px] sm:text-xs md:text-sm text-white/70 mt-2 md:mt-3 max-w-md">
+            <span className="font-semibold text-white/90">One face. Infinite possibilities.</span>
+            <span className="block sm:inline sm:ml-1">Built with consistency. Powered by LoRA.</span>
+          </p>
+        </div>
 
-          <div className="absolute top-6 md:top-10 left-1/2 -translate-x-1/2 z-10">
-            ... badge ...
-          </div>
+        {/* ===== Lower-right: brand-purple CTA + trust marks ===== */}
+        <div className="absolute bottom-[6%] md:bottom-[8%] right-[4%] md:right-[5%] lg:right-[6%] z-10 flex flex-col items-end gap-2 md:gap-3">
+          {ctaHref ? (
+            <Link href={ctaHref} className="hero-cta">
+              <span>GENERATE YOUR FIRST IMAGE</span>
+              <ArrowRight className="h-5 w-5 md:h-6 md:w-6" />
+            </Link>
+          ) : (
+            <button type="button" onClick={onPrimaryCta} className="hero-cta">
+              <span>GENERATE YOUR FIRST IMAGE</span>
+              <ArrowRight className="h-5 w-5 md:h-6 md:w-6" />
+            </button>
+          )}
 
-          <div className="absolute bottom-6 md:bottom-12 lg:bottom-16 left-4 md:left-10 lg:left-16 z-10 max-w-[68%] md:max-w-[55%] lg:max-w-[50%]">
-            ... headline + tagline ...
+          <div className="hidden md:flex items-center gap-4 lg:gap-7 text-[9px] lg:text-[11px] text-white/80 uppercase tracking-[0.18em]">
+            <TrustMark icon={<ScanFace className="h-3.5 w-3.5 text-[#a78bfa]" />} top="Consistent" bottom="Identity" />
+            <TrustMark icon={<LayoutGrid className="h-3.5 w-3.5 text-[#a78bfa]" />} top="Multi-Niche" bottom="Content" />
+            <TrustMark icon={<TrendingUp className="h-3.5 w-3.5 text-[#a78bfa]" />} top="Built For" bottom="Growth" />
           </div>
-
-          <div className="hidden md:flex items-center gap-5 lg:gap-8 ...">
-            ... trust marks ...
-          </div>
-        */}
+        </div>
       </div>
 
       {/* All keyframes + the .hero-cta button styling colocated so the
           component is self-contained — drop it anywhere and it works. */}
       <style jsx>{`
-        @keyframes hero-kenburns {
-          0%, 100% {
-            transform: scale(1) translate(0, 0);
-          }
-          50% {
-            transform: scale(1.05) translate(-1%, -0.5%);
-          }
-        }
+        /* Ken Burns dropped — at 1920×1072 the scale(1.05) was the
+           direct cause of horizontal cropping that ate the headline.
+           Image stays still now; motion comes from the particles +
+           vignette breathe + CTA pulse. */
         @keyframes hero-vignette-breathe {
           0%, 100% { opacity: 0.85; }
           50% { opacity: 1; }
@@ -261,10 +240,25 @@ export function HeroMultiverse({ onPrimaryCta, ctaHref }: HeroMultiverseProps) {
   );
 }
 
-// TrustMark + the badge component are intentionally not exported —
-// they're disabled until the hero image is regenerated without baked
-// text. JSX shells are kept commented in the main component above so
-// the re-enable is a single-block flip.
+function TrustMark({
+  icon,
+  top,
+  bottom,
+}: {
+  icon: React.ReactNode;
+  top: string;
+  bottom: string;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      {icon}
+      <div className="leading-tight">
+        <div className="font-semibold text-white/95">{top}</div>
+        <div className="text-white/60">{bottom}</div>
+      </div>
+    </div>
+  );
+}
 
 /**
  * 40-particle dust-mote canvas. Runs at ~30fps, ~0.5% CPU on a modern
