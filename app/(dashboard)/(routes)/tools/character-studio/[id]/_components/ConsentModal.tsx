@@ -130,7 +130,7 @@ export function ConsentModal({ open, onOpenChange, characterName, onConfirm }: P
           <ConsentRow
             checked={terms}
             onChange={setTerms}
-            label="I accept the TraviaLabs Terms of Service and the Acceptable Use Policy for this character."
+            label="I accept the TaviraLabs Terms of Service and the Acceptable Use Policy for this character."
           />
         </div>
 

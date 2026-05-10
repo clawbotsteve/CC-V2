@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "Acceptable Use Policy · TraviaLabs",
-  description: "TraviaLabs Acceptable Use Policy",
+  title: "Acceptable Use Policy · TaviraLabs",
+  description: "TaviraLabs Acceptable Use Policy",
 };
 
 export default function AUPPage() {
@@ -18,7 +18,7 @@ export default function AUPPage() {
 
       <p>
         This Acceptable Use Policy (&quot;AUP&quot;) describes content and
-        conduct prohibited on TraviaLabs. It applies to anyone using the
+        conduct prohibited on TaviraLabs. It applies to anyone using the
         Service, including via API, embeds, integrations, automated
         agents, or shared workspaces. Violations may result in immediate
         suspension or termination of your account, removal of content,

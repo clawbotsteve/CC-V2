@@ -577,7 +577,7 @@ export const PLAN_MAPS: Record<PlanKey, {
 }> = {
   Free: {
     name: "Free Plan",
-    description: "Try TraviaLabs with a free image generation. No credit card required.",
+    description: "Try TaviraLabs with a free image generation. No credit card required.",
     features: [
       "1 medium-quality GPT Image 2 generation",
       "Text-to-image only",

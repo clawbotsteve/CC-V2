@@ -30,7 +30,7 @@ import {
 
 // Tiles for the "Meet GPT Image 2" showcase section. Mixed-aspect demo
 // wall in the spirit of Higgsfield's model showcase, but built from
-// real GPT Image 2 outputs that double as TraviaLabs brand collateral —
+// real GPT Image 2 outputs that double as TaviraLabs brand collateral —
 // magazine covers, streetwear posters, an album single, an agency comp
 // card, an editorial beauty ad, and two photoreal AI-character lifestyle
 // shots. Each file lives at /public/cc-content/T-N.jpg. The aspect ratio
@@ -474,7 +474,7 @@ export default function DashboardPage() {
           message. Replaced with a Higgsfield-style "Meet GPT Image 2" wall
           of 12 mixed-aspect demo pieces — magazine covers, posters, brand
           ads, and photoreal AI portraits — to demonstrate GPT Image 2's
-          range and TraviaLabs' creator-economy positioning. */}
+          range and TaviraLabs' creator-economy positioning. */}
       <ModelShowcase
         badge="New Model"
         title="Meet GPT Image 2"
@@ -645,7 +645,7 @@ export default function DashboardPage() {
       {false && <section className="max-w-[1280px] mx-auto px-6 pb-8">
         <div className="mb-5">
           <h3 className="font-display text-2xl md:text-3xl font-bold tracking-tight text-white">More generated video examples</h3>
-          <p className="mt-2 text-sm text-zinc-400">Recent outputs from the TraviaLabs workflow.</p>
+          <p className="mt-2 text-sm text-zinc-400">Recent outputs from the TaviraLabs workflow.</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[
@@ -897,7 +897,7 @@ export default function DashboardPage() {
             }}
           />
           <h2 className="font-display text-3xl md:text-4xl font-extrabold mb-3 relative z-10 text-white">Ready to create?</h2>
-          <p className="text-base text-zinc-300 mb-7 relative z-10">Generate stunning AI images, videos, and influencers — all in one TraviaLabs dashboard.</p>
+          <p className="text-base text-zinc-300 mb-7 relative z-10">Generate stunning AI images, videos, and influencers — all in one TaviraLabs dashboard.</p>
           <Link
             href="/tools/image-generation"
             className="inline-block bg-gradient-to-r from-[#6366f1] to-[#8b7bff] text-white px-9 py-3.5 rounded-xl text-[15px] font-bold hover:-translate-y-0.5 transition-all relative z-10"

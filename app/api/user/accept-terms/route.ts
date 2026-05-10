@@ -31,7 +31,7 @@ export async function POST(req: Request) {
 
     if (!ageConfirmed || !likenessConfirmed || !termsConfirmed) {
       return NextResponse.json(
-        { error: "All three attestations are required to use TraviaLabs." },
+        { error: "All three attestations are required to use TaviraLabs." },
         { status: 400 }
       );
     }

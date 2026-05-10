@@ -84,7 +84,7 @@ export default function TermsAttestationModal() {
       >
         <div className="px-6 pt-6">
           <DialogTitle className="text-xl font-semibold text-white">
-            Before you start using TraviaLabs
+            Before you start using TaviraLabs
           </DialogTitle>
           <p className="mt-2 text-sm text-zinc-400">
             One-time confirmation. Required for everyone.

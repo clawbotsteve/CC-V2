@@ -24,6 +24,14 @@ type AssetItem = {
   prompt?: string;
 };
 
+// localStorage key intentionally kept on the original misspelling
+// ("travia-…") even though the brand is "Tavira". Renaming it would
+// invalidate every existing user's liked-asset state on next page
+// load. The string is never user-visible — only a private key in
+// their browser — so the brand-consistency win isn't worth the data
+// loss. If we ever migrate, do it by reading from BOTH keys and
+// writing to the new one for one release window, then drop the old
+// read after the next deploy.
 const LIKE_STORAGE_KEY = "travia-assets-liked";
 
 function formatDayLabel(date?: string) {

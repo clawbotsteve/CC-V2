@@ -844,7 +844,7 @@ function StepTrainingAndPack({
             <p className="text-sm font-medium">LoRA training</p>
             <p className="text-xs text-muted-foreground mt-0.5">
               {trainingDone
-                ? "Trained. Use this character anywhere in TraviaLabs."
+                ? "Trained. Use this character anywhere in TaviraLabs."
                 : trainingFailed
                   ? "Training failed. Re-roll variations and try again, or contact support if this keeps happening."
                   : stale

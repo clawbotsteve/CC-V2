@@ -6,7 +6,7 @@ const LegalLayout = ({ children }: { children: React.ReactNode }) => {
       <div className="mx-auto max-w-3xl px-6 py-12">
         <nav className="mb-10 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
           <Link href="/" className="text-zinc-400 hover:text-white">
-            ← TraviaLabs
+            ← TaviraLabs
           </Link>
           <span className="text-zinc-600">|</span>
           <Link href="/terms" className="text-zinc-300 hover:text-white">

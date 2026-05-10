@@ -61,7 +61,7 @@ export function HeroMultiverse({ onPrimaryCta, ctaHref }: HeroMultiverseProps) {
       <div className="relative w-full" style={{ aspectRatio: "1920 / 1072" }}>
         <Image
           src="/hero/hero-multiverse.jpg"
-          alt="Travia — your AI influencer. A solo creator on a hilltop with their laptop, surrounded by floating holographic windows each showing the same AI character in a different scene: fitness coach, fashion model, podcast host, lifestyle creator."
+          alt="Tavira — your AI influencer. A solo creator on a hilltop with their laptop, surrounded by floating holographic windows each showing the same AI character in a different scene: fitness coach, fashion model, podcast host, lifestyle creator."
           fill
           priority
           sizes="100vw"
@@ -69,7 +69,7 @@ export function HeroMultiverse({ onPrimaryCta, ctaHref }: HeroMultiverseProps) {
         />
 
         {/* OPAQUE BLACKOUT band across the bottom 36% of the hero —
-            covers the baked-into-pixels typography (Travia headline,
+            covers the baked-into-pixels typography (Tavira headline,
             tagline, "One face. Infinite possibilities", trust marks,
             and the amber CTA) so we can render fresh HTML overlays
             on top of it as the single source of truth.
@@ -113,7 +113,7 @@ export function HeroMultiverse({ onPrimaryCta, ctaHref }: HeroMultiverseProps) {
         <div className="absolute bottom-[6%] md:bottom-[8%] left-[4%] md:left-[5%] lg:left-[6%] z-10 max-w-[60%] md:max-w-[55%] lg:max-w-[55%]">
           <h1 className="font-display font-bold leading-[0.92] tracking-tight text-[#f5f0e6]">
             <span className="block text-4xl sm:text-6xl md:text-7xl lg:text-9xl">
-              Travia<span className="text-[#a78bfa]">*</span>
+              Tavira<span className="text-[#a78bfa]">*</span>
             </span>
           </h1>
           <p className="font-display italic text-sm sm:text-lg md:text-xl lg:text-2xl text-[#f5f0e6]/95 mt-1">

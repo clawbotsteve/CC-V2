@@ -41,7 +41,7 @@ export const LandingNavbar = () => {
     <nav className="sticky top-0 z-30 border-b border-white/10 bg-[#06070f]/80 px-4 py-4 backdrop-blur-xl md:px-8">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4">
         <Link href="/" className="text-lg font-semibold tracking-tight text-white md:text-xl">
-          TraviaLabs
+          TaviraLabs
         </Link>
 
         <div className="hidden items-center gap-6 text-sm text-zinc-300 md:flex">

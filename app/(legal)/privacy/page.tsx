@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "Privacy Policy · TraviaLabs",
-  description: "TraviaLabs Privacy Policy",
+  title: "Privacy Policy · TaviraLabs",
+  description: "TaviraLabs Privacy Policy",
 };
 
 export default function PrivacyPage() {
@@ -18,7 +18,7 @@ export default function PrivacyPage() {
 
       <h2>1. Who we are</h2>
       <p>
-        TraviaLabs (&quot;we,&quot; &quot;us,&quot; &quot;our&quot;) operates the website at
+        TaviraLabs (&quot;we,&quot; &quot;us,&quot; &quot;our&quot;) operates the website at
         taviralabsai.com and the AI image and video generation service
         accessible there (the &quot;Service&quot;). This Privacy Policy explains
         what information we collect, how we use and share it, and the

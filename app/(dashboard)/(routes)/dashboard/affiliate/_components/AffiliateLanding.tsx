@@ -72,7 +72,7 @@ export function AffiliateLanding({ onJoined }: AffiliateLandingProps) {
           Earn money by sharing
           <br />
           <span className="bg-gradient-to-r from-lime-300 to-emerald-400 bg-clip-text text-transparent">
-            TraviaLabs
+            TaviraLabs
           </span>
         </h1>
         <p className="text-muted-foreground text-lg max-w-xl mx-auto">

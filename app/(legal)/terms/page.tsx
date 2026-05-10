@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "Terms of Service · TraviaLabs",
-  description: "TraviaLabs Terms of Service",
+  title: "Terms of Service · TaviraLabs",
+  description: "TaviraLabs Terms of Service",
 };
 
 export default function TermsPage() {
@@ -18,9 +18,9 @@ export default function TermsPage() {
 
       <h2>1. Acceptance</h2>
       <p>
-        By creating an account, accessing, or using the TraviaLabs service
+        By creating an account, accessing, or using the TaviraLabs service
         (the &quot;Service,&quot; operated by the entity behind taviralabsai.com,
-        &quot;TraviaLabs,&quot; &quot;we,&quot; &quot;us,&quot; or &quot;our&quot;), you agree to these
+        &quot;TaviraLabs,&quot; &quot;we,&quot; &quot;us,&quot; or &quot;our&quot;), you agree to these
         Terms of Service (&quot;Terms&quot;), our{" "}
         <a href="/privacy">Privacy Policy</a>, and our{" "}
         <a href="/aup">Acceptable Use Policy</a> (the &quot;AUP&quot;). If you do
@@ -68,7 +68,7 @@ export default function TermsPage() {
 
       <h2>4. The Service</h2>
       <p>
-        TraviaLabs provides AI-assisted image and video generation, prompt
+        TaviraLabs provides AI-assisted image and video generation, prompt
         tooling, avatar / character training, and related features. Outputs
         are produced in part by third-party model providers we route to
         (including Fal, OpenAI, Higgsfield, and others identified in our{" "}
@@ -89,10 +89,10 @@ export default function TermsPage() {
         configuration settings, and other content you submit to the Service.
         &quot;Outputs&quot; means the images, videos, text, and other materials
         produced by the Service in response to your Inputs. As between you
-        and TraviaLabs, you retain ownership of your Inputs.
+        and TaviraLabs, you retain ownership of your Inputs.
       </p>
       <p>
-        You grant TraviaLabs a worldwide, non-exclusive, royalty-free,
+        You grant TaviraLabs a worldwide, non-exclusive, royalty-free,
         sublicensable license to host, store, transmit, process, route to
         third-party model providers, and display Inputs and Outputs solely
         to: (a) operate, provide, and maintain the Service for you; (b)
@@ -109,7 +109,7 @@ export default function TermsPage() {
 
       <h2>6. Ownership of Outputs</h2>
       <p>
-        As between you and TraviaLabs, and to the maximum extent permitted
+        As between you and TaviraLabs, and to the maximum extent permitted
         by applicable law, you own the Outputs you generate from your
         Inputs. You may use Outputs for personal, commercial, and
         non-commercial purposes, subject to these Terms, the AUP, and
@@ -264,7 +264,7 @@ export default function TermsPage() {
 
       <h2>11. Limitation of liability</h2>
       <p>
-        TO THE MAXIMUM EXTENT PERMITTED BY LAW, TRAVIALABS, ITS AFFILIATES,
+        TO THE MAXIMUM EXTENT PERMITTED BY LAW, TAVIRALABS, ITS AFFILIATES,
         OFFICERS, EMPLOYEES, AGENTS, AND LICENSORS WILL NOT BE LIABLE FOR
         ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR
         PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS, REVENUE, DATA, GOODWILL,
@@ -285,7 +285,7 @@ export default function TermsPage() {
 
       <h2>12. Indemnification</h2>
       <p>
-        You will defend, indemnify, and hold harmless TraviaLabs, its
+        You will defend, indemnify, and hold harmless TaviraLabs, its
         affiliates, officers, employees, contractors, and agents from and
         against any third-party claims, damages, losses, liabilities,
         costs, and expenses (including reasonable attorney fees) arising
@@ -338,7 +338,7 @@ export default function TermsPage() {
         Subject to Section 16, any dispute, claim, or controversy arising
         out of or relating to these Terms or the Service will be resolved
         exclusively in the state or federal courts located in Delaware, and
-        you and TraviaLabs each consent to the personal jurisdiction of
+        you and TaviraLabs each consent to the personal jurisdiction of
         those courts and waive any objection based on inconvenient forum.
       </p>
 
@@ -420,7 +420,7 @@ export default function TermsPage() {
       <h2>24. Entire agreement; no third-party beneficiaries</h2>
       <p>
         These Terms, together with the Privacy Policy and the AUP,
-        constitute the entire agreement between you and TraviaLabs
+        constitute the entire agreement between you and TaviraLabs
         concerning the Service and supersede all prior or contemporaneous
         agreements and understandings on that subject. There are no
         third-party beneficiaries to these Terms.
