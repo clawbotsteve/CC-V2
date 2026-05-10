@@ -441,7 +441,7 @@ const StepContentUpload = React.forwardRef<StepContentUploadHandle, Props>(
 
               <p className="text-[11px] text-muted-foreground pt-1">
                 Your acceptance is logged with this training job and may be reviewed by
-                TraviaLabs in response to abuse reports.
+                TaviraLabs in response to abuse reports.
               </p>
             </div>
 

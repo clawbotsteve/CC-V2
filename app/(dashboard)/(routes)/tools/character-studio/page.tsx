@@ -190,7 +190,7 @@ function EmptyState({ onStart }: { onStart: () => void }) {
         <Sparkles className="h-10 w-10 mx-auto text-[#a78bfa]" />
         <h2 className="mt-4 text-xl font-semibold">Build your first AI character</h2>
         <p className="mt-2 text-muted-foreground text-sm">
-          Pick a niche, write a quick description, and Travia handles the rest:
+          Pick a niche, write a quick description, and Tavira handles the rest:
           base reference → 6 consistent variations → LoRA training → 15 ready-to-post images.
         </p>
         <Button

@@ -5,7 +5,7 @@ import NextImage from "next/image";
 import { Sparkles, ArrowRight } from "lucide-react";
 
 /**
- * Higgsfield-style "Meet [Model]" showcase section adapted to TraviaLabs'
+ * Higgsfield-style "Meet [Model]" showcase section adapted to TaviraLabs'
  * visual identity (deep-navy card, purple accents, branded CTA).
  *
  * Layout:

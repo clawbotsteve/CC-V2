@@ -127,7 +127,7 @@ const mobileNavItems = [
 ];
 
 // Header logo — replaces the old inline atom-style SVG with the brand
-// mark stored at /public/brand/travialabs-mark.jpg. Source image is a
+// mark stored at /public/brand/taviralabs-mark.jpg. Source image is a
 // dark-on-dark composition (purple-gradient T + face silhouette on a
 // near-black background), which blends naturally into the nav's
 // rgba(10,10,15,0.85) backdrop. Wrapping in `rounded-md overflow-hidden`
@@ -136,8 +136,8 @@ const mobileNavItems = [
 const LogoIcon = () => (
   <span className="inline-flex h-7 w-7 items-center justify-center overflow-hidden rounded-md">
     <NextImage
-      src="/brand/travialabs-mark.jpg"
-      alt="TraviaLabs"
+      src="/brand/taviralabs-mark.jpg"
+      alt="TaviraLabs"
       width={56}
       height={56}
       priority
@@ -179,7 +179,7 @@ export default function TopNavbar() {
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2.5">
             <LogoIcon />
-            <span className="font-display font-bold text-xl tracking-tight text-foreground">TraviaLabs</span>
+            <span className="font-display font-bold text-xl tracking-tight text-foreground">TaviraLabs</span>
           </Link>
 
           {/* Center nav links (desktop) */}
@@ -348,7 +348,7 @@ export default function TopNavbar() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild className="rounded-lg">
-                    <Link href="mailto:travialabsai@gmail.com" className="flex items-center gap-2">
+                    <Link href="mailto:taviralabsai@gmail.com" className="flex items-center gap-2">
                       <Mail className="h-4 w-4" />
                       Support
                     </Link>

@@ -14,7 +14,7 @@ type Props = {
 const slides = [
   {
     id: "welcome_value",
-    title: "Welcome to TraviaLabs",
+    title: "Welcome to TaviraLabs",
     subtitle: "Create high-performing content in minutes — from one workflow.",
     bullets: [
       "Generate image variations fast",

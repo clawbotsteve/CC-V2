@@ -1,4 +1,4 @@
-# TraviaLabs (CC-V2) Full Codebase Audit Report
+# TaviraLabs (CC-V2) Full Codebase Audit Report
 
 **Date:** March 8, 2026
 **Branch:** `staging`
@@ -44,7 +44,7 @@ These two changes work together to create a **"dashboard-first" experience** —
 
 > **TYPO on dashboard page, line 176:** "Build AI influncers" should be "Build AI influencers"
 
-> **BRANDING inconsistency:** The footer says "Tavira Labs" and copyright "2026 Tavira Labs" but the product is called "TraviaLabs" in other places. The email in the batch generation section references `team@taviralabs.ai`. Settle on one spelling.
+> **BRANDING inconsistency:** The footer says "Tavira Labs" and copyright "2026 Tavira Labs" but the product is called "TaviraLabs" in other places. The email in the batch generation section references `team@taviralabs.ai`. Settle on one spelling.
 
 ---
 
@@ -155,7 +155,7 @@ For **each** Railway environment (staging + production), set:
 
 **Required — App:**
 - `NODE_ENV=production` (**CRITICAL** — without this, credit checks are bypassed)
-- `NEXT_PUBLIC_APP_URL` — Your deployed URL (e.g., `https://staging.travialabs.ai`)
+- `NEXT_PUBLIC_APP_URL` — Your deployed URL (e.g., `https://staging.taviralabs.ai`)
 - `APP_URL` — Same as above (some internal calls use this)
 
 **Required — AI Providers:**
@@ -212,7 +212,7 @@ The `start` script in `package.json` runs `npx prisma migrate deploy && npx pris
 1. **Reconcile plan naming and pricing** between `constants.ts` and `pricing-constants.ts` — decide on one canonical source
 2. **Replace placeholder Stripe/Phyziro price IDs** in whichever constants file you keep
 3. **Fix the typo** "influncers" → "influencers" on the dashboard page
-4. **Standardize branding** — "TraviaLabs" vs "Tavira Labs"
+4. **Standardize branding** — "TaviraLabs" vs "Tavira Labs"
 5. **Commit the landing/middleware changes** once you're happy with the dashboard-first approach
 6. **Set `NODE_ENV=production`** on Railway (both staging and prod)
 7. **Separate migrations from start command** — move to a Railway release command

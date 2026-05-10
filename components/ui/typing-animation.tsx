@@ -50,7 +50,7 @@ export function TypingAnimation({
 /**
  * Cycling typing animation — types out a word, pauses, erases, types
  * the next, loops forever. Used in the dashboard hero to communicate
- * that TraviaLabs isn't only for AI influencers but also AI fitness
+ * that TaviraLabs isn't only for AI influencers but also AI fitness
  * coaches, AI UGC creators, etc. Each cycle takes ~5–6 seconds per word.
  *
  * Phases (per word):

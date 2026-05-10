@@ -15,7 +15,7 @@ import { CURRENT_TERMS_VERSION } from "@/constants/constants";
  *
  *   const ok = await requireTermsAccepted(userId);
  *   if (!ok) return NextResponse.json(
- *     { error: "You must accept the Terms of Service to use TraviaLabs." },
+ *     { error: "You must accept the Terms of Service to use TaviraLabs." },
  *     { status: 403 }
  *   );
  */
