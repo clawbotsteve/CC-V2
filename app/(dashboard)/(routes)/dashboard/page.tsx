@@ -10,6 +10,7 @@ import { GlowingEffect } from "@/components/ui/glowing-effect";
 import { ModelShowcase, ShowcaseTile } from "@/components/model-showcase";
 import { CyclingSpecialText } from "@/components/ui/special-text";
 import { HeroFloatingTiles } from "@/components/hero-floating-tiles";
+import { HeroMultiverse } from "@/components/hero-multiverse";
 import { motion } from "framer-motion";
 import { useRef } from "react";
 import {
@@ -267,12 +268,51 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen">
-      {/* ===== HERO ===== */}
-      <section className="relative overflow-hidden py-20 md:py-24 text-center px-6">
-        {/* Glow — uses inset-0 + percentage-based radial so it always fades to
-            fully transparent before hitting any section edge. Replaces the
-            previous fixed 800×600 box that got clipped by overflow-hidden,
-            producing a hard purple cut-off line at the top + sides. */}
+      {/* ===== HERO =====
+          New Multiverse hero (#59): full-bleed cinematic image with the
+          solo creator + 4 floating AI-character windows. Replaces the
+          previous centered-text + side-floating-tiles hero. The single
+          image carries the entire LoRA-consistency pitch (same character
+          across 4 niches) — much stronger product narrative than the
+          generic "build your AI X" headline. See components/hero-multiverse.tsx
+          for the structure + motion details. */}
+      <HeroMultiverse onPrimaryCta={handleCreateFirstImage} />
+
+      {/* Onboarding modal stays at the page level so the new hero CTA
+          can trigger it without prop-drilling. */}
+      <OnboardingQuestionnaire
+        open={onboardingOpen}
+        onClose={() => setOnboardingOpen(false)}
+      />
+
+      {/* ===== Capability strip — preserved from the old hero so we don't
+          drop the at-a-glance "5 AI Models · 4K · 10s · 1-Click" proof
+          points that contextualized the headline. Lives between the
+          hero and the model cloud. */}
+      <section className="max-w-[1280px] mx-auto px-6 pt-12 pb-2">
+        <div className="flex gap-10 justify-center flex-wrap">
+          {[
+            { num: "5", label: "AI Models", color: "#818cf8" },
+            { num: "4K", label: "Max Resolution" },
+            { num: "10s", label: "Video Length", color: "#a78bfa" },
+            { num: "1-Click", label: "Character Lock" },
+          ].map((s) => (
+            <div key={s.label} className="text-center">
+              <div className="font-display text-2xl md:text-3xl font-bold" style={s.color ? { color: s.color } : {}}>
+                {s.num}
+              </div>
+              <div className="text-sm text-muted-foreground mt-0.5">{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* The previous in-line hero/headline/CTA block was replaced by
+          HeroMultiverse above. The dead JSX below is hidden via a
+          permanent `false` so we keep the imports/effects warm during
+          the rollout window — drop on next cleanup pass. */}
+      {false && (
+      <section className="relative overflow-hidden py-20 md:py-24 text-center px-6 hidden">
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -280,11 +320,6 @@ export default function DashboardPage() {
               'radial-gradient(ellipse 55% 45% at 50% 25%, rgba(99,102,241,0.18) 0%, rgba(167,139,250,0.07) 45%, transparent 75%)',
           }}
         />
-        
-        {/* Decorative floating AI-character thumbnails (3 left + 3 right).
-            Rendered before the centered headline column and given z-0 so
-            the headline (z-10 below) always sits on top. Hidden below
-            md: where there's no horizontal room. See HeroFloatingTiles. */}
         <HeroFloatingTiles />
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="relative z-10 max-w-[800px] mx-auto">
@@ -396,6 +431,7 @@ export default function DashboardPage() {
           </div>
         </motion.div>
       </section>
+      )}
 
       {/* ===== MODEL CLOUD =====
           Previously wrapped in a bordered card with a hardcoded dark gradient
