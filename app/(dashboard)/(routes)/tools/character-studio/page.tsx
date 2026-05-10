@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Sparkles, Plus, Loader2, MoreVertical, Trash2, AlertTriangle } from "lucide-react";
+import { Sparkles, Plus, Loader2, MoreHorizontal, Trash2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import PageContainer from "@/components/page-container";
 import AiAnimatedHeading from "@/components/ai-animated-heading";
@@ -263,12 +263,17 @@ function CharacterCard({
           {status.label}
         </div>
 
-        {/* 3-dot actions menu — top-left, on hover for desktop and
-            always-visible on mobile (no hover state). Clicking the
-            trigger MUST stop propagation so it doesn't fire the
-            card's onOpen. */}
+        {/* Actions menu — bottom-right of the image (cleaner placement
+            than the previous top-left, where it competed with the
+            status pill across the diagonal). Smaller, ghost-style: a
+            7×7 round button that fades in on hover, uses muted
+            white-on-black-blur instead of a hard border, and only
+            holds a single destructive action right now. Always-
+            visible on touch (no hover state) so mobile users find it.
+            stopPropagation on the trigger + menu prevents the card's
+            onOpen from firing when you click the menu. */}
         <div
-          className="absolute top-2 left-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+          className="absolute bottom-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity"
           onClick={(e) => e.stopPropagation()}
           onKeyDown={(e) => e.stopPropagation()}
         >
@@ -277,14 +282,14 @@ function CharacterCard({
               <button
                 type="button"
                 aria-label="Character actions"
-                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/60 backdrop-blur hover:bg-black/80 text-white border border-white/10"
+                className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-black/55 backdrop-blur-md text-white/85 hover:bg-black/75 hover:text-white transition-colors"
               >
-                <MoreVertical className="h-4 w-4" />
+                <MoreHorizontal className="h-3.5 w-3.5" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
-              align="start"
-              // Clicks inside the menu shouldn't bubble up to the card.
+              align="end"
+              side="top"
               onClick={(e) => e.stopPropagation()}
             >
               <DropdownMenuItem
