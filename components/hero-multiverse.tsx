@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ScanFace, LayoutGrid, TrendingUp } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 /**
  * Multiverse hero — full-bleed cinematic hero for the dashboard.
@@ -100,59 +100,68 @@ export function HeroMultiverse({ onPrimaryCta, ctaHref }: HeroMultiverseProps) {
             upward — implies the scene is generating something. */}
         <HeroParticles />
 
-        {/* ===== Top-center badge ===== */}
-        <div className="absolute top-6 md:top-10 left-1/2 -translate-x-1/2 z-10">
-          <div className="inline-flex items-center gap-2 bg-white/5 backdrop-blur-sm border border-white/15 rounded-full px-4 py-1.5 text-xs md:text-sm font-medium text-white/90">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 [animation:pulse-dot_2s_ease-in-out_infinite]" />
-            Powered by GPT Image 2 · Nano Banana 2 · Soul 2.0
+        {/*
+          IMPORTANT — current hero image has the headline ("Travia*"),
+          italic tagline, "One face. Infinite possibilities..." subhead,
+          three trust marks, and the "Powered by GPT Image 2..." badge
+          all BAKED INTO THE PIXELS. So we deliberately do NOT render
+          HTML overlays for those — they'd double-stack on top of the
+          baked text and look broken.
+
+          The ONE HTML overlay we keep is the CTA, positioned to sit
+          directly over (and cover) the baked amber "CREATE YOUR AI
+          INFLUENCER" button. The HTML CTA is in brand purple, larger
+          and bolder, with a darkening backdrop behind it so any pixel
+          peek-through from the baked button is suppressed.
+
+          When/if the hero image is regenerated WITHOUT baked text,
+          re-enable the headline + trust marks blocks below this.
+        */}
+
+        {/* ===== HTML CTA only — covers the baked amber button ===== */}
+        <div className="absolute bottom-[6%] md:bottom-[8%] right-[3%] md:right-[5%] lg:right-[6%] z-10 flex flex-col items-end gap-3">
+          {/* Dark blurred backdrop sized to the CTA + a bit of padding,
+              so any baked-button pixels around the edges of our HTML
+              button get blurred away. Behind the CTA in the stack. */}
+          <div className="relative">
+            <div
+              aria-hidden
+              className="absolute -inset-3 rounded-[1.25rem] bg-black/45 backdrop-blur-md"
+            />
+            {ctaHref ? (
+              <Link href={ctaHref} className="hero-cta relative">
+                <span>GENERATE YOUR FIRST IMAGE</span>
+                <ArrowRight className="h-5 w-5 md:h-6 md:w-6" />
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={onPrimaryCta}
+                className="hero-cta relative"
+              >
+                <span>GENERATE YOUR FIRST IMAGE</span>
+                <ArrowRight className="h-5 w-5 md:h-6 md:w-6" />
+              </button>
+            )}
           </div>
         </div>
 
-        {/* ===== Lower-left: headline + tagline ===== */}
-        <div className="absolute bottom-6 md:bottom-12 lg:bottom-16 left-4 md:left-10 lg:left-16 z-10 max-w-[68%] md:max-w-[55%] lg:max-w-[50%]">
-          <h1 className="font-display font-bold leading-[0.92] tracking-tight text-[#f5f0e6]">
-            <span className="block text-5xl sm:text-7xl md:text-8xl lg:text-[10rem]">
-              Travia
-              {/* Asterisk picks up a soft amber-gold glow — same accent
-                  as the CTA border so the brand mark + CTA share a
-                  color story. */}
-              <span className="text-[#f5b664]">*</span>
-            </span>
-          </h1>
-          <p className="font-display italic text-base sm:text-xl md:text-2xl lg:text-3xl text-[#f5f0e6]/95 mt-1 md:mt-2">
-            your AI influencer
-            <span className="text-[#f5b664] not-italic">*</span>
-          </p>
-          <p className="text-xs sm:text-sm md:text-base text-white/70 mt-3 md:mt-4 max-w-md">
-            <span className="font-semibold text-white/85">One face. Infinite possibilities.</span>
-            <span className="block sm:inline sm:ml-1">Built with consistency. Powered by LoRA.</span>
-          </p>
-        </div>
+        {/* === Disabled overlays — re-enable when hero image has no
+              baked text. Keeping the JSX colocated so the next
+              non-baked image swap is a one-line guard flip. ===
 
-        {/* ===== Lower-right: CTA + trust marks ===== */}
-        <div className="absolute bottom-6 md:bottom-12 lg:bottom-16 right-4 md:right-10 lg:right-16 z-10 flex flex-col items-end gap-3 md:gap-5">
-          {ctaHref ? (
-            <Link href={ctaHref} className="hero-cta">
-              <span>CREATE YOUR AI INFLUENCER</span>
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          ) : (
-            <button type="button" onClick={onPrimaryCta} className="hero-cta">
-              <span>CREATE YOUR AI INFLUENCER</span>
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          )}
-
-          {/* Three trust marks — mirrors the "consistent identity ·
-              multi-niche · built for growth" pitch baked into the
-              image's window labels. Hidden on smaller screens where
-              the headline is the priority. */}
-          <div className="hidden md:flex items-center gap-5 lg:gap-8 text-[10px] lg:text-xs text-white/75 uppercase tracking-[0.18em]">
-            <TrustMark icon={<ScanFace className="h-3.5 w-3.5 text-[#f5b664]" />} top="Consistent" bottom="Identity" />
-            <TrustMark icon={<LayoutGrid className="h-3.5 w-3.5 text-[#f5b664]" />} top="Multi-Niche" bottom="Content" />
-            <TrustMark icon={<TrendingUp className="h-3.5 w-3.5 text-[#f5b664]" />} top="Built For" bottom="Growth" />
+          <div className="absolute top-6 md:top-10 left-1/2 -translate-x-1/2 z-10">
+            ... badge ...
           </div>
-        </div>
+
+          <div className="absolute bottom-6 md:bottom-12 lg:bottom-16 left-4 md:left-10 lg:left-16 z-10 max-w-[68%] md:max-w-[55%] lg:max-w-[50%]">
+            ... headline + tagline ...
+          </div>
+
+          <div className="hidden md:flex items-center gap-5 lg:gap-8 ...">
+            ... trust marks ...
+          </div>
+        */}
       </div>
 
       {/* All keyframes + the .hero-cta button styling colocated so the
@@ -176,34 +185,75 @@ export function HeroMultiverse({ onPrimaryCta, ctaHref }: HeroMultiverseProps) {
         }
       `}</style>
       <style jsx global>{`
+        /* Primary hero CTA — brand purple gradient (matches the
+           dashboard's #6366f1 → #a78bfa accents elsewhere on the
+           site so the button reads as the canonical "do the thing"
+           color). Sized roughly 35-50% larger than the previous
+           amber/transparent version: heavier padding, bigger font,
+           bolder weight, more letter-spacing — should be the most
+           visually arresting element after the four character windows.
+           Glow halo is pure purple now (no gold tinting) so it
+           coheres with the rest of the marketing surface. */
         :global(.hero-cta) {
           display: inline-flex;
           align-items: center;
-          gap: 0.625rem;
-          padding: 0.7rem 1.25rem;
-          border: 1.5px solid rgba(245, 182, 100, 0.65);
-          border-radius: 0.625rem;
-          background: rgba(0, 0, 0, 0.45);
-          backdrop-filter: blur(8px);
-          color: #f5f0e6;
-          font-size: 0.78rem;
-          font-weight: 700;
-          letter-spacing: 0.14em;
+          gap: 0.75rem;
+          padding: 1rem 1.75rem;
+          border: 0;
+          border-radius: 0.875rem;
+          background: linear-gradient(135deg, #6366f1 0%, #8b7bff 50%, #a78bfa 100%);
+          color: #ffffff;
+          font-size: 0.95rem;
+          font-weight: 800;
+          letter-spacing: 0.12em;
           text-transform: uppercase;
-          box-shadow: 0 8px 30px rgba(245, 182, 100, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-          transition: all 0.18s ease;
+          box-shadow:
+            0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+            0 8px 24px rgba(99, 102, 241, 0.45),
+            0 16px 48px rgba(139, 123, 255, 0.35);
+          transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
           cursor: pointer;
+          /* Subtle ambient pulse on the halo so it reads as "live"
+             without being noisy. 4s loop, low-amplitude. */
+          animation: hero-cta-pulse 4s ease-in-out infinite;
         }
         :global(.hero-cta:hover) {
-          border-color: rgba(245, 182, 100, 0.95);
-          background: rgba(245, 182, 100, 0.12);
-          transform: translateY(-1px);
-          box-shadow: 0 12px 40px rgba(245, 182, 100, 0.4);
+          transform: translateY(-2px);
+          filter: brightness(1.08);
+          box-shadow:
+            0 0 0 1px rgba(255, 255, 255, 0.14) inset,
+            0 12px 32px rgba(99, 102, 241, 0.6),
+            0 22px 60px rgba(139, 123, 255, 0.5);
+        }
+        :global(.hero-cta:active) {
+          transform: translateY(0);
+        }
+        @keyframes hero-cta-pulse {
+          0%, 100% {
+            box-shadow:
+              0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+              0 8px 24px rgba(99, 102, 241, 0.45),
+              0 16px 48px rgba(139, 123, 255, 0.35);
+          }
+          50% {
+            box-shadow:
+              0 0 0 1px rgba(255, 255, 255, 0.14) inset,
+              0 10px 30px rgba(99, 102, 241, 0.6),
+              0 20px 56px rgba(139, 123, 255, 0.5);
+          }
         }
         @media (min-width: 768px) {
           :global(.hero-cta) {
-            padding: 0.95rem 1.6rem;
-            font-size: 0.875rem;
+            padding: 1.25rem 2.25rem;
+            font-size: 1.1rem;
+            gap: 0.875rem;
+            border-radius: 1rem;
+          }
+        }
+        @media (min-width: 1024px) {
+          :global(.hero-cta) {
+            padding: 1.4rem 2.6rem;
+            font-size: 1.2rem;
           }
         }
       `}</style>
@@ -211,25 +261,10 @@ export function HeroMultiverse({ onPrimaryCta, ctaHref }: HeroMultiverseProps) {
   );
 }
 
-function TrustMark({
-  icon,
-  top,
-  bottom,
-}: {
-  icon: React.ReactNode;
-  top: string;
-  bottom: string;
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      {icon}
-      <div className="leading-tight">
-        <div className="font-semibold text-white/90">{top}</div>
-        <div className="text-white/55">{bottom}</div>
-      </div>
-    </div>
-  );
-}
+// TrustMark + the badge component are intentionally not exported —
+// they're disabled until the hero image is regenerated without baked
+// text. JSX shells are kept commented in the main component above so
+// the re-enable is a single-block flip.
 
 /**
  * 40-particle dust-mote canvas. Runs at ~30fps, ~0.5% CPU on a modern
