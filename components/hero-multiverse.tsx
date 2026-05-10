@@ -39,7 +39,109 @@ interface HeroMultiverseProps {
 
 export function HeroMultiverse({ onPrimaryCta, ctaHref }: HeroMultiverseProps) {
   return (
-    <section className="relative w-full overflow-hidden bg-black">
+    <>
+      {/* ============================================================
+          MOBILE HERO (<md) — clean text-first.
+          The Multiverse cinematic image is fundamentally a wide-format
+          composition (4 floating windows fanned across a 16:9 frame).
+          Compressing it into a phone viewport makes the windows
+          shrink to thumbnails, the badge wraps awkwardly, and the
+          full-width CTA covers most of the actual hero. So mobile
+          gets its own layout: gradient headline + tagline + CTA.
+          Same pattern PR #43 used for the cycling-text mobile fallback.
+          ============================================================ */}
+      <MobileHero onPrimaryCta={onPrimaryCta} ctaHref={ctaHref} />
+
+      {/* ============================================================
+          DESKTOP HERO (md+) — the cinematic Multiverse Window.
+          ============================================================ */}
+      <DesktopHero onPrimaryCta={onPrimaryCta} ctaHref={ctaHref} />
+    </>
+  );
+}
+
+function MobileHero({ onPrimaryCta, ctaHref }: HeroMultiverseProps) {
+  return (
+    <section className="md:hidden relative w-full overflow-hidden bg-black px-6 py-10">
+      {/* Glow behind the headline — same purple radial pattern used on
+          the rest of the dashboard so mobile and desktop share a
+          visual identity even though the layouts diverge. */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(ellipse 70% 50% at 50% 30%, rgba(99,102,241,0.20) 0%, rgba(167,139,250,0.06) 45%, transparent 75%)",
+        }}
+      />
+
+      <div className="relative z-10 flex flex-col items-center text-center">
+        {/* Badge */}
+        <div className="inline-flex items-center gap-2 bg-[#6366f1]/10 border border-[#6366f1]/20 rounded-full px-3 py-1 text-[11px] font-medium text-[#818cf8] mb-5">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 [animation:pulse-dot_2s_ease-in-out_infinite]" />
+          Powered by GPT Image 2 · Nano Banana 2
+        </div>
+
+        {/* Headline + gradient phrase. Static (no scramble) on mobile —
+            cycling animations have been historically flaky on mobile
+            WebKit, and the static gradient phrase reads instantly. */}
+        <h1 className="font-display text-4xl font-extrabold tracking-tight leading-[1.05] text-foreground">
+          This is where you build
+        </h1>
+        <h1 className="font-display text-4xl font-extrabold tracking-tight leading-[1.05] mt-1">
+          <span className="bg-gradient-to-r from-[#6366f1] to-[#a78bfa] bg-clip-text text-transparent">
+            your AI influencer.
+          </span>
+        </h1>
+
+        <p className="text-sm text-muted-foreground mt-5 max-w-[320px] leading-relaxed">
+          Build AI influencers that post, grow, and generate income — without you lifting a finger.
+        </p>
+
+        <div className="mt-7 w-full max-w-[320px]">
+          {ctaHref ? (
+            <Link href={ctaHref} className="hero-cta hero-cta--mobile">
+              <span>GENERATE YOUR FIRST IMAGE</span>
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={onPrimaryCta}
+              className="hero-cta hero-cta--mobile"
+            >
+              <span>GENERATE YOUR FIRST IMAGE</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Capability strip — moved INTO the mobile hero so the order
+            of stats follows naturally below the CTA without an awkward
+            empty band between sections. Desktop has a separate strip
+            below the cinematic hero. */}
+        <div className="grid grid-cols-2 gap-x-10 gap-y-5 mt-10 pt-6 border-t border-border w-full max-w-[320px]">
+          {[
+            { num: "5", label: "AI Models", color: "#818cf8" },
+            { num: "4K", label: "Max Resolution" },
+            { num: "10s", label: "Video Length", color: "#a78bfa" },
+            { num: "1-Click", label: "Character Lock" },
+          ].map((s) => (
+            <div key={s.label} className="text-center">
+              <div className="font-display text-2xl font-bold" style={s.color ? { color: s.color } : {}}>
+                {s.num}
+              </div>
+              <div className="text-xs text-muted-foreground mt-0.5">{s.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function DesktopHero({ onPrimaryCta, ctaHref }: HeroMultiverseProps) {
+  return (
+    <section className="hidden md:block relative w-full overflow-hidden bg-black">
       {/* ===== Image stage =====
           Sized to fill the visible viewport BELOW the top navbar (~56px).
           On wide / ultra-wide displays the 1920×1072 image gets scaled
@@ -206,6 +308,15 @@ export function HeroMultiverse({ onPrimaryCta, ctaHref }: HeroMultiverseProps) {
         }
         :global(.hero-cta:active) {
           transform: translateY(0);
+        }
+        /* Mobile CTA: full width of its 320px container, centered
+           contents. Pads scale slightly smaller than desktop. */
+        :global(.hero-cta--mobile) {
+          width: 100%;
+          justify-content: center;
+          padding: 0.95rem 1.25rem;
+          font-size: 0.875rem;
+          letter-spacing: 0.14em;
         }
         @keyframes hero-cta-pulse {
           0%, 100% {

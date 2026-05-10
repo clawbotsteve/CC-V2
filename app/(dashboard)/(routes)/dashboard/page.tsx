@@ -285,11 +285,11 @@ export default function DashboardPage() {
         onClose={() => setOnboardingOpen(false)}
       />
 
-      {/* ===== Capability strip — preserved from the old hero so we don't
-          drop the at-a-glance "5 AI Models · 4K · 10s · 1-Click" proof
-          points that contextualized the headline. Lives between the
-          hero and the model cloud. */}
-      <section className="max-w-[1280px] mx-auto px-6 pt-12 pb-2">
+      {/* ===== Capability strip — desktop only.
+          Mobile already inlines this strip inside the mobile hero
+          (HeroMultiverse renders different layouts per breakpoint),
+          so showing this standalone version too would double up. */}
+      <section className="hidden md:block max-w-[1280px] mx-auto px-6 pt-12 pb-2">
         <div className="flex gap-10 justify-center flex-wrap">
           {[
             { num: "5", label: "AI Models", color: "#818cf8" },
