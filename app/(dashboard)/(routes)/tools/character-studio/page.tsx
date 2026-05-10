@@ -4,10 +4,27 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Sparkles, Plus, Loader2 } from "lucide-react";
+import { Sparkles, Plus, Loader2, MoreVertical, Trash2, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
 import PageContainer from "@/components/page-container";
 import AiAnimatedHeading from "@/components/ai-animated-heading";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useUserContext } from "@/components/layout/user-context";
 import { resolveAccessTier, canUseCharacterStudio } from "@/lib/plan-access";
 import { NICHES, Niche } from "@/lib/character-studio/prompt-scaffolds";
@@ -37,6 +54,36 @@ export default function CharacterStudioPage() {
   const [characters, setCharacters] = useState<CharacterStudioInfluencer[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
+
+  // Delete-confirmation state. Keyed by character (not boolean) so we
+  // know WHICH character the user is confirming deletion for.
+  const [pendingDelete, setPendingDelete] = useState<CharacterStudioInfluencer | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/character-studio/${pendingDelete.id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data?.error || "Couldn't delete this character.");
+        return;
+      }
+      toast.success(`${pendingDelete.name} has been deleted.`);
+      // Optimistically drop from local state so the card disappears
+      // immediately; the next library refetch will confirm.
+      setCharacters((prev) => prev.filter((c) => c.id !== pendingDelete.id));
+      setPendingDelete(null);
+    } catch (err) {
+      console.error("[CHARACTER-STUDIO] delete failed", err);
+      toast.error("Something went wrong. Try again?");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const fetchCharacters = async () => {
     try {
@@ -96,7 +143,8 @@ export default function CharacterStudioPage() {
               <CharacterCard
                 key={c.id}
                 character={c}
-                onClick={() => router.push(`/tools/character-studio/${c.id}`)}
+                onOpen={() => router.push(`/tools/character-studio/${c.id}`)}
+                onDelete={() => setPendingDelete(c)}
               />
             ))}
           </div>
@@ -108,26 +156,92 @@ export default function CharacterStudioPage() {
         onOpenChange={setCreateOpen}
         onCreated={(id) => router.push(`/tools/character-studio/${id}`)}
       />
+
+      {/* Delete-confirmation modal. Lives at the page level (not inside
+          CharacterCard) so the AlertDialog portal isn't re-mounted per
+          card and so the confirm action has access to the page-level
+          fetch state. The disclaimer is intentionally direct — once
+          deleted the user really does lose access to the LoRA, prompt
+          pack, and variations from their library, even though the row
+          is soft-deleted server-side for audit retention. */}
+      <AlertDialog
+        open={!!pendingDelete}
+        onOpenChange={(next) => !next && setPendingDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-400" />
+              Delete {pendingDelete?.name ?? "this character"}?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <span className="block">
+                You'll <span className="font-semibold text-red-300">permanently lose access</span> to:
+              </span>
+              <ul className="list-disc list-inside space-y-0.5 text-sm">
+                <li>The trained LoRA (you won't be able to use it in the Image Generator)</li>
+                <li>The 6 variation images and base reference</li>
+                <li>The 15-image prompt pack</li>
+                <li>This character's slot in your library</li>
+              </ul>
+              <span className="block pt-2 text-amber-300/90 text-sm">
+                This can't be undone. Your credits won't be refunded.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={deleting}
+              className="bg-red-600 hover:bg-red-500 text-white"
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Deleting…
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" /> Delete forever
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </PageContainer>
   );
 }
 
 function CharacterCard({
   character,
-  onClick,
+  onOpen,
+  onDelete,
 }: {
   character: CharacterStudioInfluencer;
-  onClick: () => void;
+  onOpen: () => void;
+  onDelete: () => void;
 }) {
   const niche = (character.niche as Niche | null) ?? null;
   const nicheConfig = niche ? NICHES[niche] : null;
   const status = computeStatus(character);
 
+  // Card is now a div (not a button) so we can nest the dropdown
+  // trigger as its own interactive element. The whole card opens the
+  // wizard on click; the 3-dot menu opens the actions menu and
+  // stops propagation so it doesn't ALSO route to the wizard.
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="group text-left rounded-2xl border border-border bg-card/60 overflow-hidden hover:border-[#6366f1]/50 transition-colors"
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onOpen();
+        }
+      }}
+      className="group relative text-left rounded-2xl border border-border bg-card/60 overflow-hidden hover:border-[#6366f1]/50 transition-colors cursor-pointer"
     >
       <div className="relative aspect-[3/4] bg-black">
         {character.characterStudioRef ? (
@@ -143,8 +257,47 @@ function CharacterCard({
             No reference yet
           </div>
         )}
+
+        {/* Status pill — top-right (existing). */}
         <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-black/70 backdrop-blur text-xs font-medium">
           {status.label}
+        </div>
+
+        {/* 3-dot actions menu — top-left, on hover for desktop and
+            always-visible on mobile (no hover state). Clicking the
+            trigger MUST stop propagation so it doesn't fire the
+            card's onOpen. */}
+        <div
+          className="absolute top-2 left-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+        >
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label="Character actions"
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/60 backdrop-blur hover:bg-black/80 text-white border border-white/10"
+              >
+                <MoreVertical className="h-4 w-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="start"
+              // Clicks inside the menu shouldn't bubble up to the card.
+              onClick={(e) => e.stopPropagation()}
+            >
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+                className="text-red-400 focus:text-red-300 focus:bg-red-500/10 cursor-pointer"
+              >
+                <Trash2 className="h-4 w-4 mr-2" /> Delete character
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
       <div className="p-3">
@@ -157,7 +310,7 @@ function CharacterCard({
           {character.characterStudioCharType ? ` · ${character.characterStudioCharType}` : ""}
         </p>
       </div>
-    </button>
+    </div>
   );
 }
 
