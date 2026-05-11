@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Folder, Heart, ImageIcon, Search, Video, WandSparkles } from "lucide-react";
+import { Download, Folder, Heart, ImageIcon, Loader2, Search, Video, WandSparkles } from "lucide-react";
+import { toast } from "sonner";
 
 type AssetType = "image" | "video" | "lipsync" | "upscaled";
 
@@ -45,6 +46,72 @@ function formatDayLabel(date?: string) {
   if (t === today) return "Today";
   if (t === yesterday) return "Yesterday";
   return "Earlier";
+}
+
+/**
+ * Build a download-friendly filename. Uses the first few words of the
+ * prompt (sluggified) when available, otherwise falls back to the
+ * asset id. Always prefixed with "tavira-{type}-" so it groups
+ * naturally in the user's Downloads folder.
+ */
+function buildDownloadFilename(item: AssetItem): string {
+  const base =
+    (item.prompt || "")
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s]/g, "")
+      .split(/\s+/)
+      .slice(0, 6)
+      .join("-") || item.id.slice(0, 12);
+
+  // Extension inferred from URL when possible, otherwise sensible
+  // defaults per asset type.
+  const url = item.url ?? "";
+  const match = url.match(/\.(png|jpe?g|webp|gif|mp4|webm|mov)(?:$|\?)/i);
+  const ext = match
+    ? match[1].toLowerCase().replace("jpeg", "jpg")
+    : item.type === "video" || item.type === "lipsync"
+      ? "mp4"
+      : "png";
+
+  return `tavira-${item.type}-${base}.${ext}`;
+}
+
+/**
+ * Fetch the asset and trigger a browser download. We use fetch+blob
+ * rather than `<a download>` because FAL CDN doesn't always set a
+ * Content-Disposition header — without it, browsers navigate to the
+ * file instead of downloading it. The blob approach guarantees the
+ * file lands in Downloads with our filename regardless of how the
+ * remote serves it.
+ *
+ * Falls back to a new-tab navigation if the fetch fails (e.g.
+ * occasional CORS hiccup); user can right-click → Save As from there.
+ */
+async function downloadAsset(item: AssetItem): Promise<void> {
+  if (!item.url) {
+    toast.error("This asset isn't ready yet.");
+    return;
+  }
+  try {
+    const res = await fetch(item.url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const blob = await res.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = objectUrl;
+    a.download = buildDownloadFilename(item);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    // Revoke after the download starts; small delay lets the browser
+    // pick up the blob first on slower devices.
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
+  } catch (err) {
+    console.warn("[ASSETS] direct download failed, falling back to new tab", err);
+    window.open(item.url, "_blank", "noopener,noreferrer");
+    toast.info("Opened in a new tab — right-click to save.");
+  }
 }
 
 export default function AssetsPage() {
@@ -184,6 +251,25 @@ export default function AssetsPage() {
     setLikedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
 
+  // Per-item downloading state so we can show a spinner ONLY on the
+  // card currently being downloaded (multiple clicks on different
+  // cards in quick succession all work in parallel — each gets its
+  // own ID in the Set). Set is fine here; cards are <100 in practice.
+  const [downloadingIds, setDownloadingIds] = useState<Set<string>>(new Set());
+
+  const handleDownload = async (item: AssetItem) => {
+    setDownloadingIds((prev) => new Set(prev).add(item.id));
+    try {
+      await downloadAsset(item);
+    } finally {
+      setDownloadingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(item.id);
+        return next;
+      });
+    }
+  };
+
   return (
     <div className="p-4 md:p-6">
       <div className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-6">
@@ -269,9 +355,35 @@ export default function AssetsPage() {
                           <div className="p-3">
                             <div className="mb-2 flex items-center justify-between text-xs">
                               <span className="rounded-full border border-white/15 px-2 py-0.5 text-zinc-300 capitalize">{item.type}</span>
-                              <button onClick={() => toggleLike(item.id)} className={`rounded-full border px-2 py-0.5 ${likedIds.includes(item.id) ? "border-pink-400/60 text-pink-300" : "border-white/15 text-zinc-400"}`}>
-                                ♥
-                              </button>
+                              <div className="flex items-center gap-1.5">
+                                {/* Download — disabled when the asset hasn't
+                                    finished generating yet (no URL). Shows a
+                                    spinner during the fetch+blob roundtrip
+                                    so the user knows the click registered. */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleDownload(item)}
+                                  disabled={!item.url || downloadingIds.has(item.id)}
+                                  aria-label={`Download ${item.type}`}
+                                  title="Download"
+                                  className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/15 text-zinc-300 hover:text-white hover:border-white/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                                >
+                                  {downloadingIds.has(item.id) ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  ) : (
+                                    <Download className="h-3.5 w-3.5" />
+                                  )}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => toggleLike(item.id)}
+                                  aria-label={likedIds.includes(item.id) ? "Unlike" : "Like"}
+                                  title={likedIds.includes(item.id) ? "Unlike" : "Like"}
+                                  className={`inline-flex h-7 w-7 items-center justify-center rounded-full border transition-colors ${likedIds.includes(item.id) ? "border-pink-400/60 text-pink-300 hover:text-pink-200" : "border-white/15 text-zinc-400 hover:text-zinc-200 hover:border-white/30"}`}
+                                >
+                                  <Heart className={`h-3.5 w-3.5 ${likedIds.includes(item.id) ? "fill-current" : ""}`} />
+                                </button>
+                              </div>
                             </div>
                             <p className="line-clamp-2 text-xs text-zinc-400">{item.prompt || "Generated asset"}</p>
                           </div>
