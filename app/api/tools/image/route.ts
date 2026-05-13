@@ -6,7 +6,12 @@ import { startOfDay } from "date-fns";
 import { ImageGenerationInput, ImageGenerationModel, LoraInput, NanoBannaProInput, NanoBanana2Input, Soul2Input, V1Input } from "@/types/image";
 import { checkAvailableCredit } from "@/lib/check-available-credit";
 import { ToolType } from "@prisma/client";
-import { getFalJobResult, submitFalJob, uploadImageUrlToFalStorage } from "@/lib/fal-client";
+import { getFalJobResult, uploadImageUrlToFalStorage } from "@/lib/fal-client";
+// submitImageJob routes between FAL and Replicate based on the
+// IMAGE_PROVIDER env var (defaults to "fal"). Drop-in replacement
+// for submitFalJob — same signature, same return shape. See
+// lib/image-provider.ts for the routing + input translation.
+import { submitImageJob, uploadImageUrlToProvider } from "@/lib/image-provider";
 import { aspectToImageSize, imageSizeToAspect, normalizeAspect } from "@/lib/aspect-ratio";
 import { canUseImageModel, requiredPlanForImageModel, resolveAccessTier } from "@/lib/plan-access";
 import { PLATFORM_SAFETY_NEGATIVE_PROMPT } from "@/constants/constants";
@@ -230,7 +235,7 @@ export async function POST(req: Request) {
       const normalizedAspect = normalizeAspect(body.aspect_ratio as any) || imageSizeToAspect(body.image_size as any);
       const normalizedImageSize = normalizedAspect ? aspectToImageSize(normalizedAspect) : undefined;
 
-      const resp = await submitFalJob(ImageGenerationModel.GptImage2, {
+      const resp = await submitImageJob(ImageGenerationModel.GptImage2, {
         input: {
           prompt: body.prompt,
           // body.quality has already been normalized + Free-tier-clamped above.
@@ -271,7 +276,7 @@ export async function POST(req: Request) {
         image_size: normalizedImageSize,
       };
 
-      const resp = await submitFalJob(ImageGenerationModel.NanoBannaPro, {
+      const resp = await submitImageJob(ImageGenerationModel.NanoBannaPro, {
         input: {
           prompt: data_ai.prompt,
           seed: data_ai.seed,
@@ -319,11 +324,14 @@ export async function POST(req: Request) {
         image_urls: inputImages.slice(0, 5),
       };
 
+      // Re-host user references with the active provider's storage so
+      // the downstream model gets a URL it can fetch. Routes through
+      // FAL or Replicate based on IMAGE_PROVIDER.
       const falHostedImageUrls = await Promise.all(
-        (data_ai.image_urls ?? []).map(async (url) => uploadImageUrlToFalStorage(url))
+        (data_ai.image_urls ?? []).map(async (url) => uploadImageUrlToProvider(url))
       );
 
-      const resp = await submitFalJob(ImageGenerationModel.NanoBanana2, {
+      const resp = await submitImageJob(ImageGenerationModel.NanoBanana2, {
         input: {
           prompt: data_ai.prompt,
           seed: data_ai.seed,
@@ -367,9 +375,13 @@ export async function POST(req: Request) {
 
       let referenceImageUrl: string;
       try {
-        referenceImageUrl = await uploadImageUrlToFalStorage(localReferenceUrl);
+        // Provider-aware so Soul 2.0 still works when IMAGE_PROVIDER=
+        // replicate is active (FAL is locked → can't use its storage).
+        // Higgsfield only needs a publicly fetchable URL; Replicate's
+        // files API serves the same role.
+        referenceImageUrl = await uploadImageUrlToProvider(localReferenceUrl);
       } catch (err) {
-        console.error("[SOUL2] Failed to host reference on FAL:", localReferenceUrl, err);
+        console.error("[SOUL2] Failed to host reference:", localReferenceUrl, err);
         return NextResponse.json(
           { error: "Failed to process reference image. Re-upload and try again." },
           { status: 400 }
@@ -443,7 +455,7 @@ export async function POST(req: Request) {
         enable_safety_checker: body.enable_safety_checker!,
       };
 
-      const resp = await submitFalJob(ImageGenerationModel.Lora, {
+      const resp = await submitImageJob(ImageGenerationModel.Lora, {
         input: {
           enable_safety_checker: data_ai.enable_safety_checker,
           guidance_scale: data_ai.guidance_scale,
@@ -471,7 +483,7 @@ export async function POST(req: Request) {
         safety_tolerance: body.safety_tolerance!,
       };
 
-      const resp = await submitFalJob(ImageGenerationModel.V1, {
+      const resp = await submitImageJob(ImageGenerationModel.V1, {
         input: {
           prompt: data_ai.prompt,
           image_size: data_ai.image_size,
