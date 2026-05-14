@@ -147,56 +147,78 @@ export function extractReplicateImageUrls(output: unknown): string[] {
  * Upload a Blob to Replicate's files API so it can be referenced
  * by URL from a prediction's input. Mirrors FAL's fal.storage.upload.
  *
- * Replicate auto-deletes uploaded files after a few hours, which is
+ * Replicate auto-deletes uploaded files after ~24 hours, which is
  * fine for our use cases (training ZIPs and reference images are
  * read once at job-submit time, not later).
+ *
+ * We hit the REST endpoint directly instead of `replicate.files.create()`
+ * — the SDK call was 403-ing in prod (apparent SDK bug; the REST API
+ * works fine with the exact same token + payload, verified by curl).
+ * Filed for future SDK version bump tracking.
  */
-export async function uploadBlobToReplicate(blob: Blob): Promise<string> {
-  const file = await replicate.files.create(blob);
-  return file.urls.get;
+export async function uploadBlobToReplicate(blob: Blob, filename = "upload.bin"): Promise<string> {
+  const form = new FormData();
+  // The endpoint expects a multipart "content" field.
+  form.append("content", blob, filename);
+
+  const res = await fetch("https://api.replicate.com/v1/files", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.REPLICATE_API_TOKEN!}`,
+    },
+    body: form,
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Replicate files upload failed: ${res.status} ${res.statusText} ${body.slice(0, 200)}`);
+  }
+  const json = (await res.json()) as { urls?: { get?: string }; id?: string };
+  const url = json?.urls?.get;
+  if (!url) {
+    throw new Error(`Replicate files upload returned no URL: ${JSON.stringify(json).slice(0, 200)}`);
+  }
+  return url;
 }
 
 /**
- * Resolve a user-uploaded image path into a public URL Replicate can
- * fetch. Critically DIFFERENT from FAL's flow — Replicate accepts any
- * public HTTPS URL as a model input, so we don't need to re-host
- * the file anywhere. We just hand it the URL it can already fetch.
+ * Resolve a user-uploaded image into a URL Replicate can fetch.
  *
- * Why this matters: Replicate's files.create() API requires an
- * account capability that newer accounts don't have by default
- * (returns 403 Forbidden for files uploads). Bypassing it entirely
- * for the common case removes that dependency.
+ * Why we read from disk + re-host (instead of passing the public
+ * /uploads/{name} URL directly): Next.js in standalone production
+ * mode (what Railway uses) does NOT serve files written to /public/
+ * at RUNTIME — only files present at BUILD time get bundled into
+ * the public asset pipeline. Files uploaded at runtime exist on the
+ * container's filesystem but 404 when fetched via the public URL.
+ *
+ * The FAL helper worked because it ALSO read from disk (see
+ * lib/fal-client.ts → uploadImageUrlToFalStorage) then re-uploaded
+ * to FAL's storage. We mirror that pattern for Replicate.
  *
  * Strategy:
- *   /uploads/abc.png        → https://${APP_URL}/uploads/abc.png
- *   https://example.com/x   → pass through unchanged (already public)
- *
- * The blob-upload fallback (uploadBlobToReplicate) is still available
- * for cases where there's no public URL — training ZIPs built on
- * the fly etc. — but the video / reference-image hot path skips it.
+ *   /uploads/abc.png  → read from disk, POST to Replicate /v1/files,
+ *                       return the Replicate-hosted URL
+ *   https://...       → pass through (already a public URL Replicate
+ *                       can fetch directly)
  */
 export async function uploadImageUrlToReplicate(url: string): Promise<string> {
   // Already a publicly-fetchable absolute URL? Just hand it through.
+  // Replicate accepts arbitrary public URLs as model inputs.
   if (/^https?:\/\//i.test(url)) {
     return url;
   }
 
-  // Local /uploads/* path → make absolute against our public URL.
-  // /public/uploads is served by Next as /uploads/* and is publicly
-  // accessible (this is how FAL was able to fetch references too).
+  // Local /uploads/* path → read the buffer off the container's
+  // ephemeral filesystem, POST to Replicate's files REST API, return
+  // the resulting Replicate-hosted URL (auto-deletes after ~24h
+  // which is fine for our submit-then-poll flow).
   if (url.startsWith("/")) {
-    const base = (process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/$/, "");
-    if (!base) {
-      // No public base URL configured — fall back to the blob upload
-      // path (will hit Replicate's files API, may 403 on new accounts).
-      const { readFile } = await import("fs/promises");
-      const { join } = await import("path");
-      const diskPath = join(process.cwd(), "public", url.replace(/^\//, ""));
-      const buffer = await readFile(diskPath);
-      const blob = new Blob([buffer], { type: contentTypeFromPath(url) });
-      return uploadBlobToReplicate(blob);
-    }
-    return `${base}${url}`;
+    const { readFile } = await import("fs/promises");
+    const { join } = await import("path");
+    const diskPath = join(process.cwd(), "public", url.replace(/^\//, ""));
+    const buffer = await readFile(diskPath);
+    const filename = url.split("/").pop() || "upload.bin";
+    const blob = new Blob([buffer], { type: contentTypeFromPath(url) });
+    return uploadBlobToReplicate(blob, filename);
   }
 
   // Anything else (bare filename, weird scheme) — treat as opaque
