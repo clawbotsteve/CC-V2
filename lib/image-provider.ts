@@ -75,11 +75,10 @@ export const FAL_TO_REPLICATE_MODEL_MAP: Record<string, string> = {
   // input shape is translated in translateFalInputToReplicate.
   "fal-ai/kling-video/v2.6/pro/image-to-video": "kwaivgi/kling-v2.1",
   "fal-ai/kling-video/v2.6/standard/image-to-video": "kwaivgi/kling-v2.1",
-  // Kling Motion Control isn't on Replicate (FAL-exclusive feature).
-  // Leaving unmapped so calls fall through to FAL with a warning —
-  // user will see an error until FAL is back / we add a Replicate
-  // alternative.
-  // "fal-ai/kling-video/v2.6/standard/motion-control": null,
+  // Kling Motion Control IS on Replicate (verified 2026-05-10 by
+  // searching their catalogue — kwaivgi/kling-v2.6-motion-control is
+  // the v2.6 line, and they also have a v3 if we want to upgrade).
+  "fal-ai/kling-video/v2.6/standard/motion-control": "kwaivgi/kling-v2.6-motion-control",
   "fal-ai/bytedance/seedance/v1/pro/reference-to-video": "bytedance/seedance-1-pro",
   "fal-ai/bytedance/seedance-2.0/reference-to-video": "bytedance/seedance-1-pro",
   "fal-ai/bytedance/seedance/v1/pro/fast/image-to-video": "bytedance/seedance-1-pro",
@@ -240,6 +239,35 @@ export function translateFalInputToReplicate(
     };
     if (falInput.negative_prompt) out.negative_prompt = falInput.negative_prompt;
     if (typeof falInput.cfg_scale === "number") out.cfg_scale = falInput.cfg_scale;
+    return out;
+  }
+
+  // --------------------------------------------------------------
+  // kwaivgi/kling-v2.6-motion-control on Replicate
+  // Replicate input schema (verified 2026-05-10 via their API):
+  //   image: string   (reference character image URL)
+  //   video: string   (reference motion video URL)
+  //   prompt?: string
+  //   keep_original_sound?: boolean
+  //   character_orientation: "image" | "video"
+  //   mode: "std" | "pro"   (cost vs quality knob, new on Replicate)
+  // Field names are renamed from FAL's image_url / video_url but the
+  // semantics map 1:1.
+  // --------------------------------------------------------------
+  if (falEndpoint === "fal-ai/kling-video/v2.6/standard/motion-control") {
+    const out: Record<string, any> = {
+      image: falInput.image_url,
+      video: falInput.video_url,
+      character_orientation: falInput.character_orientation ?? "image",
+      // Default to "std" — matches FAL's "/standard/" path semantically.
+      // If we later want to expose a "pro" toggle in the UI, this is
+      // where it'd thread through.
+      mode: "std",
+    };
+    if (falInput.prompt) out.prompt = falInput.prompt;
+    if (typeof falInput.keep_original_sound === "boolean") {
+      out.keep_original_sound = falInput.keep_original_sound;
+    }
     return out;
   }
 
