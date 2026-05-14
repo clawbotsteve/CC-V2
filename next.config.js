@@ -83,6 +83,21 @@ const nextConfig = {
         hostname: "fal.media",
         pathname: "/**",
       },
+      // Replicate's output CDN. All model outputs (openai/gpt-image-2,
+      // google/nano-banana-2, black-forest-labs/flux-*, kling, seedance,
+      // topaz, etc.) are served from replicate.delivery once the
+      // prediction completes. Wildcard covers any future subdomain
+      // splits the same way we did for fal.media.
+      {
+        protocol: "https",
+        hostname: "replicate.delivery",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "**.replicate.delivery",
+        pathname: "/**",
+      },
     ],
   },
   async headers() {
