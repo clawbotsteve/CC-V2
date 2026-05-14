@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getWebhookUrl } from "@/lib/utils";
 import { submitFalJob, uploadImageUrlToFalStorage } from "@/lib/fal-client";
+// Provider abstraction for the FLUX_1 training path. FAL keeps the
+// FLUX_2 branch below since Replicate doesn't have an equivalent
+// (FLUX_1 / flux-dev-lora-trainer is the supported migration target).
+import { submitTrainingJob } from "@/lib/image-provider";
+import { uploadImageUrlToProvider } from "@/lib/image-provider";
 import { InfluencerModel } from "@/types/influencer";
 
 
@@ -42,7 +47,10 @@ export async function POST(req: NextRequest) {
       default_caption = undefined,
     } = body;
 
-    const falTrainingDataUrl = await uploadImageUrlToFalStorage(images_data_url);
+    // Provider-aware: FAL re-hosts on FAL storage; Replicate re-hosts
+    // via the /v1/files REST endpoint. Either way we get back a URL
+    // the trainer worker can fetch.
+    const falTrainingDataUrl = await uploadImageUrlToProvider(images_data_url);
 
 
     if (!model) {
@@ -53,8 +61,12 @@ export async function POST(req: NextRequest) {
     }
 
     if (model === InfluencerModel.FLUX_1) {
-
-      const { request_id } = await submitFalJob("fal-ai/flux-lora-fast-training", {
+      // submitTrainingJob routes to FAL or Replicate based on
+      // IMAGE_PROVIDER. The input shape stays FAL-flavored
+      // (images_data_url, trigger_word, steps) — the provider layer
+      // translates to ostris/flux-dev-lora-trainer's input fields
+      // when Replicate is active.
+      const { request_id } = await submitTrainingJob("fal-ai/flux-lora-fast-training", {
         input: {
           images_data_url: falTrainingDataUrl,
           create_masks,

@@ -97,6 +97,110 @@ export async function getReplicateJobStatus(requestId: string) {
 }
 
 /**
+ * Submit a Replicate TRAINING job.
+ *
+ * Replicate's training API has different mechanics from predictions:
+ *   - URL: /v1/models/{owner}/{name}/versions/{version_id}/trainings
+ *   - Requires a `destination` field — an empty model owned by your
+ *     account where the trained LoRA is pushed. The destination must
+ *     be created MANUALLY once at https://replicate.com/create before
+ *     the first training; subsequent trainings push new versions to
+ *     the same destination model.
+ *
+ * Set REPLICATE_TRAINING_DESTINATION in env to your destination,
+ * e.g. "clawbotsteve/tavira-loras". The destination model owns all
+ * trained LoRA versions; we extract the .safetensors weights URL
+ * from the training output in the webhook.
+ *
+ * Returns { request_id } so DB row keying matches the rest of the
+ * codebase. The Replicate training id is what we use as the
+ * Influencer.id swap target in /finalize.
+ */
+export async function submitReplicateTraining(
+  trainerModel: string,
+  trainerVersion: string,
+  input: Record<string, unknown>,
+  options: { webhookUrl: string; destination?: string },
+): Promise<{ request_id: string }> {
+  const destination =
+    options.destination || process.env.REPLICATE_TRAINING_DESTINATION;
+  if (!destination) {
+    throw new Error(
+      "submitReplicateTraining: missing destination. Set REPLICATE_TRAINING_DESTINATION env var (e.g. 'owner/tavira-loras') to a Replicate model you've created at https://replicate.com/create — destination is a one-time setup step.",
+    );
+  }
+
+  const body: Record<string, unknown> = {
+    destination,
+    input,
+  };
+  // Same localhost guard as the prediction path — Replicate's webhook
+  // can't reach 127.0.0.1, so skip it on dev and rely on polling.
+  if (
+    options.webhookUrl &&
+    !options.webhookUrl.includes("localhost") &&
+    !options.webhookUrl.includes("127.0.0.1")
+  ) {
+    body.webhook = options.webhookUrl;
+    body.webhook_events_filter = ["completed"];
+  }
+
+  const url = `https://api.replicate.com/v1/models/${trainerModel}/versions/${trainerVersion}/trainings`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.REPLICATE_API_TOKEN!}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(
+      `Replicate training submit failed: ${res.status} ${res.statusText} ${text.slice(0, 300)}`,
+    );
+  }
+  const json = (await res.json()) as { id: string };
+  return { request_id: json.id };
+}
+
+/**
+ * Fetch a training's current status. Used by the webhook-miss
+ * recovery path (Character Studio's "Check status now" button) when
+ * IMAGE_PROVIDER=replicate.
+ */
+export async function getReplicateTrainingStatus(trainingId: string) {
+  const res = await fetch(`https://api.replicate.com/v1/trainings/${trainingId}`, {
+    headers: { Authorization: `Bearer ${process.env.REPLICATE_API_TOKEN!}` },
+  });
+  if (!res.ok) {
+    throw new Error(`Replicate training fetch failed: ${res.status} ${res.statusText}`);
+  }
+  return res.json();
+}
+
+/**
+ * Latest version id of a Replicate model. Trainings target a
+ * specific version; we resolve "latest" once at submit time rather
+ * than hardcoding a version string that would go stale.
+ */
+export async function getReplicateLatestVersion(model: string): Promise<string> {
+  const res = await fetch(`https://api.replicate.com/v1/models/${model}`, {
+    headers: { Authorization: `Bearer ${process.env.REPLICATE_API_TOKEN!}` },
+  });
+  if (!res.ok) {
+    throw new Error(`Replicate model fetch failed for ${model}: ${res.status}`);
+  }
+  const json = (await res.json()) as { latest_version?: { id?: string } };
+  const v = json?.latest_version?.id;
+  if (!v) {
+    throw new Error(`Replicate model ${model} has no latest_version`);
+  }
+  return v;
+}
+
+/**
  * Synchronous run — POST a prediction and block until it completes
  * (or fails / times out). Equivalent to FAL's `fal.subscribe()`.
  *
