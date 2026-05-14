@@ -73,8 +73,13 @@ export const FAL_TO_REPLICATE_MODEL_MAP: Record<string, string> = {
   // Kling 2.6 pro / standard — Replicate has kwaivgi/kling-v2.1 as the
   // current generation. Maps to the closest equivalent on Replicate;
   // input shape is translated in translateFalInputToReplicate.
-  "fal-ai/kling-video/v2.6/pro/image-to-video": "kwaivgi/kling-v2.1",
-  "fal-ai/kling-video/v2.6/standard/image-to-video": "kwaivgi/kling-v2.1",
+  // Use the v2.6 slug to match what FAL exposes (was incorrectly
+  // mapped to v2.1 in earlier PRs — v2.1 worked but our UI advertises
+  // Kling 2.6 to users and the model has different capabilities,
+  // notably native audio generation. Verified via Replicate API
+  // 2026-05-10: kwaivgi/kling-v2.6 is the current Pro tier slug).
+  "fal-ai/kling-video/v2.6/pro/image-to-video": "kwaivgi/kling-v2.6",
+  "fal-ai/kling-video/v2.6/standard/image-to-video": "kwaivgi/kling-v2.6",
   // Kling Motion Control IS on Replicate (verified 2026-05-10 by
   // searching their catalogue — kwaivgi/kling-v2.6-motion-control is
   // the v2.6 line, and they also have a v3 if we want to upgrade).
@@ -218,14 +223,21 @@ export function translateFalInputToReplicate(
   }
 
   // --------------------------------------------------------------
-  // kwaivgi/kling-v2.1 on Replicate (Kling 2.6 / 2.1 image-to-video)
-  // Replicate input schema (https://replicate.com/kwaivgi/kling-v2.1):
+  // kwaivgi/kling-v2.6 on Replicate (Kling 2.6 Pro image-to-video)
+  // Replicate input schema (verified via API 2026-05-10):
   //   prompt: string
   //   start_image: string (URL) — required for image-to-video
   //   duration: 5 | 10
   //   aspect_ratio: "16:9" | "9:16" | "1:1"
+  //     (ignored if start_image is provided — model infers from image)
+  //   generate_audio: boolean — native audio gen, new in v2.6
   //   negative_prompt?: string
-  //   cfg_scale?: number
+  //
+  // Notable diff from v2.1 (what we previously mapped to):
+  //   - cfg_scale REMOVED — model now picks internally. We drop the
+  //     field if the caller passed it.
+  //   - generate_audio ADDED — wired through from the FAL input so
+  //     the UI's "audio on/off" toggle keeps working.
   // --------------------------------------------------------------
   if (
     falEndpoint === "fal-ai/kling-video/v2.6/pro/image-to-video" ||
@@ -236,9 +248,12 @@ export function translateFalInputToReplicate(
       start_image: falInput.image_url,
       duration: Number(falInput.duration) || 5,
       aspect_ratio: falInput.aspect_ratio ?? "16:9",
+      // FAL's video route already coerces this to a boolean — default
+      // true if undefined, matches the UI default.
+      generate_audio: falInput.generate_audio !== false,
     };
     if (falInput.negative_prompt) out.negative_prompt = falInput.negative_prompt;
-    if (typeof falInput.cfg_scale === "number") out.cfg_scale = falInput.cfg_scale;
+    // cfg_scale intentionally dropped — not supported on v2.6.
     return out;
   }
 
