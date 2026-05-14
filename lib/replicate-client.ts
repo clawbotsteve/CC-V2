@@ -97,6 +97,83 @@ export async function getReplicateJobStatus(requestId: string) {
 }
 
 /**
+ * Synchronous run — POST a prediction and block until it completes
+ * (or fails / times out). Equivalent to FAL's `fal.subscribe()`.
+ *
+ * Used by Character Studio's Step 2 reference generation where the
+ * wizard wants the result inline (no webhook + polling dance — just
+ * "give me a URL when it's done"). Acceptable here because Step 2 is
+ * a SINGLE image and users actively wait for it.
+ *
+ * Uses Replicate's REST endpoint with the `Prefer: wait=N` header
+ * which makes Replicate block server-side and return the completed
+ * prediction in one round-trip (up to ~60s; falls back to "still
+ * processing" status after that and we poll).
+ *
+ * Why REST instead of the SDK's replicate.run(): the SDK has been
+ * unreliable (files.create() returned 403 in prod despite the REST
+ * endpoint working with the same token — see PR #74). REST gives us
+ * exact control over headers + lets us poll predictably.
+ */
+export async function runReplicateJobSync(
+  model: string,
+  input: Record<string, unknown>,
+  options: { maxWaitMs?: number } = {},
+): Promise<{ id: string; output: unknown; status: string; error: unknown }> {
+  const maxWaitMs = options.maxWaitMs ?? 90_000;
+
+  // Step 1: submit the prediction with the wait preference. Replicate
+  // will return either the completed prediction OR a still-processing
+  // one after 60s — we handle both.
+  const submitRes = await fetch(`https://api.replicate.com/v1/models/${model}/predictions`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.REPLICATE_API_TOKEN!}`,
+      "Content-Type": "application/json",
+      // Block server-side until prediction finishes or 60s elapses.
+      Prefer: "wait=60",
+    },
+    body: JSON.stringify({ input }),
+  });
+
+  if (!submitRes.ok) {
+    const body = await submitRes.text().catch(() => "");
+    throw new Error(
+      `Replicate sync run submit failed: ${submitRes.status} ${submitRes.statusText} ${body.slice(0, 200)}`,
+    );
+  }
+
+  let prediction = (await submitRes.json()) as {
+    id: string;
+    status: string;
+    output: unknown;
+    error: unknown;
+  };
+
+  // Step 2: if `Prefer: wait` didn't complete the prediction (long-
+  // running model), poll until it does or we hit the budget.
+  const startedAt = Date.now();
+  while (
+    prediction.status !== "succeeded" &&
+    prediction.status !== "failed" &&
+    prediction.status !== "canceled" &&
+    Date.now() - startedAt < maxWaitMs
+  ) {
+    await new Promise((r) => setTimeout(r, 1500));
+    const pollRes = await fetch(
+      `https://api.replicate.com/v1/predictions/${prediction.id}`,
+      {
+        headers: { Authorization: `Bearer ${process.env.REPLICATE_API_TOKEN!}` },
+      },
+    );
+    if (!pollRes.ok) continue;
+    prediction = (await pollRes.json()) as typeof prediction;
+  }
+
+  return prediction;
+}
+
+/**
  * Fetch the full result for a completed prediction.
  * Replicate.predictions.get returns everything (status + output +
  * error), so this is just an alias for clarity — callers that want

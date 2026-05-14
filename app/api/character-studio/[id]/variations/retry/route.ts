@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import prismadb from "@/lib/prismadb";
 import { auth } from "@clerk/nextjs/server";
 import { getWebhookUrl } from "@/lib/utils";
-import { submitFalJob, uploadImageUrlToFalStorage } from "@/lib/fal-client";
+// Provider-routed. Picks FAL or Replicate based on IMAGE_PROVIDER.
+import { submitImageJob as submitFalJob, uploadImageUrlToProvider as uploadImageUrlToFalStorage } from "@/lib/image-provider";
 import { ImageGenerationModel } from "@/types/image";
 import { moderateAndLog } from "@/lib/content-moderation";
 import { checkAvailableCredit } from "@/lib/check-available-credit";

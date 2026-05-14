@@ -32,7 +32,10 @@ import {
   getReplicateJobStatus,
   getReplicateJobResult,
   uploadImageUrlToReplicate,
+  runReplicateJobSync,
+  extractReplicateImageUrls,
 } from "./replicate-client";
+import { fal } from "@fal-ai/client";
 
 export type ImageProvider = "fal" | "replicate";
 
@@ -440,4 +443,60 @@ export async function uploadImageUrlToProvider(url: string): Promise<string> {
     return uploadImageUrlToReplicate(url);
   }
   return uploadImageUrlToFalStorage(url);
+}
+
+/**
+ * Synchronous image gen — blocks until the model returns or fails.
+ * Equivalent to fal.subscribe() on FAL or our new Replicate
+ * `runReplicateJobSync` wrapper. Returns the resulting image URL
+ * (first image if multiple) and the raw provider response.
+ *
+ * Used by Character Studio Step 2 (the reference-image flow) where
+ * the wizard wants a result inline rather than via webhook + poll.
+ *
+ * Returns `{ imageUrl, raw }` so callers that need additional fields
+ * from the response (logs, metrics, etc.) can dig in.
+ */
+export async function runImageJobSync(
+  falEndpoint: string,
+  input: Record<string, any>,
+): Promise<{ imageUrl: string; raw: any }> {
+  const provider = getImageProvider();
+
+  if (provider === "replicate") {
+    const replicateModel = falToReplicateModel(falEndpoint);
+    if (!replicateModel) {
+      throw new Error(
+        `runImageJobSync: no Replicate mapping for "${falEndpoint}". Add it to FAL_TO_REPLICATE_MODEL_MAP.`,
+      );
+    }
+    const replicateInput = translateFalInputToReplicate(falEndpoint, input);
+    const result = await runReplicateJobSync(replicateModel, replicateInput);
+    if (result.status !== "succeeded") {
+      throw new Error(
+        `Replicate prediction failed (status=${result.status}): ${String(result.error || "unknown").slice(0, 200)}`,
+      );
+    }
+    const urls = extractReplicateImageUrls(result.output);
+    const imageUrl = urls[0] || "";
+    return { imageUrl, raw: result };
+  }
+
+  // FAL path — fal.subscribe() blocks until completion.
+  const result = await fal.subscribe(falEndpoint, { input, logs: false });
+  const r = result as any;
+  // Defensive multi-path URL extraction matches the existing
+  // image-tool status route — different models return URLs in
+  // different shapes.
+  const imageUrl =
+    r?.data?.images?.[0]?.url ||
+    r?.data?.images?.[0]?.image_url ||
+    r?.data?.image?.url ||
+    r?.images?.[0]?.url ||
+    r?.images?.[0]?.image_url ||
+    r?.image?.url ||
+    r?.output?.images?.[0]?.url ||
+    r?.payload?.images?.[0]?.url ||
+    "";
+  return { imageUrl, raw: result };
 }

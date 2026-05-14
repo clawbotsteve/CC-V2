@@ -1,15 +1,17 @@
 import { NextResponse } from "next/server";
 import prismadb from "@/lib/prismadb";
 import { auth } from "@clerk/nextjs/server";
-import { fal } from "@fal-ai/client";
 import { moderateAndLog } from "@/lib/content-moderation";
 import { ImageGenerationModel } from "@/types/image";
 import { checkAvailableCredit } from "@/lib/check-available-credit";
 import { ToolType } from "@prisma/client";
 import { deductCredit } from "@/lib/charge-user";
 import { buildCharacterDescriptors } from "@/lib/character-studio/fill-prompts";
-
-fal.config({ credentials: process.env.FAL_API_KEY! });
+// Provider-routed sync image gen. Replaces the direct fal.subscribe
+// call so this endpoint works on either FAL or Replicate based on
+// IMAGE_PROVIDER. Same blocking semantics — waits up to ~90s for the
+// prediction to complete.
+import { runImageJobSync } from "@/lib/image-provider";
 
 interface ReferenceBody {
   /**
@@ -140,34 +142,20 @@ export async function POST(
       );
     }
 
-    // Synchronous call. fal.subscribe waits for completion; the response
-    // contains the final image URL directly so we don't need to plumb
-    // through the webhook + polling dance.
-    const result = await fal.subscribe(ImageGenerationModel.GptImage2, {
-      input: {
+    // Synchronous call. runImageJobSync waits for completion (FAL via
+    // fal.subscribe, Replicate via POST + Prefer: wait + polling),
+    // returns the image URL extracted from the provider's response
+    // shape. Same blocking semantics either way.
+    const { imageUrl, raw: result } = await runImageJobSync(
+      ImageGenerationModel.GptImage2,
+      {
         prompt,
         quality: "medium",
         num_images: 1,
         output_format: "png",
         aspect_ratio: "9:16",
       },
-      logs: false,
-    });
-
-    // FAL response shapes vary by model + by sync vs. async path. Try
-    // every known location for the URL — same defensive helper the
-    // image-tool's status route uses for queue results.
-    const r = result as any;
-    const imageUrl =
-      r?.data?.images?.[0]?.url ||
-      r?.data?.images?.[0]?.image_url ||
-      r?.data?.image?.url ||
-      r?.images?.[0]?.url ||
-      r?.images?.[0]?.image_url ||
-      r?.image?.url ||
-      r?.output?.images?.[0]?.url ||
-      r?.payload?.images?.[0]?.url ||
-      "";
+    );
 
     if (!imageUrl) {
       console.error(
