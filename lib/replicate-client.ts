@@ -157,25 +157,50 @@ export async function uploadBlobToReplicate(blob: Blob): Promise<string> {
 }
 
 /**
- * Same as the FAL helper — handle local /uploads/* paths by reading
- * from disk, then upload to Replicate's files API and return a
- * publicly fetchable URL. Used when we need to give Replicate a URL
- * to a user-uploaded image (reference for image-to-image, base for
- * variations, etc.).
+ * Resolve a user-uploaded image path into a public URL Replicate can
+ * fetch. Critically DIFFERENT from FAL's flow — Replicate accepts any
+ * public HTTPS URL as a model input, so we don't need to re-host
+ * the file anywhere. We just hand it the URL it can already fetch.
+ *
+ * Why this matters: Replicate's files.create() API requires an
+ * account capability that newer accounts don't have by default
+ * (returns 403 Forbidden for files uploads). Bypassing it entirely
+ * for the common case removes that dependency.
+ *
+ * Strategy:
+ *   /uploads/abc.png        → https://${APP_URL}/uploads/abc.png
+ *   https://example.com/x   → pass through unchanged (already public)
+ *
+ * The blob-upload fallback (uploadBlobToReplicate) is still available
+ * for cases where there's no public URL — training ZIPs built on
+ * the fly etc. — but the video / reference-image hot path skips it.
  */
 export async function uploadImageUrlToReplicate(url: string): Promise<string> {
-  // Lazy-load the Node fs helpers so this module stays importable in
-  // edge runtimes (where 'fs/promises' doesn't exist). Only the
-  // /uploads/* branch needs them.
-  if (url.startsWith("/")) {
-    const { readFile } = await import("fs/promises");
-    const { join } = await import("path");
-    const diskPath = join(process.cwd(), "public", url.replace(/^\//, ""));
-    const buffer = await readFile(diskPath);
-    const blob = new Blob([buffer], { type: contentTypeFromPath(url) });
-    return uploadBlobToReplicate(blob);
+  // Already a publicly-fetchable absolute URL? Just hand it through.
+  if (/^https?:\/\//i.test(url)) {
+    return url;
   }
 
+  // Local /uploads/* path → make absolute against our public URL.
+  // /public/uploads is served by Next as /uploads/* and is publicly
+  // accessible (this is how FAL was able to fetch references too).
+  if (url.startsWith("/")) {
+    const base = (process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/$/, "");
+    if (!base) {
+      // No public base URL configured — fall back to the blob upload
+      // path (will hit Replicate's files API, may 403 on new accounts).
+      const { readFile } = await import("fs/promises");
+      const { join } = await import("path");
+      const diskPath = join(process.cwd(), "public", url.replace(/^\//, ""));
+      const buffer = await readFile(diskPath);
+      const blob = new Blob([buffer], { type: contentTypeFromPath(url) });
+      return uploadBlobToReplicate(blob);
+    }
+    return `${base}${url}`;
+  }
+
+  // Anything else (bare filename, weird scheme) — treat as opaque
+  // and try to fetch + re-upload. Rare path.
   const res = await fetch(url);
   if (!res.ok) {
     throw new Error(`Failed to fetch source for Replicate upload: ${res.status} ${res.statusText}`);
