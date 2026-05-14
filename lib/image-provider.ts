@@ -70,8 +70,21 @@ export const FAL_TO_REPLICATE_MODEL_MAP: Record<string, string> = {
   "fal-ai/flux-lora-fast-training": "ostris/flux-dev-lora-trainer",
 
   // Video generation
-  "fal-ai/kling-video/v2.6/standard/image-to-video": "kwaivgi/kling-v2.0",
+  // Kling 2.6 pro / standard — Replicate has kwaivgi/kling-v2.1 as the
+  // current generation. Maps to the closest equivalent on Replicate;
+  // input shape is translated in translateFalInputToReplicate.
+  "fal-ai/kling-video/v2.6/pro/image-to-video": "kwaivgi/kling-v2.1",
+  "fal-ai/kling-video/v2.6/standard/image-to-video": "kwaivgi/kling-v2.1",
+  // Kling Motion Control isn't on Replicate (FAL-exclusive feature).
+  // Leaving unmapped so calls fall through to FAL with a warning —
+  // user will see an error until FAL is back / we add a Replicate
+  // alternative.
+  // "fal-ai/kling-video/v2.6/standard/motion-control": null,
   "fal-ai/bytedance/seedance/v1/pro/reference-to-video": "bytedance/seedance-1-pro",
+  "fal-ai/bytedance/seedance-2.0/reference-to-video": "bytedance/seedance-1-pro",
+  "fal-ai/bytedance/seedance/v1/pro/fast/image-to-video": "bytedance/seedance-1-pro",
+  "fal-ai/veo3.1/fast/image-to-video": "google/veo-3-fast",
+  "fal-ai/wan-pro/image-to-video": "wavespeedai/wan-2.2-i2v-a14b",
 
   // Upscale
   "fal-ai/topaz/upscale/image": "topazlabs/image-upscale",
@@ -205,6 +218,94 @@ export function translateFalInputToReplicate(
     return out;
   }
 
+  // --------------------------------------------------------------
+  // kwaivgi/kling-v2.1 on Replicate (Kling 2.6 / 2.1 image-to-video)
+  // Replicate input schema (https://replicate.com/kwaivgi/kling-v2.1):
+  //   prompt: string
+  //   start_image: string (URL) — required for image-to-video
+  //   duration: 5 | 10
+  //   aspect_ratio: "16:9" | "9:16" | "1:1"
+  //   negative_prompt?: string
+  //   cfg_scale?: number
+  // --------------------------------------------------------------
+  if (
+    falEndpoint === "fal-ai/kling-video/v2.6/pro/image-to-video" ||
+    falEndpoint === "fal-ai/kling-video/v2.6/standard/image-to-video"
+  ) {
+    const out: Record<string, any> = {
+      prompt: falInput.prompt,
+      start_image: falInput.image_url,
+      duration: Number(falInput.duration) || 5,
+      aspect_ratio: falInput.aspect_ratio ?? "16:9",
+    };
+    if (falInput.negative_prompt) out.negative_prompt = falInput.negative_prompt;
+    if (typeof falInput.cfg_scale === "number") out.cfg_scale = falInput.cfg_scale;
+    return out;
+  }
+
+  // --------------------------------------------------------------
+  // bytedance/seedance-1-pro on Replicate
+  // Used for both v1/pro/reference-to-video, v2.0/reference-to-video,
+  // and v1/pro/fast/image-to-video FAL endpoints (Replicate hosts
+  // one Seedance model).
+  // Replicate input schema:
+  //   prompt: string
+  //   image: string (URL) — optional, for image-to-video
+  //   duration: 5 | 10
+  //   resolution: "480p" | "720p" | "1080p"
+  //   aspect_ratio?: "16:9" | "9:16" | "1:1" | "4:3" | "3:4"
+  //   fps: number (default 24)
+  // --------------------------------------------------------------
+  if (
+    falEndpoint === "fal-ai/bytedance/seedance/v1/pro/reference-to-video" ||
+    falEndpoint === "fal-ai/bytedance/seedance-2.0/reference-to-video" ||
+    falEndpoint === "fal-ai/bytedance/seedance/v1/pro/fast/image-to-video"
+  ) {
+    // FAL's reference flow uses image_urls (array); image-to-video
+    // uses image_url (single). Replicate wants a single image string.
+    const refImage =
+      (Array.isArray(falInput.image_urls) && falInput.image_urls[0]) ||
+      falInput.image_url ||
+      undefined;
+
+    const out: Record<string, any> = {
+      prompt: falInput.prompt,
+      duration: Number(falInput.duration) || 5,
+      resolution: falInput.resolution ?? "720p",
+    };
+    if (refImage) out.image = refImage;
+    if (falInput.aspect_ratio) out.aspect_ratio = falInput.aspect_ratio;
+    return out;
+  }
+
+  // --------------------------------------------------------------
+  // google/veo-3-fast on Replicate
+  // Schema (https://replicate.com/google/veo-3-fast):
+  //   prompt: string
+  //   image?: string (URL)
+  //   duration: "4s" | "6s" | "8s"
+  //   aspect_ratio: "16:9" | "9:16" | "auto"
+  // --------------------------------------------------------------
+  if (falEndpoint === "fal-ai/veo3.1/fast/image-to-video") {
+    return {
+      prompt: falInput.prompt,
+      image: falInput.image_url,
+      duration: falInput.duration ?? "8s",
+      aspect_ratio: falInput.aspect_ratio ?? "auto",
+    };
+  }
+
+  // --------------------------------------------------------------
+  // wavespeedai/wan-2.2-i2v-a14b on Replicate (Wan image-to-video)
+  // --------------------------------------------------------------
+  if (falEndpoint === "fal-ai/wan-pro/image-to-video") {
+    return {
+      prompt: falInput.prompt,
+      image: falInput.image_url,
+      aspect_ratio: falInput.aspect_ratio ?? "16:9",
+    };
+  }
+
   // Default — pass through verbatim. Lets us add new model mappings
   // without breaking existing routes that happen to use compatible
   // input shapes.
@@ -237,12 +338,14 @@ export async function submitImageJob(
     // Replicate's equivalent model expects. Centralized in
     // translateFalInputToReplicate() so route handlers stay clean.
     const replicateInput = translateFalInputToReplicate(falEndpoint, options.input);
-    // Replicate uses /api/webhook/replicate/image so payload parsing
-    // can branch correctly. Callers pass /api/webhook/image as the
-    // FAL webhook; we swap the path here when going to Replicate.
+    // Generic webhook-URL rewriter — flips /api/webhook/{kind} →
+    // /api/webhook/replicate/{kind} so each tool's webhook stays
+    // separated (image webhook updates GeneratedImage, video webhook
+    // updates GeneratedVideo, etc.). Each Replicate webhook handler
+    // lives at the parallel path.
     const replicateWebhook = options.webhookUrl.replace(
-      "/api/webhook/image",
-      "/api/webhook/replicate/image",
+      /\/api\/webhook\/(image|video|train|image-upscale|face-enhance|face-swap)\b/,
+      "/api/webhook/replicate/$1",
     );
     console.log(
       `[IMAGE PROVIDER] Replicate → ${replicateModel}`,
