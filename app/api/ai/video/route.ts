@@ -3,7 +3,10 @@ import { auth } from "@clerk/nextjs/server";
 import { getWebhookUrl } from "@/lib/utils";
 import { VideoGenerationInput, clampSeedanceDuration, SEEDANCE_DEFAULT_RESOLUTION } from "@/types/video";
 import { SeedanceResolution, VideoModel } from "@/types/types";
-import { submitFalJob, uploadImageUrlToFalStorage } from "@/lib/fal-client";
+// Provider-routed. submitImageJob + uploadImageUrlToProvider pick FAL
+// or Replicate based on IMAGE_PROVIDER. See lib/image-provider.ts for
+// the routing + per-model input translation logic.
+import { submitImageJob as submitFalJob, uploadImageUrlToProvider as uploadImageUrlToFalStorage } from "@/lib/image-provider";
 import { moderateAndLog } from "@/lib/content-moderation";
 
 
