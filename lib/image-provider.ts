@@ -34,6 +34,8 @@ import {
   uploadImageUrlToReplicate,
   runReplicateJobSync,
   extractReplicateImageUrls,
+  submitReplicateTraining,
+  getReplicateLatestVersion,
 } from "./replicate-client";
 import { fal } from "@fal-ai/client";
 
@@ -443,6 +445,74 @@ export async function uploadImageUrlToProvider(url: string): Promise<string> {
     return uploadImageUrlToReplicate(url);
   }
   return uploadImageUrlToFalStorage(url);
+}
+
+/**
+ * Submit a LoRA training job. Routes to FAL's flux-lora-fast-training
+ * (the legacy path) or Replicate's ostris/flux-dev-lora-trainer based
+ * on IMAGE_PROVIDER. Returns { request_id } in both cases.
+ *
+ * Replicate path mechanics differ from predictions — see
+ * submitReplicateTraining for the full notes. Caller-visible
+ * contract is identical: pass a public URL to the training ZIP, get
+ * back a request_id we key the DB row on.
+ */
+export async function submitTrainingJob(
+  falEndpoint: string,
+  options: { input: any; webhookUrl: string },
+): Promise<{ request_id: string }> {
+  const provider = getImageProvider();
+
+  if (provider === "replicate") {
+    const replicateModel = falToReplicateModel(falEndpoint);
+    if (!replicateModel) {
+      console.warn(
+        `[IMAGE PROVIDER] No Replicate mapping for training endpoint "${falEndpoint}", falling back to FAL.`,
+      );
+      // No clean fallback here — FAL is presumably locked. We surface
+      // the error so the caller can mark the training failed.
+      throw new Error(`No Replicate mapping for "${falEndpoint}"`);
+    }
+
+    // Translate the input shape. The trainer model wants:
+    //   input_images:  string (URL to training ZIP)
+    //   trigger_word:  string
+    //   steps:         number
+    //   plus optional knobs (autocaption, lora_rank, etc.)
+    const replicateInput: Record<string, unknown> = {
+      input_images: options.input.images_data_url,
+      steps: options.input.steps ?? 1000,
+      autocaption: true,
+    };
+    if (options.input.trigger_word) {
+      replicateInput.trigger_word = options.input.trigger_word;
+    }
+    if (typeof options.input.learning_rate === "number") {
+      replicateInput.learning_rate = options.input.learning_rate;
+    }
+
+    // Resolve the trainer's latest version. Done dynamically (rather
+    // than hardcoded) so we automatically track upstream updates.
+    // Cached implicitly via the HTTP layer; one extra round-trip per
+    // training submission is fine (training is a rare action).
+    const version = await getReplicateLatestVersion(replicateModel);
+
+    const replicateWebhook = options.webhookUrl.replace(
+      /\/api\/webhook\/(image|video|train|image-upscale|face-enhance|face-swap)\b/,
+      "/api/webhook/replicate/$1",
+    );
+
+    console.log(
+      `[IMAGE PROVIDER] Replicate training → ${replicateModel}:${version.slice(0, 8)}`,
+    );
+    return submitReplicateTraining(replicateModel, version, replicateInput, {
+      webhookUrl: replicateWebhook,
+    });
+  }
+
+  // FAL path (current behavior, preserved by default).
+  const resp = await submitFalJob(falEndpoint, options);
+  return { request_id: resp.request_id };
 }
 
 /**
