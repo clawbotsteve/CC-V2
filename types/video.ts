@@ -134,6 +134,17 @@ export function getVideoCreditVariant(
     const d = input.duration === Duration.Ten ? "10s" : "5s";
     return input.generate_audio === false ? `kling_silent_${d}` : `kling_audio_${d}`;
   }
+  if (input.model === VideoModel.KlingV3) {
+    // Kling 3.0 cost scales by duration (1-15s). We bucket into three
+    // tiers (5s / 10s / 15s) to keep the variant grid small. Audio
+    // doubles the bucket count for the silent discount.
+    //   variant key: kling_v3_{audio|silent}_{5|10|15}s
+    const durRaw = Number(input.duration) || 5;
+    const dBucket = durRaw >= 13 ? "15s" : durRaw >= 8 ? "10s" : "5s";
+    return input.generate_audio === false
+      ? `kling_v3_silent_${dBucket}`
+      : `kling_v3_audio_${dBucket}`;
+  }
   if (input.model === VideoModel.Seedance2Ref) {
     // Resolution-aware variant. Cost is computed dynamically as
     // (perSecondCost × duration) — see lib/get-credit-cost.ts.

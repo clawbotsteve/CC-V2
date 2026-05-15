@@ -85,6 +85,7 @@ export default function VideoSettingsPanel({
             <SelectValue placeholder="Select a model" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value={VideoModel.KlingV3}>Kling 3.0 (NEW · 4K · multi-shot)</SelectItem>
             <SelectItem value={VideoModel.Kling}>Kling 2.6</SelectItem>
             <SelectItem value={VideoModel.KlingMotionControl}>Kling Motion Control</SelectItem>
             <SelectItem value={VideoModel.Seedance2Ref}>Seedance 2.0 (Reference)</SelectItem>

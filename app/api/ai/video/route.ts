@@ -77,6 +77,33 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // 🔹 Kling 3.0 handler (Replicate-only, no FAL fallback).
+    // Same model Higgsfield exposes as "Kling 3.0". Adds end-frame,
+    // multi-shot, and up to 4K output over the Kling 2.6 path above.
+    if (data.model === VideoModel.KlingV3) {
+      const klingV3Input: any = {
+        prompt: data.prompt,
+        image_url: falHostedImageUrl,
+        aspect_ratio: data.aspect_ratio,
+        // Allow durations up to 15s for Kling 3.0; UI clamps but
+        // we coerce defensively here too.
+        duration: Math.min(15, Math.max(1, Number(data.duration) || 5)),
+        generate_audio: data.generate_audio !== false,
+        // mode: "standard" | "pro" | "4k". Default "pro" (1080p)
+        // matches the existing Kling 2.6 pricing tier so users
+        // upgrading don't get a billing surprise. Picker can override.
+        mode: (data as any).kling_v3_mode || "pro",
+      };
+      if (data.negative_prompt) klingV3Input.negative_prompt = data.negative_prompt;
+
+      const { request_id } = await submitFalJob(
+        "fal-ai/kling-video/v3/image-to-video",
+        { input: klingV3Input, webhookUrl }
+      );
+
+      return NextResponse.json({ success: true, requestId: request_id });
+    }
+
     // 🔹 Kling Motion Control handler
     // Note: This model requires image_url, video_url, and character_orientation
     // It does NOT support aspect_ratio, duration, negative_prompt, or cfg_scale
