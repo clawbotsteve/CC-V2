@@ -65,6 +65,17 @@ function getFallbackCreditCost(tool: ToolType, variant?: string): number {
         case "kling_audio_10s": return CREDIT_COSTS.VIDEO_10S;
         case "kling_silent_5s": return Math.max(1, CREDIT_COSTS.VIDEO_5S_KLING - 2);
         case "kling_silent_10s": return Math.max(1, CREDIT_COSTS.VIDEO_10S - 4);
+        // Kling 3.0 — premium tier above 2.6. Bumped ~30% over 2.6
+        // to account for longer max duration + higher quality output.
+        // Picker doesn't expose 4K mode explicitly yet — default
+        // mode is "pro" (1080p), same effective price as 2.6 + the
+        // premium uplift.
+        case "kling_v3_audio_5s": return Math.ceil(CREDIT_COSTS.VIDEO_5S_KLING * 1.3);
+        case "kling_v3_audio_10s": return Math.ceil(CREDIT_COSTS.VIDEO_10S * 1.3);
+        case "kling_v3_audio_15s": return Math.ceil(CREDIT_COSTS.VIDEO_10S * 1.95);
+        case "kling_v3_silent_5s": return Math.max(1, Math.ceil(CREDIT_COSTS.VIDEO_5S_KLING * 1.3) - 2);
+        case "kling_v3_silent_10s": return Math.max(1, Math.ceil(CREDIT_COSTS.VIDEO_10S * 1.3) - 4);
+        case "kling_v3_silent_15s": return Math.max(1, Math.ceil(CREDIT_COSTS.VIDEO_10S * 1.95) - 6);
         case "standard_5s": return CREDIT_COSTS.VIDEO_5S_KLING;
         case "wan_720p": return CREDIT_COSTS.VIDEO_5S_WAN;
         case "nsfw_5s": return CREDIT_COSTS.VIDEO_5S_NSFW;

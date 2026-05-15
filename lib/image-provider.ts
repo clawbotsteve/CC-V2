@@ -85,6 +85,11 @@ export const FAL_TO_REPLICATE_MODEL_MAP: Record<string, string> = {
   // 2026-05-10: kwaivgi/kling-v2.6 is the current Pro tier slug).
   "fal-ai/kling-video/v2.6/pro/image-to-video": "kwaivgi/kling-v2.6",
   "fal-ai/kling-video/v2.6/standard/image-to-video": "kwaivgi/kling-v2.6",
+  // Kling 3.0 — Replicate-only (no FAL endpoint exists). Using a
+  // synthetic "fal-ai/kling-video/v3/image-to-video" string as the
+  // logical name in our codebase so it slots into the same mapping
+  // architecture. If FAL ever adds Kling 3.0 we change this one line.
+  "fal-ai/kling-video/v3/image-to-video": "kwaivgi/kling-v3-video",
   // Kling Motion Control IS on Replicate (verified 2026-05-10 by
   // searching their catalogue — kwaivgi/kling-v2.6-motion-control is
   // the v2.6 line, and they also have a v3 if we want to upgrade).
@@ -259,6 +264,41 @@ export function translateFalInputToReplicate(
     };
     if (falInput.negative_prompt) out.negative_prompt = falInput.negative_prompt;
     // cfg_scale intentionally dropped — not supported on v2.6.
+    return out;
+  }
+
+  // --------------------------------------------------------------
+  // kwaivgi/kling-v3-video on Replicate (Kling 3.0)
+  // Schema verified 2026-05-14 via Replicate API:
+  //   prompt: string (max 2500 chars)
+  //   duration: int (1-15)
+  //   mode: "standard" | "pro" | "4k"
+  //   start_image?: string  (first frame; aspect ratio inferred)
+  //   end_image?: string    (last frame; requires start_image)
+  //   aspect_ratio?: enum   (ignored when start_image is provided)
+  //   multi_prompt?: string (JSON for multi-shot mode)
+  //   generate_audio?: boolean
+  //   negative_prompt?: string
+  // --------------------------------------------------------------
+  if (falEndpoint === "fal-ai/kling-video/v3/image-to-video") {
+    const out: Record<string, any> = {
+      prompt: falInput.prompt,
+      // Default mode "pro" (1080p) when not specified — matches the
+      // Kling 2.6 pricing tier most users are coming from. The picker
+      // can override to "standard" (cheaper) or "4k" (premium).
+      mode: falInput.mode || "pro",
+      duration: Number(falInput.duration) || 5,
+    };
+    if (falInput.image_url) out.start_image = falInput.image_url;
+    if (falInput.end_image_url) out.end_image = falInput.end_image_url;
+    if (!falInput.image_url && falInput.aspect_ratio) {
+      out.aspect_ratio = falInput.aspect_ratio;
+    }
+    if (falInput.multi_prompt) out.multi_prompt = falInput.multi_prompt;
+    if (typeof falInput.generate_audio === "boolean") {
+      out.generate_audio = falInput.generate_audio;
+    }
+    if (falInput.negative_prompt) out.negative_prompt = falInput.negative_prompt;
     return out;
   }
 

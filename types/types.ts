@@ -91,6 +91,14 @@ export enum VideoModel {
   KlingMotionControl = 'kling-motion-control',
   /** Bytedance Seedance 2.0 reference-to-video, added 2026-04-29 (Creator+ tier). FAL endpoint: fal-ai/bytedance/seedance-2.0/reference-to-video */
   Seedance2Ref = 'seedance-2-ref',
+  /**
+   * Kling 3.0 Video — same model Higgsfield exposes as "Kling 3.0" in
+   * their UI. Adds end-frame interpolation, multi-shot continuity, 4K
+   * output (when mode='4k'), and longer max duration (15s) over the
+   * Kling 2.6 generation. Replicate: kwaivgi/kling-v3-video. There is
+   * no FAL equivalent — this is a Replicate-only model in the picker.
+   */
+  KlingV3 = 'kling-v3',
   /** @deprecated Removed from picker 2026-04-29. Enum kept for historical DB rows. */
   Veo = 'veo',
 }

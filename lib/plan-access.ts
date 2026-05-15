@@ -92,6 +92,7 @@ export function canUseVideoModel(access: AccessTier, model?: string): boolean {
     return (
       model === "kling" ||
       model === "kling-motion-control" ||
+      model === "kling-v3" ||
       model === "seedance-2-ref"
     );
   }
@@ -108,6 +109,7 @@ export function canUseUpscaleModel(access: AccessTier, model?: string): boolean 
 
 export function requiredPlanForVideoModel(model?: string): string {
   if (model === "kling-motion-control") return "Creator";
+  if (model === "kling-v3") return "Creator";
   if (model === "seedance-2-ref") return "Creator";
   if (model === "veo") return "Studio";
   return "Starter";

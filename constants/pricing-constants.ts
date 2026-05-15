@@ -241,6 +241,15 @@ export const TOOL_COSTS_BY_TIER: Record<
     { tool: ToolType.VIDEO_GENERATOR, variant: "kling_audio_10s", creditCost: 22 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_5s", creditCost: 9 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_10s", creditCost: 18 },
+    // Kling 3.0 (Replicate's kwaivgi/kling-v3-video) — premium tier
+    // above Kling 2.6. ~30% credit bump for 5s/10s vs. 2.6 to account
+    // for higher output quality + max duration up to 15s.
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_audio_5s", creditCost: 15 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_audio_10s", creditCost: 29 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_audio_15s", creditCost: 43 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_silent_5s", creditCost: 13 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_silent_10s", creditCost: 25 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_silent_15s", creditCost: 37 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "wan_720p", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_4s", creditCost: 51 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_8s", creditCost: 101 },
@@ -280,6 +289,15 @@ export const TOOL_COSTS_BY_TIER: Record<
     { tool: ToolType.VIDEO_GENERATOR, variant: "kling_audio_10s", creditCost: 22 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_5s", creditCost: 9 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_10s", creditCost: 18 },
+    // Kling 3.0 (Replicate's kwaivgi/kling-v3-video) — premium tier
+    // above Kling 2.6. ~30% credit bump for 5s/10s vs. 2.6 to account
+    // for higher output quality + max duration up to 15s.
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_audio_5s", creditCost: 15 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_audio_10s", creditCost: 29 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_audio_15s", creditCost: 43 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_silent_5s", creditCost: 13 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_silent_10s", creditCost: 25 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_silent_15s", creditCost: 37 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "wan_720p", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_4s", creditCost: 51 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_8s", creditCost: 101 },
@@ -319,6 +337,15 @@ export const TOOL_COSTS_BY_TIER: Record<
     { tool: ToolType.VIDEO_GENERATOR, variant: "kling_audio_10s", creditCost: 22 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_5s", creditCost: 9 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_10s", creditCost: 18 },
+    // Kling 3.0 (Replicate's kwaivgi/kling-v3-video) — premium tier
+    // above Kling 2.6. ~30% credit bump for 5s/10s vs. 2.6 to account
+    // for higher output quality + max duration up to 15s.
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_audio_5s", creditCost: 15 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_audio_10s", creditCost: 29 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_audio_15s", creditCost: 43 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_silent_5s", creditCost: 13 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_silent_10s", creditCost: 25 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_silent_15s", creditCost: 37 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "wan_720p", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_4s", creditCost: 51 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_8s", creditCost: 101 },
@@ -358,6 +385,15 @@ export const TOOL_COSTS_BY_TIER: Record<
     { tool: ToolType.VIDEO_GENERATOR, variant: "kling_audio_10s", creditCost: 22 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_5s", creditCost: 9 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_10s", creditCost: 18 },
+    // Kling 3.0 (Replicate's kwaivgi/kling-v3-video) — premium tier
+    // above Kling 2.6. ~30% credit bump for 5s/10s vs. 2.6 to account
+    // for higher output quality + max duration up to 15s.
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_audio_5s", creditCost: 15 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_audio_10s", creditCost: 29 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_audio_15s", creditCost: 43 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_silent_5s", creditCost: 13 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_silent_10s", creditCost: 25 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_silent_15s", creditCost: 37 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "wan_720p", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_4s", creditCost: 51 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_8s", creditCost: 101 },
@@ -397,6 +433,15 @@ export const TOOL_COSTS_BY_TIER: Record<
     { tool: ToolType.VIDEO_GENERATOR, variant: "kling_audio_10s", creditCost: 22 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_5s", creditCost: 9 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_10s", creditCost: 18 },
+    // Kling 3.0 (Replicate's kwaivgi/kling-v3-video) — premium tier
+    // above Kling 2.6. ~30% credit bump for 5s/10s vs. 2.6 to account
+    // for higher output quality + max duration up to 15s.
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_audio_5s", creditCost: 15 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_audio_10s", creditCost: 29 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_audio_15s", creditCost: 43 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_silent_5s", creditCost: 13 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_silent_10s", creditCost: 25 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_silent_15s", creditCost: 37 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "wan_720p", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_4s", creditCost: 51 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_8s", creditCost: 101 },
@@ -436,6 +481,15 @@ export const TOOL_COSTS_BY_TIER: Record<
     { tool: ToolType.VIDEO_GENERATOR, variant: "kling_audio_10s", creditCost: 22 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_5s", creditCost: 9 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_10s", creditCost: 18 },
+    // Kling 3.0 (Replicate's kwaivgi/kling-v3-video) — premium tier
+    // above Kling 2.6. ~30% credit bump for 5s/10s vs. 2.6 to account
+    // for higher output quality + max duration up to 15s.
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_audio_5s", creditCost: 15 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_audio_10s", creditCost: 29 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_audio_15s", creditCost: 43 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_silent_5s", creditCost: 13 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_silent_10s", creditCost: 25 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_silent_15s", creditCost: 37 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "wan_720p", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_4s", creditCost: 51 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_8s", creditCost: 101 },
@@ -475,6 +529,15 @@ export const TOOL_COSTS_BY_TIER: Record<
     { tool: ToolType.VIDEO_GENERATOR, variant: "kling_audio_10s", creditCost: 22 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_5s", creditCost: 9 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_10s", creditCost: 18 },
+    // Kling 3.0 (Replicate's kwaivgi/kling-v3-video) — premium tier
+    // above Kling 2.6. ~30% credit bump for 5s/10s vs. 2.6 to account
+    // for higher output quality + max duration up to 15s.
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_audio_5s", creditCost: 15 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_audio_10s", creditCost: 29 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_audio_15s", creditCost: 43 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_silent_5s", creditCost: 13 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_silent_10s", creditCost: 25 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_silent_15s", creditCost: 37 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "wan_720p", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_4s", creditCost: 51 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_8s", creditCost: 101 },
@@ -514,6 +577,15 @@ export const TOOL_COSTS_BY_TIER: Record<
     { tool: ToolType.VIDEO_GENERATOR, variant: "kling_audio_10s", creditCost: 22 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_5s", creditCost: 9 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_10s", creditCost: 18 },
+    // Kling 3.0 (Replicate's kwaivgi/kling-v3-video) — premium tier
+    // above Kling 2.6. ~30% credit bump for 5s/10s vs. 2.6 to account
+    // for higher output quality + max duration up to 15s.
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_audio_5s", creditCost: 15 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_audio_10s", creditCost: 29 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_audio_15s", creditCost: 43 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_silent_5s", creditCost: 13 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_silent_10s", creditCost: 25 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_silent_15s", creditCost: 37 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "wan_720p", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_4s", creditCost: 51 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_8s", creditCost: 101 },
@@ -553,6 +625,15 @@ export const TOOL_COSTS_BY_TIER: Record<
     { tool: ToolType.VIDEO_GENERATOR, variant: "kling_audio_10s", creditCost: 22 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_5s", creditCost: 9 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "kling_silent_10s", creditCost: 18 },
+    // Kling 3.0 (Replicate's kwaivgi/kling-v3-video) — premium tier
+    // above Kling 2.6. ~30% credit bump for 5s/10s vs. 2.6 to account
+    // for higher output quality + max duration up to 15s.
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_audio_5s", creditCost: 15 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_audio_10s", creditCost: 29 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_audio_15s", creditCost: 43 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_silent_5s", creditCost: 13 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_silent_10s", creditCost: 25 },
+    { tool: ToolType.VIDEO_GENERATOR, variant: "kling_v3_silent_15s", creditCost: 37 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "wan_720p", creditCost: 8 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_4s", creditCost: 51 },
     { tool: ToolType.VIDEO_GENERATOR, variant: "veo_8s", creditCost: 101 },
