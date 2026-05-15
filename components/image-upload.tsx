@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { ImageIcon, X } from "lucide-react";
 import { toast } from "sonner";
 import { uploadFiles } from "@/lib/utils";
+import { MAX_UPLOAD_SIZE_BYTES } from "@/constants/constants";
 
 interface Props {
   data: Record<string, File | File[] | undefined>;
@@ -221,7 +222,7 @@ const ImageUpload = React.forwardRef<ImageUploadHandle, Props>(
               onValueChange={setFiles}
               accept={accept}
               maxFiles={maxFiles}
-              maxSize={10 * 1024 * 1024} // 10 MB (bumped from 5 — phone photos commonly exceed 5)
+              maxSize={MAX_UPLOAD_SIZE_BYTES}
               onFileReject={onFileReject}
               className="w-full max-w-md"
               disabled={uploading}
@@ -266,7 +267,7 @@ const ImageUpload = React.forwardRef<ImageUploadHandle, Props>(
                         {files.length === 0 ? "Drag & drop files here" : "Add more images"}
                       </p>
                       <p className="text-muted-foreground text-xs">
-                        Or click to browse ({files.length}/{maxFiles}) - 10MB each. Must be bigger than 300x300px
+                        Or click to browse ({files.length}/{maxFiles}) - {Math.round(MAX_UPLOAD_SIZE_BYTES / 1024 / 1024)}MB each. Must be bigger than 300x300px
                       </p>
                     </div>
                     <FileUploadTrigger asChild>

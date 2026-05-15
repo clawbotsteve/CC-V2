@@ -126,3 +126,21 @@ export const NSFW_NEGATIVE_PROMPT = [
   PLATFORM_SAFETY_NEGATIVE_PROMPT,
   ...NSFW_CHILD_SAFETY_PROMPTS,
 ].join(", ");
+
+/**
+ * Max upload size for user-supplied reference images.
+ *
+ * Was 10 MB hardcoded in ImageUpload — bumped to 25 MB because modern
+ * phone cameras (iPhone 16 Pro, Pixel 9 Pro, Galaxy S25) routinely
+ * output 12-20 MB HEIC / ProRAW shots and users were hitting the cap
+ * for the Kling 2.6 / 3.0 reference photo upload.
+ *
+ * The server's /api/upload route allows up to 100 MB; this client-side
+ * cap is the friendlier "fail fast in the browser" check. Bumping
+ * only affects the picker error message + the FileUpload component's
+ * drop validation — no server changes needed.
+ *
+ * If users start uploading 4K HDR ProRAW or RAW DSLR shots (50-80 MB)
+ * we can bump again, but 25 MB covers ~99% of real phone output today.
+ */
+export const MAX_UPLOAD_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB

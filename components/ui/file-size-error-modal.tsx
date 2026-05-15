@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { MAX_UPLOAD_SIZE_BYTES } from "@/constants/constants";
 import {
   Dialog,
   DialogContent,
@@ -28,7 +29,7 @@ export function FileSizeErrorModal({
   error,
   fileName,
   fileSize,
-  maxSize = 10 * 1024 * 1024, // Default 10MB
+  maxSize = MAX_UPLOAD_SIZE_BYTES,
 }: FileSizeErrorModalProps) {
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;
