@@ -29,7 +29,7 @@
  */
 
 export interface StockCreator {
-  /** Stable id — also the image filename: /creators/{id}.jpg */
+  /** Stable id — also the primary image filename: /creators/{id}.jpg */
   id: string;
   /** Display name. */
   name: string;
@@ -38,6 +38,20 @@ export interface StockCreator {
   /** Which DTC verticals this creator reads well for (UI hint /
    *  future filtering). */
   bestFor: string[];
+  /**
+   * How many reference photos exist for this creator in
+   * public/creators/. The fusion path (Nano Banana 2 Edit) accepts
+   * multiple reference images and locks identity MUCH harder with
+   * 2-3 angles than with one — so a stock creator should ship with
+   * a small SET of premade photos, not a single shot. Convention:
+   *   /creators/{id}.jpg      (primary — used for the picker tile)
+   *   /creators/{id}-2.jpg
+   *   /creators/{id}-3.jpg    ... up to imageCount
+   * Defaults to 1 (just the primary) so the roster works the moment
+   * a single shot is dropped in; bump per-creator as more angles
+   * are added.
+   */
+  imageCount?: number;
 }
 
 export const STOCK_CREATORS: StockCreator[] = [
@@ -91,6 +105,29 @@ export const STOCK_CREATORS: StockCreator[] = [
   },
 ];
 
+/** Primary image — used for the picker tile. */
 export function stockCreatorImage(id: string): string {
   return `/creators/${id}.jpg`;
+}
+
+/**
+ * The full reference set for a stock creator. Passed (leading,
+ * before the product) to Nano Banana 2 Edit so identity locks hard
+ * across the ad. Capped at 3 — more refs = stronger lock but
+ * diminishing returns + token cost; 3 angles is the sweet spot.
+ */
+export function stockCreatorRefs(id: string): string[] {
+  const c = STOCK_CREATORS.find((s) => s.id === id);
+  const count = Math.min(Math.max(c?.imageCount ?? 1, 1), 3);
+  const refs = [stockCreatorImage(id)];
+  for (let i = 2; i <= count; i++) refs.push(`/creators/${id}-${i}.jpg`);
+  return refs;
+}
+
+/** Resolve a picker image URL back to its stock creator id (so the
+ *  client can hand the full ref set to the sample endpoint). */
+export function stockCreatorIdFromImage(url: string): string | null {
+  const m = url.match(/\/creators\/([a-z0-9_-]+)\.jpg$/i);
+  if (!m) return null;
+  return STOCK_CREATORS.some((s) => s.id === m[1]) ? m[1] : null;
 }
