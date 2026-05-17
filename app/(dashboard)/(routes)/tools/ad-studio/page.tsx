@@ -463,7 +463,7 @@ export default function AdStudioPage() {
                 it's the highest-performing safe default.
               </p>
 
-              <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {AD_ANGLES.map((a) => {
                   const selected = angle === a.key;
                   return (
@@ -471,14 +471,51 @@ export default function AdStudioPage() {
                       key={a.key}
                       type="button"
                       onClick={() => setAngle(a.key)}
-                      className={`text-left rounded-xl border px-4 py-3 transition-colors ${
+                      className={`group text-left rounded-xl overflow-hidden border-2 transition-colors ${
                         selected
-                          ? "border-[#6366f1] bg-[#6366f1]/15"
-                          : "border-border bg-card/40 hover:border-[#6366f1]/40"
+                          ? "border-[#6366f1]"
+                          : "border-transparent hover:border-[#6366f1]/40"
                       }`}
                     >
-                      <p className="text-sm font-semibold">{a.label}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{a.blurb}</p>
+                      {/* Visual: 9:16 example thumbnail. The angle's
+                          example image sits on top of a branded
+                          gradient — if the asset isn't dropped in
+                          yet (or 404s) the <img> hides itself via
+                          onError and the gradient + label show
+                          through. Ships now, lights up when the 6
+                          example shots land in public/ad-angles/. */}
+                      <div
+                        className="relative aspect-[9/16] w-full"
+                        style={{
+                          background:
+                            "linear-gradient(150deg,#1e1b3a 0%,#2a1f4d 55%,#15132a 100%)",
+                        }}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={a.exampleImage}
+                          alt={`${a.label} ad example`}
+                          loading="lazy"
+                          className="absolute inset-0 h-full w-full object-cover"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).style.display = "none";
+                          }}
+                        />
+                        {/* Bottom scrim so the label is always
+                            readable over either the photo or the
+                            gradient fallback. */}
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-3">
+                          <p className="text-sm font-semibold leading-tight">{a.label}</p>
+                          <p className="text-[11px] text-zinc-300 mt-0.5 line-clamp-2">
+                            {a.blurb}
+                          </p>
+                        </div>
+                        {selected && (
+                          <span className="absolute top-2 right-2 h-6 w-6 rounded-full bg-[#6366f1] flex items-center justify-center shadow-lg">
+                            <Check className="h-3.5 w-3.5 text-white" />
+                          </span>
+                        )}
+                      </div>
                     </button>
                   );
                 })}

@@ -1,0 +1,24 @@
+Ad Studio angle example thumbnails go here.
+
+The Step 3 "Pick the ad angle" cards show a visual example of what
+each angle produces. Until these files exist the cards render a
+clean branded gradient + label (graceful fallback — nothing looks
+broken). Drop the 6 files here to light them up:
+
+  lifestyle_hold.jpg
+  problem_solution.jpg
+  testimonial.jpg
+  unboxing.jpg
+  before_after.jpg
+  demo.jpg
+
+Specs:
+  - 9:16 vertical, ~720x1280 (cards are small; keep files < 200 KB)
+  - Should look like a real UGC ad shot for THAT angle, with a
+    generic-ish product (so it reads as "this is the style," not
+    "this is one specific brand")
+  - Best path: dogfood it — open /tools/ad-studio, pick any trained
+    creator + a clean generic product (a plain serum bottle works
+    great), run each of the 6 angles once, download the result,
+    rename to {key}.jpg, drop it here. On-brand examples + a "we
+    use our own product" story for free.
