@@ -42,11 +42,21 @@ export interface AdAngle {
   aspectRatio: "9:16" | "1:1" | "4:5";
   /** {creator} + {product} get filled at request time. */
   template: string;
+  /**
+   * Static example thumbnail showing what this angle produces.
+   * Path under /public. Conventionally /ad-angles/{key}.jpg.
+   * The UI degrades gracefully (gradient + label) if the asset
+   * isn't present yet, so the flow ships before the images do —
+   * same pattern as the hero. Drop the 6 generated examples into
+   * public/ad-angles/ to light these up.
+   */
+  exampleImage: string;
 }
 
 export const AD_ANGLES: AdAngle[] = [
   {
     key: "lifestyle_hold",
+    exampleImage: "/ad-angles/lifestyle_hold.jpg",
     label: "Lifestyle hold",
     blurb: "Creator holding the product to camera, natural setting. The safe, high-performing default.",
     aspectRatio: "9:16",
@@ -55,6 +65,7 @@ export const AD_ANGLES: AdAngle[] = [
   },
   {
     key: "problem_solution",
+    exampleImage: "/ad-angles/problem_solution.jpg",
     label: "Problem → solution",
     blurb: "Creator mid-explanation gesturing at the product as the fix. Highest-converting ad hook.",
     aspectRatio: "9:16",
@@ -63,6 +74,7 @@ export const AD_ANGLES: AdAngle[] = [
   },
   {
     key: "testimonial",
+    exampleImage: "/ad-angles/testimonial.jpg",
     label: "Testimonial / skeptic",
     blurb: "\"I was skeptical but…\" — creator with a convinced, slightly surprised expression.",
     aspectRatio: "9:16",
@@ -71,6 +83,7 @@ export const AD_ANGLES: AdAngle[] = [
   },
   {
     key: "unboxing",
+    exampleImage: "/ad-angles/unboxing.jpg",
     label: "Unboxing reaction",
     blurb: "Excited first-look reaction holding the product just out of the box.",
     aspectRatio: "9:16",
@@ -79,6 +92,7 @@ export const AD_ANGLES: AdAngle[] = [
   },
   {
     key: "before_after",
+    exampleImage: "/ad-angles/before_after.jpg",
     label: "Before / after",
     blurb: "Confident 'look at the result' pose presenting the product as the cause.",
     aspectRatio: "9:16",
@@ -87,6 +101,7 @@ export const AD_ANGLES: AdAngle[] = [
   },
   {
     key: "demo",
+    exampleImage: "/ad-angles/demo.jpg",
     label: "Demo / how-to",
     blurb: "Creator actively using or applying the product, mid-action.",
     aspectRatio: "9:16",
