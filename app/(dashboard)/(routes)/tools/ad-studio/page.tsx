@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { Sparkles, Upload, Loader2, ArrowRight, Package, UserRound } from "lucide-react";
+import {
+  Sparkles, Upload, Loader2, ArrowRight, ArrowLeft, Package,
+  UserRound, Link2, Check, RotateCcw,
+} from "lucide-react";
 import { toast } from "sonner";
 import PageContainer from "@/components/page-container";
 import AiAnimatedHeading from "@/components/ai-animated-heading";
@@ -12,15 +14,19 @@ import { uploadFiles } from "@/lib/utils";
 import { AD_ANGLES, AdAngleKey } from "@/lib/ad-studio/ad-angles";
 
 /**
- * Ad Studio MVP (Pivot PR 2).
+ * Ad Studio — guided UGC-ad creation flow.
  *
- * The product-first flow that repositions Tavira for ecom: upload
- * your product → pick a consistent AI creator → get a believable
- * UGC ad shot with the product composited in.
+ * Pivot PR 2.5: turned the single-panel form into a real stepped
+ * experience an ecom operator wants to walk through, and added
+ * paste-a-product-link auto-scrape (the biggest friction remover).
  *
- * MVP = ONE sample to validate the loop. The 20-variant batch is
- * Pivot PR 3 (the "fire your UGC agency" demo) — its CTA is stubbed
- * here so the flow reads end-to-end.
+ * Steps: Product -> Creator -> Angle -> Result.
+ *
+ * NOTE: product/creator/result previews use plain <img>, not
+ * next/image. The URLs are arbitrary (scraped ecom CDNs, user
+ * uploads, Replicate output) and can't all be whitelisted in
+ * next.config remotePatterns. <img> sidesteps that entirely for
+ * these dynamic previews.
  */
 
 type CSCharacter = {
@@ -30,42 +36,55 @@ type CSCharacter = {
   avatarImageUrl?: string | null;
 };
 
+type Step = 1 | 2 | 3 | 4;
+
+const STEP_LABELS = ["Product", "Creator", "Angle", "Your ad"];
+
 export default function AdStudioPage() {
-  // Product
+  const [step, setStep] = useState<Step>(1);
+
+  // ---- Product ----
   const [productUrl, setProductUrl] = useState<string | null>(null);
   const [productName, setProductName] = useState("");
+  const [scrapeInput, setScrapeInput] = useState("");
+  const [scraping, setScraping] = useState(false);
   const productInputRef = useRef<HTMLInputElement | null>(null);
   const [uploadingProduct, setUploadingProduct] = useState(false);
 
-  // Creator
+  // ---- Creator ----
   const [characters, setCharacters] = useState<CSCharacter[]>([]);
   const [creatorUrl, setCreatorUrl] = useState<string | null>(null);
   const [creatorName, setCreatorName] = useState("");
   const creatorInputRef = useRef<HTMLInputElement | null>(null);
   const [uploadingCreator, setUploadingCreator] = useState(false);
 
-  // Angle + generation
+  // ---- Angle / generation ----
   const [angle, setAngle] = useState<AdAngleKey>("lifestyle_hold");
   const [generating, setGenerating] = useState(false);
-  const [jobId, setJobId] = useState<string | null>(null);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Pull the user's Character Studio creators for the picker — the
-  // whole pitch is "consistent creator," so trained characters are
-  // the primary path; uploading a one-off photo is the fallback.
   useEffect(() => {
     fetch("/api/character-studio")
       .then((r) => r.json())
       .then((d) => {
         if (Array.isArray(d?.characters)) {
           setCharacters(
-            d.characters.filter((c: CSCharacter) => c.characterStudioRef || c.avatarImageUrl),
+            d.characters.filter(
+              (c: CSCharacter) => c.characterStudioRef || c.avatarImageUrl,
+            ),
           );
         }
       })
       .catch(() => {});
   }, []);
+
+  useEffect(
+    () => () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    },
+    [],
+  );
 
   const uploadOne = async (
     file: File,
@@ -94,6 +113,34 @@ export default function AdStudioPage() {
     }
   };
 
+  const scrape = async () => {
+    if (!scrapeInput.trim()) return;
+    setScraping(true);
+    try {
+      const res = await fetch("/api/ad-studio/scrape-product", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: scrapeInput.trim() }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        toast.error(d?.error || "Couldn't fetch that page.");
+        return;
+      }
+      if (d?.imageUrl) {
+        setProductUrl(d.imageUrl);
+        if (d.title && !productName) setProductName(String(d.title).slice(0, 90));
+        toast.success("Product pulled in — looking good.");
+      } else {
+        toast.error(d?.error || "No product image found. Upload it manually.");
+      }
+    } catch {
+      toast.error("Something went wrong fetching that page.");
+    } finally {
+      setScraping(false);
+    }
+  };
+
   const pollResult = useCallback((id: string) => {
     if (pollRef.current) clearInterval(pollRef.current);
     pollRef.current = setInterval(async () => {
@@ -115,17 +162,11 @@ export default function AdStudioPage() {
     }, 3000);
   }, []);
 
-  useEffect(() => () => {
-    if (pollRef.current) clearInterval(pollRef.current);
-  }, []);
-
-  const canGenerate = !!productUrl && !!creatorUrl && !generating;
-
   const generate = async () => {
-    if (!canGenerate) return;
+    if (!productUrl || !creatorUrl) return;
+    setStep(4);
     setGenerating(true);
     setResultUrl(null);
-    setJobId(null);
     try {
       const res = await fetch("/api/ad-studio/sample", {
         method: "POST",
@@ -144,34 +185,110 @@ export default function AdStudioPage() {
         setGenerating(false);
         return;
       }
-      setJobId(data.jobId);
       pollResult(data.jobId);
-    } catch (err) {
-      console.error(err);
+    } catch {
       toast.error("Something went wrong.");
       setGenerating(false);
     }
   };
 
+  const resetAll = () => {
+    setStep(1);
+    setProductUrl(null);
+    setProductName("");
+    setScrapeInput("");
+    setCreatorUrl(null);
+    setCreatorName("");
+    setAngle("lifestyle_hold");
+    setResultUrl(null);
+    setGenerating(false);
+  };
+
   return (
     <PageContainer scrollable>
-      <div className="w-full p-4 md:p-8">
-        <div className="py-4 flex flex-col sm:flex-row gap-4 sm:gap-0 justify-between border-b border-foreground/40">
-          <AiAnimatedHeading
-            heading="Ad Studio"
-            description="Upload your product. Pick an AI creator. Get scroll-stopping UGC ad creative — no agency, no shoot."
-            icon={<Sparkles className="h-6 w-6" />}
-          />
+      <div className="w-full max-w-4xl mx-auto p-4 md:p-8">
+        <AiAnimatedHeading
+          heading="Ad Studio"
+          description="Paste your product link or upload it, pick an AI creator, and get scroll-stopping UGC ad creative — no agency, no shoot."
+          icon={<Sparkles className="h-6 w-6" />}
+        />
+
+        {/* Step rail */}
+        <div className="mt-6 flex items-center gap-2">
+          {STEP_LABELS.map((label, i) => {
+            const n = (i + 1) as Step;
+            const done = step > n;
+            const active = step === n;
+            return (
+              <div key={label} className="flex-1 flex items-center gap-2">
+                <div className="flex-1">
+                  <div
+                    className={`h-1.5 rounded-full transition-colors ${
+                      done || active
+                        ? "bg-gradient-to-r from-[#6366f1] to-[#a78bfa]"
+                        : "bg-white/10"
+                    } ${active ? "animate-pulse" : ""}`}
+                  />
+                  <p
+                    className={`mt-1.5 text-[11px] font-semibold uppercase tracking-wider ${
+                      active
+                        ? "text-[#c4b5fd]"
+                        : done
+                          ? "text-zinc-300"
+                          : "text-zinc-500"
+                    }`}
+                  >
+                    {n}. {label}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-6 pt-8">
-          {/* ===== Left: the 3-step setup ===== */}
-          <div className="space-y-5">
-            {/* Step 1 — product */}
-            <div className="rounded-2xl border border-border bg-card/60 p-4">
-              <p className="text-sm font-semibold flex items-center gap-2 mb-3">
-                <Package className="h-4 w-4 text-[#a78bfa]" /> 1 · Your product
+        <div className="mt-8 rounded-2xl border border-border bg-card/60 p-6 md:p-8 min-h-[440px]">
+          {/* ===== STEP 1 — PRODUCT ===== */}
+          {step === 1 && (
+            <div>
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <Package className="h-5 w-5 text-[#a78bfa]" /> What are you advertising?
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Paste your product page link — we'll pull the image and name automatically.
+                Or upload a product photo.
               </p>
+
+              {/* URL scrape */}
+              <div className="mt-6">
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                  <Link2 className="h-3.5 w-3.5" /> Product URL
+                </label>
+                <div className="flex gap-2 mt-2">
+                  <input
+                    value={scrapeInput}
+                    onChange={(e) => setScrapeInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && scrape()}
+                    placeholder="https://yourstore.com/products/the-product"
+                    className="flex-1 rounded-lg border border-border bg-black/30 px-3 py-2.5 text-sm outline-none focus:border-[#6366f1]"
+                  />
+                  <Button onClick={scrape} disabled={scraping || !scrapeInput.trim()}>
+                    {scraping ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      "Fetch"
+                    )}
+                  </Button>
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-1.5">
+                  Works with Shopify, most ecom stores. Some big marketplaces block
+                  scrapers — upload manually if so.
+                </p>
+              </div>
+
+              <div className="my-5 flex items-center gap-3 text-xs text-zinc-500">
+                <span className="flex-1 h-px bg-white/10" /> or <span className="flex-1 h-px bg-white/10" />
+              </div>
+
               <input
                 ref={productInputRef}
                 type="file"
@@ -182,68 +299,111 @@ export default function AdStudioPage() {
                   if (f) uploadOne(f, setProductUrl, setUploadingProduct);
                 }}
               />
-              {productUrl ? (
-                <div className="relative aspect-square w-32 rounded-lg overflow-hidden bg-black">
-                  <Image src={productUrl} alt="Product" fill className="object-cover" sizes="128px" />
+              <Button
+                variant="outline"
+                onClick={() => productInputRef.current?.click()}
+                disabled={uploadingProduct}
+              >
+                {uploadingProduct ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Upload className="h-4 w-4 mr-2" />
+                )}
+                Upload product photo
+              </Button>
+
+              {productUrl && (
+                <div className="mt-6 flex items-start gap-4">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={productUrl}
+                    alt="Product"
+                    className="h-28 w-28 rounded-lg object-cover bg-black border border-border"
+                  />
+                  <div className="flex-1">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Product name
+                    </label>
+                    <input
+                      value={productName}
+                      onChange={(e) => setProductName(e.target.value)}
+                      placeholder="e.g. PR-1 Vitamin C Serum"
+                      className="mt-2 w-full rounded-lg border border-border bg-black/30 px-3 py-2 text-sm outline-none focus:border-[#6366f1]"
+                    />
+                    <p className="text-[11px] text-emerald-400 mt-2 flex items-center gap-1">
+                      <Check className="h-3 w-3" /> Product ready
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-8 flex justify-end">
+                <Button
+                  onClick={() => setStep(2)}
+                  disabled={!productUrl}
+                  className="bg-gradient-to-r from-[#6366f1] to-[#8b7bff] text-white"
+                >
+                  Continue <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* ===== STEP 2 — CREATOR ===== */}
+          {step === 2 && (
+            <div>
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <UserRound className="h-5 w-5 text-[#a78bfa]" /> Who's the face of the ad?
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Pick a trained creator — they stay identical across every ad you make.
+                That consistency is what makes a brand feel real.
+              </p>
+
+              {characters.length > 0 ? (
+                <div className="mt-5 grid grid-cols-3 sm:grid-cols-5 gap-3">
+                  {characters.map((c) => {
+                    const ref = c.characterStudioRef || c.avatarImageUrl || "";
+                    const selected = creatorUrl === ref;
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => {
+                          setCreatorUrl(ref);
+                          setCreatorName(c.name);
+                        }}
+                        className={`relative aspect-[3/4] rounded-xl overflow-hidden border-2 transition-colors ${
+                          selected ? "border-[#6366f1]" : "border-transparent hover:border-white/20"
+                        }`}
+                        title={c.name}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        {ref && <img src={ref} alt={c.name} className="h-full w-full object-cover" />}
+                        <span className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent px-2 py-1 text-[11px] truncate">
+                          {c.name}
+                        </span>
+                        {selected && (
+                          <span className="absolute top-1.5 right-1.5 h-5 w-5 rounded-full bg-[#6366f1] flex items-center justify-center">
+                            <Check className="h-3 w-3 text-white" />
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               ) : (
-                <Button
-                  variant="outline"
-                  onClick={() => productInputRef.current?.click()}
-                  disabled={uploadingProduct}
-                >
-                  {uploadingProduct ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Upload className="h-4 w-4 mr-2" />
-                  )}
-                  Upload product photo
-                </Button>
-              )}
-              <input
-                value={productName}
-                onChange={(e) => setProductName(e.target.value)}
-                placeholder="Product name (optional, e.g. 'PR-1 vitamin C serum')"
-                className="mt-3 w-full rounded-lg border border-border bg-black/30 px-3 py-2 text-sm outline-none"
-              />
-            </div>
-
-            {/* Step 2 — creator */}
-            <div className="rounded-2xl border border-border bg-card/60 p-4">
-              <p className="text-sm font-semibold flex items-center gap-2 mb-3">
-                <UserRound className="h-4 w-4 text-[#a78bfa]" /> 2 · Your AI creator
-              </p>
-              {characters.length > 0 && (
-                <>
-                  <p className="text-xs text-muted-foreground mb-2">
-                    Pick a trained creator (stays consistent across every ad):
+                <div className="mt-5 rounded-xl border border-dashed border-border p-6 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    No trained creators yet. Build a reusable one in{" "}
+                    <Link href="/tools/character-studio" className="text-[#a78bfa] underline">
+                      Character Studio
+                    </Link>{" "}
+                    so it stays identical across every ad — or upload a one-off photo below.
                   </p>
-                  <div className="flex gap-2 flex-wrap mb-3">
-                    {characters.map((c) => {
-                      const ref = c.characterStudioRef || c.avatarImageUrl || "";
-                      const selected = creatorUrl === ref;
-                      return (
-                        <button
-                          key={c.id}
-                          type="button"
-                          onClick={() => {
-                            setCreatorUrl(ref);
-                            setCreatorName(c.name);
-                          }}
-                          className={`relative h-16 w-16 rounded-lg overflow-hidden border-2 ${
-                            selected ? "border-[#6366f1]" : "border-transparent"
-                          }`}
-                          title={c.name}
-                        >
-                          {ref && (
-                            <Image src={ref} alt={c.name} fill className="object-cover" sizes="64px" />
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </>
+                </div>
               )}
+
               <input
                 ref={creatorInputRef}
                 type="file"
@@ -260,6 +420,7 @@ export default function AdStudioPage() {
               <Button
                 variant="outline"
                 size="sm"
+                className="mt-4"
                 onClick={() => creatorInputRef.current?.click()}
                 disabled={uploadingCreator}
               >
@@ -268,26 +429,41 @@ export default function AdStudioPage() {
                 ) : (
                   <Upload className="h-4 w-4 mr-2" />
                 )}
-                {characters.length > 0 ? "…or upload a creator photo" : "Upload a creator photo"}
+                {characters.length > 0 ? "…or upload a one-off creator photo" : "Upload a creator photo"}
               </Button>
+
               {creatorUrl && (
-                <p className="text-xs text-emerald-400 mt-2">✓ Creator selected</p>
-              )}
-              {characters.length === 0 && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  Tip: build a reusable creator in{" "}
-                  <Link href="/tools/character-studio" className="text-[#a78bfa] underline">
-                    Character Studio
-                  </Link>{" "}
-                  so it stays identical across every ad.
+                <p className="text-[11px] text-emerald-400 mt-3 flex items-center gap-1">
+                  <Check className="h-3 w-3" /> Creator selected
+                  {creatorName ? ` — ${creatorName}` : ""}
                 </p>
               )}
-            </div>
 
-            {/* Step 3 — angle */}
-            <div className="rounded-2xl border border-border bg-card/60 p-4">
-              <p className="text-sm font-semibold mb-3">3 · Ad angle</p>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="mt-8 flex justify-between">
+                <Button variant="ghost" onClick={() => setStep(1)}>
+                  <ArrowLeft className="h-4 w-4 mr-2" /> Back
+                </Button>
+                <Button
+                  onClick={() => setStep(3)}
+                  disabled={!creatorUrl}
+                  className="bg-gradient-to-r from-[#6366f1] to-[#8b7bff] text-white"
+                >
+                  Continue <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* ===== STEP 3 — ANGLE ===== */}
+          {step === 3 && (
+            <div>
+              <h2 className="text-xl font-semibold">Pick the ad angle</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Each angle is a proven paid-social hook. Start with Lifestyle hold —
+                it's the highest-performing safe default.
+              </p>
+
+              <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {AD_ANGLES.map((a) => {
                   const selected = angle === a.key;
                   return (
@@ -295,82 +471,84 @@ export default function AdStudioPage() {
                       key={a.key}
                       type="button"
                       onClick={() => setAngle(a.key)}
-                      className={`text-left rounded-lg border px-3 py-2 transition-colors ${
+                      className={`text-left rounded-xl border px-4 py-3 transition-colors ${
                         selected
                           ? "border-[#6366f1] bg-[#6366f1]/15"
                           : "border-border bg-card/40 hover:border-[#6366f1]/40"
                       }`}
                     >
-                      <p className="text-sm font-medium">{a.label}</p>
-                      <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">
-                        {a.blurb}
-                      </p>
+                      <p className="text-sm font-semibold">{a.label}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{a.blurb}</p>
                     </button>
                   );
                 })}
               </div>
-            </div>
 
-            <Button
-              onClick={generate}
-              disabled={!canGenerate}
-              className="w-full bg-gradient-to-r from-[#6366f1] to-[#8b7bff] text-white h-11"
-            >
+              <div className="mt-8 flex justify-between">
+                <Button variant="ghost" onClick={() => setStep(2)}>
+                  <ArrowLeft className="h-4 w-4 mr-2" /> Back
+                </Button>
+                <Button
+                  onClick={generate}
+                  className="bg-gradient-to-r from-[#6366f1] to-[#8b7bff] text-white"
+                >
+                  <Sparkles className="h-4 w-4 mr-2" /> Generate ad
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* ===== STEP 4 — RESULT ===== */}
+          {step === 4 && (
+            <div className="flex flex-col items-center text-center">
               {generating ? (
+                <div className="py-16">
+                  <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4 text-[#a78bfa]" />
+                  <p className="text-sm">Compositing {productName || "your product"} into the scene…</p>
+                  <p className="text-xs text-muted-foreground mt-1">~15–30 seconds</p>
+                </div>
+              ) : resultUrl ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating your ad…
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={resultUrl}
+                    alt="Generated ad"
+                    className="aspect-[9/16] w-[300px] rounded-xl object-cover bg-black border border-border"
+                  />
+                  <div className="flex gap-3 mt-5">
+                    <Button asChild variant="outline">
+                      <a href={resultUrl} download="tavira-ad.png" target="_blank" rel="noreferrer">
+                        Download
+                      </a>
+                    </Button>
+                    <Button
+                      className="bg-gradient-to-r from-[#6366f1] to-[#8b7bff] text-white"
+                      onClick={() =>
+                        toast.info(
+                          "20-variant batch ships next — this is the single-shot MVP.",
+                        )
+                      }
+                    >
+                      Generate 20 variants <ArrowRight className="h-4 w-4 ml-1" />
+                    </Button>
+                  </div>
+                  <button
+                    onClick={resetAll}
+                    className="mt-5 text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5"
+                  >
+                    <RotateCcw className="h-3 w-3" /> Start a new ad
+                  </button>
                 </>
               ) : (
-                <>
-                  <Sparkles className="h-4 w-4 mr-2" /> Generate ad
-                </>
+                <div className="py-16">
+                  <p className="text-sm text-muted-foreground">No result yet.</p>
+                  <Button variant="ghost" className="mt-3" onClick={() => setStep(3)}>
+                    <ArrowLeft className="h-4 w-4 mr-2" /> Back to angle
+                  </Button>
+                </div>
               )}
-            </Button>
-          </div>
-
-          {/* ===== Right: result ===== */}
-          <div className="rounded-2xl border border-border bg-card/40 p-6 flex items-center justify-center min-h-[480px]">
-            {resultUrl ? (
-              <div className="flex flex-col items-center gap-4">
-                <div className="relative aspect-[9/16] w-[300px] rounded-xl overflow-hidden bg-black">
-                  <Image src={resultUrl} alt="Generated ad" fill className="object-cover" sizes="300px" />
-                </div>
-                <div className="flex gap-3">
-                  <Button asChild variant="outline">
-                    <a href={resultUrl} download="tavira-ad.png" target="_blank" rel="noreferrer">
-                      Download
-                    </a>
-                  </Button>
-                  <Button
-                    className="bg-gradient-to-r from-[#6366f1] to-[#8b7bff] text-white"
-                    onClick={() =>
-                      toast.info("20-variant batch is coming in the next release — this is the MVP single-shot.")
-                    }
-                  >
-                    Generate 20 variants <ArrowRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground max-w-sm text-center">
-                  Like the creator + product fusion? The next release turns this one shot into
-                  20 ad variants across hooks & formats in one click.
-                </p>
-              </div>
-            ) : generating ? (
-              <div className="text-center text-muted-foreground">
-                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3" />
-                <p className="text-sm">Compositing your product into the creator's scene…</p>
-                <p className="text-xs mt-1">~15–30 seconds</p>
-              </div>
-            ) : (
-              <div className="text-center text-muted-foreground max-w-sm">
-                <Package className="h-10 w-10 mx-auto mb-3 opacity-40" />
-                <p className="text-sm">
-                  Upload a product, pick a creator, choose an angle, and your first
-                  AI UGC ad shows up here.
-                </p>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </PageContainer>
