@@ -42,6 +42,12 @@ export const routes = [
         color: "text-foreground",
       },
       {
+        label: "Ad Studio",
+        icon: Sparkles,
+        href: "/tools/ad-studio",
+        color: "text-foreground",
+      },
+      {
         label: "Marketplace",
         icon: Store,
         href: "/dashboard/lora-market",
