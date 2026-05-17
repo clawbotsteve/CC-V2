@@ -343,6 +343,150 @@ export default function PricingPage() {
         })}
       </div>
 
+      {/* ===== Scaling-your-brand band (ecom/DTC pivot) =====
+          Deliberately a SEPARATE section below the hobbyist/creator
+          grid. Different buyer (brand/agency operator, not a solo
+          creator), different mental model ("replace my UGC budget",
+          not "make an AI character"). Keeping it out of the 5-card
+          grid avoids choice paralysis and lets the messaging speak
+          to a budget holder. */}
+      <div className="max-w-[1480px] mx-auto pt-14 md:pt-20">
+        <div className="text-center mb-8">
+          <div className="inline-block text-[11px] tracking-[0.18em] font-semibold text-fuchsia-300 rounded-full border border-fuchsia-400/30 px-3 py-1 mb-3">
+            FOR ECOM BRANDS &amp; AGENCIES
+          </div>
+          <h2 className="text-3xl md:text-4xl font-bold">Replace your UGC creator budget</h2>
+          <p className="text-zinc-400 mt-2 max-w-2xl mx-auto">
+            Train one on-brand AI creator. Generate dozens of ad variants a week.
+            Built for teams that live and die by paid-social creative volume.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-stretch">
+          {([
+            {
+              key: "brand",
+              name: "Brand",
+              badge: "SCALING DTC",
+              price: "$399",
+              cadence: "/mo",
+              tier: "plan_brand",
+              blurb: "For brands running consistent paid social.",
+              credits: "6,000 credits/month",
+              bullets: [
+                "Everything in Studio — every model, no caps",
+                "25 AI creators (one per product line / persona)",
+                "Commercial-use license for ad creative",
+                "Bulk variant generation + ZIP export",
+                "Priority queue",
+              ],
+              cta: "Start with Brand",
+            },
+            {
+              key: "agency",
+              name: "Agency",
+              badge: "MULTI-CLIENT",
+              price: "$999",
+              cadence: "/mo",
+              tier: "plan_agency",
+              blurb: "For agencies managing creative for multiple brands.",
+              credits: "18,000 credits/month",
+              bullets: [
+                "Everything in Brand",
+                "100 AI creators across all client accounts",
+                "Highest priority queue",
+                "Commercial-use license",
+                "Onboarding call included",
+              ],
+              cta: "Start with Agency",
+              highlight: true,
+            },
+            {
+              key: "dfy",
+              name: "Done-for-you",
+              badge: "WE RUN IT FOR YOU",
+              price: "Let's talk",
+              cadence: "",
+              tier: "",
+              blurb: "Hand us your products. We deliver ad-ready creative on a schedule.",
+              credits: "Custom volume",
+              bullets: [
+                "Dedicated creator strategist",
+                "We train creators + produce the ads",
+                "Monthly creative drops to your spec",
+                "Performance review + iteration",
+                "Custom contract",
+              ],
+              cta: "Let's talk",
+            },
+          ] as const).map((b) => {
+            const pack = b.tier
+              ? Object.values(planPacks).find((pk) => pk.tier === b.tier)
+              : undefined;
+            const live = b.tier ? plansByTier.get(b.tier) : undefined;
+            const subId =
+              live?.phyziroPriceId || live?.devPriceId ||
+              pack?.phyziroPriceId || pack?.devPriceId || "";
+            const isDfy = b.key === "dfy";
+            return (
+              <div
+                key={b.key}
+                className={`relative rounded-xl border bg-gradient-to-b p-5 flex flex-col min-h-[440px] ${
+                  (b as any).highlight
+                    ? "from-fuchsia-900/50 to-slate-950/80 border-fuchsia-500/40"
+                    : "from-slate-800/60 to-slate-950/80 border-slate-600/40"
+                }`}
+              >
+                {(b as any).highlight && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-[11px] font-bold px-3 py-1 rounded-full bg-fuchsia-300 text-black">
+                    MOST POPULAR FOR AGENCIES
+                  </div>
+                )}
+                <div className="text-[10px] tracking-wider font-semibold text-zinc-300 rounded-full border border-white/20 px-2 py-1 w-fit mb-3">
+                  {b.badge}
+                </div>
+                <h3 className="text-[28px] font-bold leading-none">{b.name}</h3>
+                <p className="text-xs text-zinc-300 mt-1">{b.blurb}</p>
+                <p className="text-[36px] font-extrabold leading-none mt-4 flex items-end gap-2">
+                  <span>{b.price}</span>
+                  {b.cadence && <span className="text-sm font-semibold text-zinc-300">{b.cadence}</span>}
+                </p>
+                <p className="text-lime-300 font-semibold mt-2 text-sm">{b.credits}</p>
+                <div className="mt-4 space-y-1.5 text-zinc-200 text-[13px] flex-1">
+                  {b.bullets.map((bl) => (
+                    <p key={bl} className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-lime-300 shrink-0" /> {bl}
+                    </p>
+                  ))}
+                </div>
+                <div className="mt-4">
+                  {isDfy ? (
+                    <Button
+                      asChild
+                      className="w-full h-9 text-sm"
+                      variant="outline"
+                    >
+                      <a href="mailto:taviralabsai@gmail.com?subject=Done-for-you%20ad%20creative%20inquiry&body=Tell%20us%20about%20your%20brand%2C%20products%2C%20and%20monthly%20ad%20volume.">
+                        {b.cta}
+                      </a>
+                    </Button>
+                  ) : (
+                    <Button
+                      className="w-full h-9 text-sm"
+                      variant={(b as any).highlight ? "premium" : "outline"}
+                      disabled={isLoading || plan === b.tier || !subId || submittingId === subId}
+                      onClick={() => onSubscribe(subId)}
+                    >
+                      {plan === b.tier ? "Current Plan" : b.cta}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {!isDashboardEmbed && (
         <div className="max-w-3xl mx-auto pt-8 md:pt-12">
           <h2 className="text-3xl font-bold text-center mb-6">Frequently Asked Questions</h2>
