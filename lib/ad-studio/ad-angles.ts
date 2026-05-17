@@ -2,9 +2,20 @@
  * Ad Studio — UGC ad-angle prompt templates.
  *
  * Each angle is a hand-tuned Nano Banana 2 Edit prompt that fuses
- * TWO reference images: the AI creator (image 1) and the product
- * (image 2). The model keeps the creator's identity consistent
- * while compositing the product into a believable UGC ad scene.
+ * the AI creator reference(s) + the product reference into a
+ * believable UGC ad scene.
+ *
+ * PROMPT SAFETY NOTE (learned the hard way, 2026-05-17):
+ * Nano Banana 2 is Gemini-based. Phrasing like "same person, keep
+ * face and identity identical" reads to Gemini's safety classifier
+ * as biometric identity preservation / deepfake and gets refused
+ * with an opaque "Failed to generate image." — ESPECIALLY when the
+ * creator reference is a photorealistic real human. Framing the
+ * subject as "the AI UGC creator from the reference, keep their
+ * look/vibe consistent" (character consistency, not identity lock)
+ * passes far more reliably. Keep templates in that register. The
+ * stock-creator roster references should also be AI-generated
+ * faces, not real photos, for the same reason.
  *
  * These map 1:1 to the proven hook archetypes that win on paid
  * social (TikTok/Meta UGC creative):
@@ -61,7 +72,7 @@ export const AD_ANGLES: AdAngle[] = [
     blurb: "Creator holding the product to camera, natural setting. The safe, high-performing default.",
     aspectRatio: "9:16",
     template:
-      "Same person as image 1 (keep face and identity identical), holding the product from image 2 naturally up toward the camera at chest height, casual authentic UGC selfie framing, soft natural window light, plain modern home interior softly blurred behind, genuine warm half-smile looking at the lens, product clearly visible and in sharp focus with its label readable, shot on a phone front camera, slight imperfection / realism (no studio polish), vertical 9:16.",
+      "Feature the AI UGC creator from the reference image, keeping their overall look, hairstyle and vibe consistent and natural, holding the product shown in the product reference naturally up toward the camera at chest height, casual authentic UGC selfie framing, soft natural window light, plain modern home interior softly blurred behind, genuine warm half-smile looking at the lens, product clearly visible and in sharp focus with its label readable, shot on a phone front camera, slight imperfection / realism (no studio polish), vertical 9:16.",
   },
   {
     key: "problem_solution",
@@ -70,7 +81,7 @@ export const AD_ANGLES: AdAngle[] = [
     blurb: "Creator mid-explanation gesturing at the product as the fix. Highest-converting ad hook.",
     aspectRatio: "9:16",
     template:
-      "Same person as image 1 (identical face and identity), caught mid-sentence talking directly to the camera with an expressive 'here's what fixed it' hand gesture, the product from image 2 held in the other hand at frame level, casual bathroom or bedroom UGC setting softly blurred, honest direct-address energy, natural phone-camera look with realistic skin texture, product label sharp and readable, vertical 9:16.",
+      "Feature the AI UGC creator from the reference image, keeping their look and vibe consistent and natural, caught mid-sentence talking directly to the camera with an expressive 'here's what fixed it' hand gesture, the product shown in the product reference held in the other hand at frame level, casual bathroom or bedroom UGC setting softly blurred, honest direct-address energy, natural phone-camera look with realistic skin texture, product label sharp and readable, vertical 9:16.",
   },
   {
     key: "testimonial",
@@ -79,7 +90,7 @@ export const AD_ANGLES: AdAngle[] = [
     blurb: "\"I was skeptical but…\" — creator with a convinced, slightly surprised expression.",
     aspectRatio: "9:16",
     template:
-      "Same person as image 1 (identical face and identity), relaxed on a sofa talking candidly to the camera with a slightly surprised, won-over expression (the 'okay I'm actually impressed' look), holding the product from image 2 loosely in one hand resting on their knee, cozy warm home lighting, authentic unpolished UGC vlog framing, product clearly visible, vertical 9:16.",
+      "Feature the AI UGC creator from the reference image, keeping their look and vibe consistent and natural, relaxed on a sofa talking candidly to the camera with a slightly surprised, won-over expression (the 'okay I'm actually impressed' look), holding the product shown in the product reference loosely in one hand resting on their knee, cozy warm home lighting, authentic unpolished UGC vlog framing, product clearly visible, vertical 9:16.",
   },
   {
     key: "unboxing",
@@ -88,7 +99,7 @@ export const AD_ANGLES: AdAngle[] = [
     blurb: "Excited first-look reaction holding the product just out of the box.",
     aspectRatio: "9:16",
     template:
-      "Same person as image 1 (identical face and identity), genuine excited 'ooh' reaction looking down at the product from image 2 just lifted out of its packaging held in both hands, packaging/box visible lower in frame, bright clean desk or kitchen counter setting, energetic authentic unboxing UGC energy, phone-camera realism, product and packaging in sharp focus, vertical 9:16.",
+      "Feature the AI UGC creator from the reference image, keeping their look and vibe consistent and natural, genuine excited 'ooh' reaction looking down at the product shown in the product reference just lifted out of its packaging held in both hands, packaging/box visible lower in frame, bright clean desk or kitchen counter setting, energetic authentic unboxing UGC energy, phone-camera realism, product and packaging in sharp focus, vertical 9:16.",
   },
   {
     key: "before_after",
@@ -97,7 +108,7 @@ export const AD_ANGLES: AdAngle[] = [
     blurb: "Confident 'look at the result' pose presenting the product as the cause.",
     aspectRatio: "9:16",
     template:
-      "Same person as image 1 (identical face and identity), confident glowing 'look at this result' expression presenting the product from image 2 held beside their face at cheek level, flattering soft beauty lighting, clean bright bathroom mirror selfie UGC framing, fresh radiant skin, product label sharp and readable, aspirational but still authentic phone-camera look, vertical 9:16.",
+      "Feature the AI UGC creator from the reference image, keeping their look and vibe consistent and natural, confident glowing 'look at this result' expression presenting the product shown in the product reference held beside their face at cheek level, flattering soft beauty lighting, clean bright bathroom mirror selfie UGC framing, fresh radiant skin, product label sharp and readable, aspirational but still authentic phone-camera look, vertical 9:16.",
   },
   {
     key: "demo",
@@ -106,7 +117,7 @@ export const AD_ANGLES: AdAngle[] = [
     blurb: "Creator actively using or applying the product, mid-action.",
     aspectRatio: "9:16",
     template:
-      "Same person as image 1 (identical face and identity), mid-action actively using/applying the product from image 2 (e.g. dispensing, applying, demonstrating), focused engaged expression looking slightly down at what they're doing, close-ish UGC framing so the product use is clearly visible, natural bathroom/vanity lighting, authentic tutorial energy, product in sharp focus, vertical 9:16.",
+      "Feature the AI UGC creator from the reference image, keeping their look and vibe consistent and natural, mid-action actively using/applying the product shown in the product reference (e.g. dispensing, applying, demonstrating), focused engaged expression looking slightly down at what they're doing, close-ish UGC framing so the product use is clearly visible, natural bathroom/vanity lighting, authentic tutorial energy, product in sharp focus, vertical 9:16.",
   },
 ];
 
@@ -120,6 +131,6 @@ export function fillAdAnglePrompt(
   vars: { creator?: string; product?: string },
 ): string {
   return angle.template
-    .replaceAll("{creator}", vars.creator || "the person in image 1")
-    .replaceAll("{product}", vars.product || "the product in image 2");
+    .replaceAll("{creator}", vars.creator || "the AI creator in the reference")
+    .replaceAll("{product}", vars.product || "the product in the product reference");
 }

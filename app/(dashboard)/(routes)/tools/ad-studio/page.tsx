@@ -164,7 +164,9 @@ export default function AdStudioPage() {
           setGenerating(false);
           if (pollRef.current) clearInterval(pollRef.current);
         } else if (d?.status === "failed") {
-          toast.error("Generation failed — try a different angle or image.");
+          toast.error(
+            "The model couldn't render this combo (it can refuse on some reference photos). Try a Tavira creator or a different angle.",
+          );
           setGenerating(false);
           if (pollRef.current) clearInterval(pollRef.current);
         }
