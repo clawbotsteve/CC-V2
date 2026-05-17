@@ -1,0 +1,37 @@
+Tavira stock creator roster reference images go here.
+
+Ad Studio Step 2 shows these as "Tavira creators · ready to use" —
+the zero-friction picks an ecom brand uses without training anything.
+Until a file exists the tile renders a branded gradient + the
+creator's name/vibe (graceful fallback — nothing looks broken).
+
+Filenames must match the ids in lib/ad-studio/stock-creators.ts:
+
+  ava.jpg       (Ava — girl-next-door, early 20s)
+  maya.jpg      (Maya — warm relatable, late 20s)
+  sofia.jpg     (Sofia — polished beauty creator, 20s)
+  kai.jpg       (Kai — fitness guy, 20s)
+  noah.jpg      (Noah — approachable everyman, 30s)
+  jada.jpg      (Jada — Gen-Z hype, early 20s)
+  elena.jpg     (Elena — busy mom, 30s)
+  marcus.jpg    (Marcus — confident professional, 30s)
+
+CASTING BRIEF (this is the moat — get it right):
+  - UGC that CONVERTS looks like a real customer filming on their
+    phone, NOT a glossy studio model. Skew authentic-attractive +
+    relatable. "Could be my neighbor," not "magazine cover."
+  - Each: a clean, well-lit, FRONT-FACING bust/upper-body shot
+    (shoulders up), neutral expression or soft natural smile,
+    plain/soft background, looking at camera. This is the fusion
+    REFERENCE — the cleaner + more frontal it is, the better
+    Nano Banana 2 Edit composites products into their hands.
+  - Variety is the value: spread across age / ethnicity / gender /
+    vibe so a brand finds one that matches THEIR customer. The 8
+    defaults above are a sensible spread for DTC (beauty,
+    supplements, fitness, home, fashion, tech) — edit the roster in
+    stock-creators.ts if you want different archetypes.
+  - 3:4 portrait, ~900x1200, < 250 KB each.
+
+You can generate the whole roster in Character Studio (one
+character each, grab the base reference) or any image tool. Drop the
+8 files here, tell Claude, and the picker goes fully visual.
