@@ -49,6 +49,14 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const creatorImageUrl: string | undefined = body?.creatorImageUrl;
+    // Optional multi-reference set. When a STOCK creator is picked the
+    // client sends its full premade photo set (2-3 angles). NB2 Edit
+    // locks identity much harder with multiple refs than one — this
+    // is why each stock creator ships with a SET, not a single shot.
+    // Falls back to [creatorImageUrl] for uploads / trained creators.
+    const creatorRefsRaw: string[] = Array.isArray(body?.creatorRefs)
+      ? body.creatorRefs.filter((u: unknown): u is string => typeof u === "string" && !!u)
+      : [];
     const productImageUrl: string | undefined = body?.productImageUrl;
     const angleKey: AdAngleKey = body?.angle || "lifestyle_hold";
 
@@ -90,20 +98,43 @@ export async function POST(req: Request) {
       );
     }
 
-    // Re-host both references with the active provider so the model
-    // worker can fetch them (FAL storage or Replicate /v1/files
-    // depending on IMAGE_PROVIDER).
-    let hostedCreator: string;
+    // Build the creator reference list: the multi-ref set when a
+    // stock creator was picked, else the single image. Dedup +
+    // cap at 3 creator refs so the product still gets a clear slot
+    // and we don't blow the input budget.
+    const creatorRefList = (
+      creatorRefsRaw.length > 0 ? creatorRefsRaw : [creatorImageUrl]
+    )
+      .filter((v, i, a) => a.indexOf(v) === i)
+      .slice(0, 3);
+
+    // Re-host every reference + the product with the active provider
+    // so the model worker can fetch them (FAL storage or Replicate
+    // /v1/files depending on IMAGE_PROVIDER). Stock-creator refs that
+    // 404 (asset not dropped in yet) are silently dropped so the
+    // flow still works with whatever refs DO resolve.
+    let hostedCreatorRefs: string[];
     let hostedProduct: string;
     try {
-      [hostedCreator, hostedProduct] = await Promise.all([
-        uploadImageUrlToProvider(creatorImageUrl),
+      const [creatorResults, prod] = await Promise.all([
+        Promise.allSettled(creatorRefList.map((u) => uploadImageUrlToProvider(u))),
         uploadImageUrlToProvider(productImageUrl),
       ]);
+      hostedCreatorRefs = creatorResults
+        .filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled")
+        .map((r) => r.value);
+      hostedProduct = prod;
     } catch (err) {
       console.error("[AD-STUDIO] reference hosting failed", err);
       return NextResponse.json(
         { error: "Couldn't process the images. Re-upload and try again." },
+        { status: 502 },
+      );
+    }
+
+    if (hostedCreatorRefs.length === 0) {
+      return NextResponse.json(
+        { error: "Couldn't load the creator image. Pick another creator or upload a photo." },
         { status: 502 },
       );
     }
@@ -119,10 +150,11 @@ export async function POST(req: Request) {
         resolution: "1K",
         aspect_ratio: angle.aspectRatio,
         aspectRatio: angle.aspectRatio,
-        // image 1 = creator (identity to preserve), image 2 = product.
-        // Nano Banana 2 Edit treats the array order as semantically
-        // meaningful and the prompt references "image 1" / "image 2".
-        image_urls: [hostedCreator, hostedProduct],
+        // Creator reference(s) lead, product last. NB2 Edit treats
+        // array order as semantically meaningful and the angle prompt
+        // references "image 1" (the creator) + the final product image.
+        // Multiple leading creator refs = much harder identity lock.
+        image_urls: [...hostedCreatorRefs, hostedProduct],
       },
       webhookUrl,
     });

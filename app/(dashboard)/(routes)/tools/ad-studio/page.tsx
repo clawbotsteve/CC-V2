@@ -12,7 +12,7 @@ import AiAnimatedHeading from "@/components/ai-animated-heading";
 import { Button } from "@/components/ui/button";
 import { uploadFiles } from "@/lib/utils";
 import { AD_ANGLES, AdAngleKey } from "@/lib/ad-studio/ad-angles";
-import { STOCK_CREATORS, stockCreatorImage } from "@/lib/ad-studio/stock-creators";
+import { STOCK_CREATORS, stockCreatorImage, stockCreatorRefs } from "@/lib/ad-studio/stock-creators";
 
 /**
  * Ad Studio — guided UGC-ad creation flow.
@@ -59,11 +59,21 @@ export default function AdStudioPage() {
   const creatorInputRef = useRef<HTMLInputElement | null>(null);
   const [uploadingCreator, setUploadingCreator] = useState(false);
 
+  // Full premade reference set when a STOCK creator is picked (sent
+  // to the sample endpoint for a much harder identity lock than a
+  // single shot). Empty for uploads / trained creators.
+  const [creatorRefs, setCreatorRefs] = useState<string[]>([]);
+
   // ---- Angle / generation ----
   const [angle, setAngle] = useState<AdAngleKey>("lifestyle_hold");
   const [generating, setGenerating] = useState(false);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
+
+  // ---- Video (Seedance i2v) step ----
+  const [animating, setAnimating] = useState(false);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const videoPollRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     fetch("/api/character-studio")
@@ -83,6 +93,7 @@ export default function AdStudioPage() {
   useEffect(
     () => () => {
       if (pollRef.current) clearInterval(pollRef.current);
+      if (videoPollRef.current) clearInterval(videoPollRef.current);
     },
     [],
   );
@@ -168,12 +179,14 @@ export default function AdStudioPage() {
     setStep(4);
     setGenerating(true);
     setResultUrl(null);
+    setVideoUrl(null);
     try {
       const res = await fetch("/api/ad-studio/sample", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           creatorImageUrl: creatorUrl,
+          creatorRefs: creatorRefs.length > 0 ? creatorRefs : undefined,
           productImageUrl: productUrl,
           angle,
           productName: productName.trim() || undefined,
@@ -193,6 +206,50 @@ export default function AdStudioPage() {
     }
   };
 
+  // Animate the approved still into a UGC video via Seedance i2v.
+  // Separate one-click step (not auto-chained) — see the endpoint
+  // comment for the credit/UX reasoning.
+  const animate = async () => {
+    if (!resultUrl || animating) return;
+    setAnimating(true);
+    setVideoUrl(null);
+    try {
+      const res = await fetch("/api/ad-studio/animate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrl: resultUrl }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data?.error || "Couldn't start the video.");
+        setAnimating(false);
+        return;
+      }
+      const id = data.jobId;
+      if (videoPollRef.current) clearInterval(videoPollRef.current);
+      videoPollRef.current = setInterval(async () => {
+        try {
+          const r = await fetch(`/api/tools/video/status/${id}`);
+          const d = await r.json();
+          if (d?.status === "completed" && (d?.videoUrl || d?.imageUrl)) {
+            setVideoUrl(d.videoUrl || d.imageUrl);
+            setAnimating(false);
+            if (videoPollRef.current) clearInterval(videoPollRef.current);
+          } else if (d?.status === "failed") {
+            toast.error("Video generation failed — the still still works as a static ad.");
+            setAnimating(false);
+            if (videoPollRef.current) clearInterval(videoPollRef.current);
+          }
+        } catch {
+          /* keep polling */
+        }
+      }, 4000);
+    } catch {
+      toast.error("Something went wrong.");
+      setAnimating(false);
+    }
+  };
+
   const resetAll = () => {
     setStep(1);
     setProductUrl(null);
@@ -200,9 +257,12 @@ export default function AdStudioPage() {
     setScrapeInput("");
     setCreatorUrl(null);
     setCreatorName("");
+    setCreatorRefs([]);
     setAngle("lifestyle_hold");
     setResultUrl(null);
+    setVideoUrl(null);
     setGenerating(false);
+    setAnimating(false);
   };
 
   return (
@@ -377,6 +437,9 @@ export default function AdStudioPage() {
                         onClick={() => {
                           setCreatorUrl(img);
                           setCreatorName(sc.name);
+                          // Stock creator → send its full premade
+                          // photo set for a hard identity lock.
+                          setCreatorRefs(stockCreatorRefs(sc.id));
                         }}
                         className={`relative aspect-[3/4] rounded-xl overflow-hidden border-2 transition-colors ${
                           selected ? "border-[#6366f1]" : "border-transparent hover:border-white/20"
@@ -436,6 +499,7 @@ export default function AdStudioPage() {
                         onClick={() => {
                           setCreatorUrl(ref);
                           setCreatorName(c.name);
+                          setCreatorRefs([]); // trained creator: single ref
                         }}
                         className={`relative aspect-[3/4] rounded-xl overflow-hidden border-2 transition-colors ${
                           selected ? "border-[#6366f1]" : "border-transparent hover:border-white/20"
@@ -476,6 +540,7 @@ export default function AdStudioPage() {
                   if (f) {
                     uploadOne(f, setCreatorUrl, setUploadingCreator);
                     setCreatorName("");
+                    setCreatorRefs([]); // one-off upload: single ref
                   }
                 }}
               />
@@ -608,29 +673,70 @@ export default function AdStudioPage() {
                 </div>
               ) : resultUrl ? (
                 <>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={resultUrl}
-                    alt="Generated ad"
-                    className="aspect-[9/16] w-[300px] rounded-xl object-cover bg-black border border-border"
-                  />
-                  <div className="flex gap-3 mt-5">
+                  <div className="relative">
+                    {videoUrl ? (
+                      <video
+                        src={videoUrl}
+                        className="aspect-[9/16] w-[300px] rounded-xl object-cover bg-black border border-border"
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        controls
+                      />
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={resultUrl}
+                        alt="Generated ad"
+                        className="aspect-[9/16] w-[300px] rounded-xl object-cover bg-black border border-border"
+                      />
+                    )}
+                    {animating && (
+                      <div className="absolute inset-0 rounded-xl bg-black/65 flex flex-col items-center justify-center">
+                        <Loader2 className="h-8 w-8 animate-spin text-[#a78bfa] mb-3" />
+                        <p className="text-xs">Animating into a video ad…</p>
+                        <p className="text-[11px] text-muted-foreground mt-1">~60–90 seconds</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex gap-3 mt-5 flex-wrap justify-center">
                     <Button asChild variant="outline">
-                      <a href={resultUrl} download="tavira-ad.png" target="_blank" rel="noreferrer">
-                        Download
+                      <a
+                        href={videoUrl || resultUrl}
+                        download={videoUrl ? "tavira-ad.mp4" : "tavira-ad.png"}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Download {videoUrl ? "video" : "image"}
                       </a>
                     </Button>
-                    <Button
-                      className="bg-gradient-to-r from-[#6366f1] to-[#8b7bff] text-white"
-                      onClick={() =>
-                        toast.info(
-                          "20-variant batch ships next — this is the single-shot MVP.",
-                        )
-                      }
-                    >
-                      Generate 20 variants <ArrowRight className="h-4 w-4 ml-1" />
-                    </Button>
+                    {!videoUrl && (
+                      <Button
+                        className="bg-gradient-to-r from-[#6366f1] to-[#8b7bff] text-white"
+                        onClick={animate}
+                        disabled={animating}
+                      >
+                        {animating ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Animating…
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="h-4 w-4 mr-2" /> Turn into a video ad
+                          </>
+                        )}
+                      </Button>
+                    )}
                   </div>
+                  {!videoUrl && !animating && (
+                    <p className="text-[11px] text-muted-foreground mt-2 max-w-xs">
+                      Like this still? Animate it into a 5s UGC video ad with
+                      Seedance — that's what actually runs on TikTok/Meta.
+                    </p>
+                  )}
+
                   <button
                     onClick={resetAll}
                     className="mt-5 text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5"
