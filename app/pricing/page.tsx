@@ -13,6 +13,9 @@ import { planPacks } from "@/constants/pricing-constants";
 type BillingView = "monthly" | "annual";
 
 type CardMeta = {
+  // beginner + studio removed from the public page (0 subs, choice-
+  // paralysis); union kept loose so the render's key checks still
+  // type-check without dead branches needing deletion.
   key: "free" | "beginner" | "starter" | "creator" | "studio";
   name: string;
   topBadge: string;
@@ -56,25 +59,13 @@ const CARDS: CardMeta[] = [
     fullAccess: ["GPT Image 2 (medium)"],
     unlimited: [],
   },
-  {
-    key: "beginner",
-    name: "Beginner",
-    topBadge: "ENTRY-LEVEL CREATOR",
-    subtitle: "ALL IMAGE TOOLS, NO VIDEO",
-    cta: "Start Beginner",
-    tierMonthly: "plan_beginner",
-    tierAnnual: "plan_beginner_3month",
-    wrapper: "from-blue-900/55 to-slate-950/80 border-blue-500/35",
-    displayMonthlyPrice: 9.99,
-    creditsText: "80 credits/month",
-    fullAccess: [
-      "GPT Image 2 (medium)",
-      "Nano Banana 2 (1K + 2K)",
-      "Nano Banana 2 Edit (1K + 2K)",
-      "Flux LoRA",
-    ],
-    unlimited: [],
-  },
+  // Beginner ($9.99) cut from the public page 2026-05-14. Had 0
+  // active subscribers (incl. its 3-month variant) — pure choice-
+  // paralysis noise on a page now selling ad creative to brands.
+  // The SubscriptionTier rows + planPacks entries are intentionally
+  // LEFT IN the DB / pricing-constants so TIER_KEY_MAP, plan-access,
+  // and any historical references still resolve cleanly. This is a
+  // display-only removal; nothing to grandfather (zero subs).
   {
     key: "starter",
     name: "Starter",
@@ -119,26 +110,13 @@ const CARDS: CardMeta[] = [
     ],
     unlimited: [],
   },
-  {
-    key: "studio",
-    name: "Studio",
-    topBadge: "BUILT FOR SERIOUS SCALE",
-    subtitle: "FOR AGENCIES AND OPERATORS",
-    cta: "Scale with Studio",
-    tierMonthly: "plan_elite",
-    tierAnnual: "plan_elite_3month",
-    wrapper: "from-fuchsia-900/50 to-slate-950/80 border-fuchsia-500/35",
-    displayMonthlyPrice: 149.99,
-    firstMonthCoupon: { id: "abjQuA1g", percentOff: 31 },
-    creditsText: "2,000 credits/month",
-    fullAccess: [
-      "Everything in Creator",
-      "10 AI influencer slots",
-      "Highest credit allowance",
-      "Highest priority queue",
-    ],
-    unlimited: [],
-  },
+  // Studio ($149.99) cut from the public page 2026-05-14. Zero active
+  // subscribers, AND its "for agencies and operators" positioning was
+  // incoherent next to the new dedicated Brand ($399) / Agency ($999)
+  // tiers — two "for agencies" cards at 3x price gaps confuses the
+  // buyer. Scaling buyers now go to the dedicated ecom band below the
+  // grid. SubscriptionTier/planPacks rows left intact (display-only
+  // removal, nothing to grandfather).
 ];
 
 const FAQS = [
@@ -213,7 +191,11 @@ export default function PricingPage() {
           : "3-Month plans use flat 20% savings (no intro month discount)."}
       </p>
 
-      <div className="max-w-[1480px] mx-auto grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-2.5 items-stretch">
+      {/* 3 cards now (Free / Starter / Creator) after cutting
+          Beginner + Studio — centered 3-col so it doesn't read as a
+          sparse 5-col row. The ecom Brand/Agency/DFY band renders
+          separately below. */}
+      <div className="max-w-[1100px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-3 items-stretch justify-center">
         {CARDS.map((card) => {
           const tier = billing === "monthly" ? card.tierMonthly : card.tierAnnual;
           const p = plansByTier.get(tier);
