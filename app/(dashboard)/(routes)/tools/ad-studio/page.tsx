@@ -12,6 +12,7 @@ import AiAnimatedHeading from "@/components/ai-animated-heading";
 import { Button } from "@/components/ui/button";
 import { uploadFiles } from "@/lib/utils";
 import { AD_ANGLES, AdAngleKey } from "@/lib/ad-studio/ad-angles";
+import { STOCK_CREATORS, stockCreatorImage } from "@/lib/ad-studio/stock-creators";
 
 /**
  * Ad Studio — guided UGC-ad creation flow.
@@ -356,9 +357,72 @@ export default function AdStudioPage() {
                 <UserRound className="h-5 w-5 text-[#a78bfa]" /> Who's the face of the ad?
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
-                Pick a trained creator — they stay identical across every ad you make.
-                That consistency is what makes a brand feel real.
+                Pick a ready-to-use Tavira creator, or one of your own trained
+                creators. They stay consistent across every ad you make.
               </p>
+
+              {/* ===== Tavira stock roster — zero-friction picks ===== */}
+              <div className="mt-5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#c4b5fd] mb-2">
+                  Tavira creators · ready to use
+                </p>
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                  {STOCK_CREATORS.map((sc) => {
+                    const img = stockCreatorImage(sc.id);
+                    const selected = creatorUrl === img;
+                    return (
+                      <button
+                        key={sc.id}
+                        type="button"
+                        onClick={() => {
+                          setCreatorUrl(img);
+                          setCreatorName(sc.name);
+                        }}
+                        className={`relative aspect-[3/4] rounded-xl overflow-hidden border-2 transition-colors ${
+                          selected ? "border-[#6366f1]" : "border-transparent hover:border-white/20"
+                        }`}
+                        title={`${sc.name} — ${sc.vibe}`}
+                        style={{
+                          background:
+                            "linear-gradient(150deg,#1e1b3a 0%,#2a1f4d 55%,#15132a 100%)",
+                        }}
+                      >
+                        {/* Graceful fallback: gradient + name show
+                            through until /creators/{id}.jpg lands. */}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={img}
+                          alt={sc.name}
+                          loading="lazy"
+                          className="absolute inset-0 h-full w-full object-cover"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).style.display = "none";
+                          }}
+                        />
+                        <span className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-2 py-1.5">
+                          <span className="block text-[12px] font-semibold leading-tight">
+                            {sc.name}
+                          </span>
+                          <span className="block text-[10px] text-zinc-300 truncate">
+                            {sc.vibe}
+                          </span>
+                        </span>
+                        {selected && (
+                          <span className="absolute top-1.5 right-1.5 h-5 w-5 rounded-full bg-[#6366f1] flex items-center justify-center">
+                            <Check className="h-3 w-3 text-white" />
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {characters.length > 0 && (
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mt-6 mb-2">
+                  Your trained creators
+                </p>
+              )}
 
               {characters.length > 0 ? (
                 <div className="mt-5 grid grid-cols-3 sm:grid-cols-5 gap-3">
@@ -393,15 +457,13 @@ export default function AdStudioPage() {
                   })}
                 </div>
               ) : (
-                <div className="mt-5 rounded-xl border border-dashed border-border p-6 text-center">
-                  <p className="text-sm text-muted-foreground">
-                    No trained creators yet. Build a reusable one in{" "}
-                    <Link href="/tools/character-studio" className="text-[#a78bfa] underline">
-                      Character Studio
-                    </Link>{" "}
-                    so it stays identical across every ad — or upload a one-off photo below.
-                  </p>
-                </div>
+                <p className="mt-6 text-xs text-muted-foreground">
+                  Want a creator that's uniquely yours? Build one in{" "}
+                  <Link href="/tools/character-studio" className="text-[#a78bfa] underline">
+                    Character Studio
+                  </Link>{" "}
+                  — or upload a one-off photo below.
+                </p>
               )}
 
               <input
