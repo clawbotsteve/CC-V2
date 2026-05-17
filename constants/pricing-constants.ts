@@ -9,7 +9,16 @@ export type PlanKey =
   | "Creator"
   | "Creator3Month"
   | "Studio"
-  | "Studio3Month";
+  | "Studio3Month"
+  // Ecom/DTC pivot (2026-05): higher tiers aimed at brands & agencies
+  // running paid-social ad creative at volume. Same engine, much
+  // higher credit/avatar ceilings + commercial-use license. Both map
+  // to "studio" feature access (everything unlocked) — the value is
+  // volume + license + support, not feature gating.
+  | "Brand"
+  | "Brand3Month"
+  | "Agency"
+  | "Agency3Month";
 
 export type PlanPack = Omit<
   SubscriptionTier,
@@ -53,6 +62,31 @@ const phyziroPriceIds = {
     devMonthly: "plan_elite",
     devQuarterly: "plan_elite_3month",
     phyziro: "sub_u4IUIG47Z3eTyTtZpTAjb5"
+  },
+  // Brand & Agency tiers (ecom pivot). The real Stripe price IDs
+  // must be created in the Stripe dashboard and pasted into
+  // `monthly` / `quarterly` below before checkout works for these
+  // tiers — until then the tiers exist in the DB + UI + access
+  // control but the Stripe checkout call will 400 for them.
+  // devMonthly/devQuarterly use the tier-key fallback pattern
+  // (same as starter/creator/studio) so dev/test mode works now.
+  // Operator TODO: create 4 Stripe recurring prices
+  //   Brand monthly $399, Brand 3-month $1077,
+  //   Agency monthly $999, Agency 3-month $2697
+  // then fill the price_… IDs here.
+  brand: {
+    monthly: "",
+    quarterly: "",
+    devMonthly: "plan_brand",
+    devQuarterly: "plan_brand_3month",
+    phyziro: ""
+  },
+  agency: {
+    monthly: "",
+    quarterly: "",
+    devMonthly: "plan_agency",
+    devQuarterly: "plan_agency_3month",
+    phyziro: ""
   },
 };
 
@@ -162,6 +196,58 @@ export const planPacks: Record<PlanKey, PlanPack> = {
     maxAvatarCount: 10,
     devPriceId: phyziroPriceIds.studio.devQuarterly,
     phyziroPriceId: ""
+  },
+
+  // ===== Ecom/DTC pivot tiers =====
+  // Brand: scaling DTC brand running paid social. ~3x Studio credits
+  // (enough for ~hundreds of ad variants/mo), 25 AI creators,
+  // commercial-use license (messaged in UI, not enforced in code).
+  Brand: {
+    key: "Brand",
+    name: "Brand Plan",
+    tier: "plan_brand",
+    price: 399,
+    period: "monthly" as BillingPeriod,
+    creditsPerMonth: 6000,
+    maxAvatarCount: 25,
+    devPriceId: phyziroPriceIds.brand.devMonthly,
+    phyziroPriceId: phyziroPriceIds.brand.phyziro,
+  },
+  Brand3Month: {
+    key: "Brand3Month",
+    name: "Brand Plan - 3 Month",
+    // 3-month = 10% off the monthly run-rate (399*3 = 1197 → 1077).
+    tier: "plan_brand_3month",
+    price: 1077,
+    period: "three_months" as BillingPeriod,
+    creditsPerMonth: 6000,
+    maxAvatarCount: 25,
+    devPriceId: phyziroPriceIds.brand.devQuarterly,
+    phyziroPriceId: "",
+  },
+  // Agency: managing multiple client brands. Highest self-serve tier
+  // (anything above this routes to the DFY "Let's talk" card).
+  Agency: {
+    key: "Agency",
+    name: "Agency Plan",
+    tier: "plan_agency",
+    price: 999,
+    period: "monthly" as BillingPeriod,
+    creditsPerMonth: 18000,
+    maxAvatarCount: 100,
+    devPriceId: phyziroPriceIds.agency.devMonthly,
+    phyziroPriceId: phyziroPriceIds.agency.phyziro,
+  },
+  Agency3Month: {
+    key: "Agency3Month",
+    name: "Agency Plan - 3 Month",
+    tier: "plan_agency_3month",
+    price: 2697, // 999*3 = 2997 → 10% off
+    period: "three_months" as BillingPeriod,
+    creditsPerMonth: 18000,
+    maxAvatarCount: 100,
+    devPriceId: phyziroPriceIds.agency.devQuarterly,
+    phyziroPriceId: "",
   },
 };
 
@@ -757,7 +843,58 @@ export const PLAN_MAPS: Record<PlanKey, {
       "Highest concurrency",
       "Priority rendering",
     ],
-  }
+  },
+
+  // ===== Ecom/DTC pivot tiers =====
+  Brand: {
+    name: "Brand Plan",
+    description: "For scaling DTC brands replacing their UGC creator budget.",
+    features: [
+      "Everything in Studio — every model, no caps",
+      "6,000 credits/month",
+      "25 AI creators",
+      "Commercial-use license for ad creative",
+      "Bulk variant generation + ZIP export",
+      "Priority queue",
+    ],
+  },
+  Brand3Month: {
+    name: "Brand Plan (3 month)",
+    description: "For scaling DTC brands replacing their UGC creator budget.",
+    features: [
+      "Everything in Studio — every model, no caps",
+      "6,000 credits/month",
+      "25 AI creators",
+      "Commercial-use license for ad creative",
+      "Bulk variant generation + ZIP export",
+      "Priority queue",
+    ],
+  },
+  Agency: {
+    name: "Agency Plan",
+    description: "For agencies producing creative for multiple client brands.",
+    recommended: true,
+    features: [
+      "Everything in Brand",
+      "18,000 credits/month",
+      "100 AI creators across client accounts",
+      "Highest priority queue",
+      "Commercial-use license",
+      "Onboarding call included",
+    ],
+  },
+  Agency3Month: {
+    name: "Agency Plan (3 month)",
+    description: "For agencies producing creative for multiple client brands.",
+    features: [
+      "Everything in Brand",
+      "18,000 credits/month",
+      "100 AI creators across client accounts",
+      "Highest priority queue",
+      "Commercial-use license",
+      "Onboarding call included",
+    ],
+  },
 };
 
 export const TIER_KEY_MAP: Record<string, PlanKey> = {
@@ -769,5 +906,21 @@ export const TIER_KEY_MAP: Record<string, PlanKey> = {
   plan_pro: "Creator",
   plan_pro_3month: "Creator3Month",
   plan_elite: "Studio",
-  plan_elite_3month: "Studio3Month"
+  plan_elite_3month: "Studio3Month",
+  plan_brand: "Brand",
+  plan_brand_3month: "Brand3Month",
+  plan_agency: "Agency",
+  plan_agency_3month: "Agency3Month",
 };
+
+// Brand & Agency reuse Studio's (plan_elite) per-unit tool costs
+// verbatim — the differentiator is monthly credit volume + avatar
+// count + commercial license, NOT cheaper per-image rates. Aliasing
+// here (instead of copy-pasting ~50 cost rows ×4) keeps the source
+// of truth single: bump plan_elite costs and these track automatically.
+// The seed (prisma/seed.ts → upsertToolCosts) looks these up by the
+// `tier` string from planPacks, so the keys must exist on the object.
+TOOL_COSTS_BY_TIER.plan_brand = TOOL_COSTS_BY_TIER.plan_elite;
+TOOL_COSTS_BY_TIER.plan_brand_3month = TOOL_COSTS_BY_TIER.plan_elite_3month;
+TOOL_COSTS_BY_TIER.plan_agency = TOOL_COSTS_BY_TIER.plan_elite;
+TOOL_COSTS_BY_TIER.plan_agency_3month = TOOL_COSTS_BY_TIER.plan_elite_3month;

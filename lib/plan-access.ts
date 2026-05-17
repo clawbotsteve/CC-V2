@@ -13,6 +13,12 @@ function normalizeTier(raw?: string | null): string {
  */
 export function resolveAccessTier(planTier?: string | null): AccessTier {
   const t = normalizeTier(planTier);
+  // Brand & Agency (ecom pivot) are the highest paid tiers — they get
+  // full "studio" feature access (everything unlocked). Checked first
+  // for specificity; they differ from Studio only in credit/avatar
+  // ceilings + commercial license, which are enforced via
+  // creditsPerMonth / maxAvatarCount, not feature gates.
+  if (t.includes("brand") || t.includes("agency")) return "studio";
   if (t.includes("elite") || t.includes("studio")) return "studio";
   if (t.includes("pro") || t.includes("creator")) return "creator";
   if (t.includes("basic") || t.includes("starter")) return "starter";
