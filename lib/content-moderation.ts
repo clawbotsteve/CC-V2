@@ -104,7 +104,10 @@ async function checkRealPerson(prompt: string): Promise<ModerationFlag[]> {
  * remote calls. Caller decides what to do with `flags` (block + log, or
  * block-and-flag-for-review depending on context).
  */
-export async function moderatePrompt(prompt: string): Promise<ModerationResult> {
+export async function moderatePrompt(
+  prompt: string,
+  opts?: { skipRealPerson?: boolean },
+): Promise<ModerationResult> {
   if (!prompt || !prompt.trim()) {
     return { allowed: true, reason: null, flags: [] };
   }
@@ -114,15 +117,23 @@ export async function moderatePrompt(prompt: string): Promise<ModerationResult> 
     return { allowed: false, reason: USER_FACING_REJECTION, flags: blocklistFlags };
   }
 
+  // The real-person (celebrity-deepfake) classifier is the wrong
+  // guard for Ad Studio: those prompts intentionally name the
+  // customer's product/brand, which the LLM routinely misreads as a
+  // public figure (e.g. "Reps FUTR" → realperson). Blocklist +
+  // OpenAI omni-moderation still run, so NSFW/violence/CSAM/hate are
+  // still caught. Only product-ad endpoints opt out.
   const [moderationFlags, realPersonFlags] = await Promise.all([
     checkOpenAIModeration(prompt).catch((err) => {
       console.error("[content-moderation] OpenAI moderation call failed:", err);
       return [] as ModerationFlag[];
     }),
-    checkRealPerson(prompt).catch((err) => {
-      console.error("[content-moderation] Real-person classifier failed:", err);
-      return [] as ModerationFlag[];
-    }),
+    opts?.skipRealPerson
+      ? Promise.resolve([] as ModerationFlag[])
+      : checkRealPerson(prompt).catch((err) => {
+          console.error("[content-moderation] Real-person classifier failed:", err);
+          return [] as ModerationFlag[];
+        }),
   ]);
 
   const flags = [...moderationFlags, ...realPersonFlags];
@@ -163,8 +174,20 @@ export async function moderateAndLog(params: {
   userId: string | null;
   endpoint: string;
   prompt: string;
+  /** Product-ad endpoints (Ad Studio) set this — they intentionally
+   *  name the customer's brand/product, which the celebrity
+   *  classifier false-positives on. Blocklist + OpenAI moderation
+   *  still run. */
+  skipRealPerson?: boolean;
 }): Promise<ModerationResult> {
-  const result = await moderatePrompt(params.prompt);
-  await logModeration({ ...params, result });
+  const result = await moderatePrompt(params.prompt, {
+    skipRealPerson: params.skipRealPerson,
+  });
+  await logModeration({
+    userId: params.userId,
+    endpoint: params.endpoint,
+    prompt: params.prompt,
+    result,
+  });
   return result;
 }

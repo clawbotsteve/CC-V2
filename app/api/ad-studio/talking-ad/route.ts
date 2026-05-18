@@ -96,6 +96,9 @@ export async function POST(req: Request) {
       userId,
       endpoint: "ad-studio.talking-ad",
       prompt,
+      // Ad copy names the customer's brand/product — the celebrity
+      // classifier false-positives on it ("Reps FUTR" → realperson).
+      skipRealPerson: true,
     });
     if (!moderation.allowed) {
       return NextResponse.json({ error: moderation.reason }, { status: 400 });
