@@ -47,6 +47,14 @@ type Step = 1 | 2 | 3 | 4;
 const STEP_LABELS = ["Product", "Creator", "Angle", "Your ad"];
 
 /**
+ * Spokesperson (Seedance-2 text-to-video) is hidden: it can't ingest
+ * the real product/creator image (E005 gate) so it never matches the
+ * user's actual product — net-negative UX. Backend + code kept;
+ * flip to true only if we land an enterprise image+audio model.
+ */
+const SHOW_SPOKESPERSON = false;
+
+/**
  * Higgsfield-style pre-filled hook script. The talking box should
  * never be blank — give a strong, product-aware UGC line the user
  * can ship as-is or tweak ("don't make me think").
@@ -1080,7 +1088,7 @@ export default function AdStudioPage() {
                   {/* Premium: talking video ad — only for roster
                       creators (Seedance-2 needs a persona, not a
                       photo). Brand/Agency tier; the API enforces it. */}
-                  {creatorUrl && stockCreatorIdFromImage(creatorUrl) && (
+                  {SHOW_SPOKESPERSON && creatorUrl && stockCreatorIdFromImage(creatorUrl) && (
                     <div className="mt-6 w-full max-w-sm rounded-xl border border-[#6366f1]/40 bg-[#6366f1]/5 p-4 text-left">
                       <p className="text-sm font-semibold flex items-center gap-1.5">
                         <Sparkles className="h-4 w-4 text-[#a78bfa]" />
