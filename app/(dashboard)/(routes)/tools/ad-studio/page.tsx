@@ -347,7 +347,7 @@ export default function AdStudioPage() {
             setTalkingBusy(false);
             if (talkingPollRef.current) clearInterval(talkingPollRef.current);
           } else if (d?.status === "failed") {
-            toast.error("Talking video failed — try a shorter line or another creator.");
+            toast.error("Spokesperson video failed — try a shorter line and retry.");
             setTalkingBusy(false);
             if (talkingPollRef.current) clearInterval(talkingPollRef.current);
           }
@@ -901,39 +901,27 @@ export default function AdStudioPage() {
                     <div className="mt-6 w-full max-w-sm rounded-xl border border-[#6366f1]/40 bg-[#6366f1]/5 p-4 text-left">
                       <p className="text-sm font-semibold flex items-center gap-1.5">
                         <Sparkles className="h-4 w-4 text-[#a78bfa]" />
-                        Talking video ad
+                        AI spokesperson video
                         <span className="text-[10px] uppercase tracking-wide rounded bg-[#6366f1]/30 px-1.5 py-0.5">
                           Brand · beta
                         </span>
                       </p>
                       <p className="text-[11px] text-muted-foreground mt-1">
-                        Your creator says a hook line to camera — with real
-                        voice. ~3 min to render.
+                        A consistent Tavira AI spokesperson reads your hook to
+                        camera with real voice, naming your product. ~3 min.
                       </p>
-                      {/* Selected product + creator (Higgsfield-style
-                          confirmation of what's in the ad). */}
-                      <div className="mt-3 flex items-center gap-2">
-                        {productUrl && (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={productUrl}
-                            alt="Product"
-                            className="h-9 w-9 rounded-md object-cover border border-border bg-black"
-                          />
-                        )}
-                        {creatorUrl && (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={creatorUrl}
-                            alt="Creator"
-                            className="h-9 w-9 rounded-md object-cover border border-border bg-black"
-                          />
-                        )}
-                        <span className="text-[11px] text-muted-foreground">
-                          {creatorName || "Your creator"}
-                          {productName ? ` · ${productName}` : ""}
-                        </span>
-                      </div>
+                      {/* Honest expectation-set: this is a SEPARATE
+                          deliverable, not the still's creator/product.
+                          Seedance-2 takes no image (E005), so the
+                          spokesperson + product are generated from text
+                          and won't visually match the still above. */}
+                      <p className="mt-2 text-[11px] text-amber-300/90 bg-amber-400/10 border border-amber-400/20 rounded-md px-2.5 py-1.5">
+                        Heads up: this is its own standalone talking clip — the
+                        spokesperson and product are AI-generated from your
+                        script and <strong>won't exactly match</strong> the
+                        still above. For your exact creator + product, use
+                        "Turn into a video ad" (silent).
+                      </p>
                       {talkingUrl ? (
                         <>
                           {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
@@ -945,8 +933,8 @@ export default function AdStudioPage() {
                             className="mt-3 w-full rounded-lg border border-border bg-black"
                           />
                           <Button asChild variant="outline" className="mt-3 w-full">
-                            <a href={talkingUrl} download="tavira-talking-ad.mp4" target="_blank" rel="noreferrer">
-                              Download talking video
+                            <a href={talkingUrl} download="tavira-spokesperson.mp4" target="_blank" rel="noreferrer">
+                              Download spokesperson video
                             </a>
                           </Button>
                         </>
@@ -991,12 +979,12 @@ export default function AdStudioPage() {
                             {talkingBusy ? (
                               <>
                                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                Rendering the talking ad…
+                                Rendering the spokesperson video…
                               </>
                             ) : (
                               <>
                                 <Sparkles className="h-4 w-4 mr-2" />
-                                Generate talking video ad
+                                Generate spokesperson video
                               </>
                             )}
                           </Button>
