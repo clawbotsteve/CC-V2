@@ -954,15 +954,35 @@ export default function AdStudioPage() {
                             {j.label}
                           </span>
                           {j.url && (
-                            <a
-                              href={j.url}
-                              download={`tavira-${j.angle}.png`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-[11px] text-[#a78bfa] hover:underline"
-                            >
-                              Download
-                            </a>
+                            <div className="flex items-center gap-3">
+                              <button
+                                onClick={() => {
+                                  // Promote this variant into the
+                                  // single-result view → unlocks
+                                  // "Turn into a video ad" + the
+                                  // spokesperson card on it.
+                                  setResultUrl(j.url);
+                                  setVideoUrl(null);
+                                  setTalkingUrl(null);
+                                  if (batchPollRef.current)
+                                    clearInterval(batchPollRef.current);
+                                  setBatchBusy(false);
+                                  setBatchJobs([]);
+                                }}
+                                className="text-[11px] text-[#a78bfa] hover:underline"
+                              >
+                                Use → video
+                              </button>
+                              <a
+                                href={j.url}
+                                download={`tavira-${j.angle}.png`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-[11px] text-muted-foreground hover:text-foreground hover:underline"
+                              >
+                                Download
+                              </a>
+                            </div>
                           )}
                         </div>
                       </div>
