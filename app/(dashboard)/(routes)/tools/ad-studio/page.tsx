@@ -46,6 +46,18 @@ type Step = 1 | 2 | 3 | 4;
 
 const STEP_LABELS = ["Product", "Creator", "Angle", "Your ad"];
 
+/**
+ * Higgsfield-style pre-filled hook script. The talking box should
+ * never be blank — give a strong, product-aware UGC line the user
+ * can ship as-is or tweak ("don't make me think").
+ */
+function defaultHookScript(productName: string): string {
+  const p = productName.trim();
+  return p
+    ? `Okay I had to show you guys the ${p} — I genuinely use it every day now and I'm kind of obsessed. You need this.`
+    : `Okay I had to show you guys this — I genuinely use it every day now and I'm kind of obsessed. You need this.`;
+}
+
 export default function AdStudioPage() {
   const [step, setStep] = useState<Step>(1);
 
@@ -114,9 +126,28 @@ export default function AdStudioPage() {
     () => () => {
       if (pollRef.current) clearInterval(pollRef.current);
       if (videoPollRef.current) clearInterval(videoPollRef.current);
+      if (talkingPollRef.current) clearInterval(talkingPollRef.current);
     },
     [],
   );
+
+  // Pre-fill the talking-hook box with a strong product-aware line
+  // the moment the talking card can show (Higgsfield-style — never a
+  // blank prompt). Only when still empty + not already rendered, so
+  // we never clobber the user's edits.
+  useEffect(() => {
+    if (
+      step === 4 &&
+      resultUrl &&
+      !talkingUrl &&
+      creatorUrl &&
+      stockCreatorIdFromImage(creatorUrl) &&
+      !talkingScript
+    ) {
+      setTalkingScript(defaultHookScript(productName));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, resultUrl, creatorUrl, talkingUrl]);
 
   const uploadOne = async (
     file: File,
@@ -869,6 +900,30 @@ export default function AdStudioPage() {
                         Your creator says a hook line to camera — with real
                         voice. ~3 min to render.
                       </p>
+                      {/* Selected product + creator (Higgsfield-style
+                          confirmation of what's in the ad). */}
+                      <div className="mt-3 flex items-center gap-2">
+                        {productUrl && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={productUrl}
+                            alt="Product"
+                            className="h-9 w-9 rounded-md object-cover border border-border bg-black"
+                          />
+                        )}
+                        {creatorUrl && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={creatorUrl}
+                            alt="Creator"
+                            className="h-9 w-9 rounded-md object-cover border border-border bg-black"
+                          />
+                        )}
+                        <span className="text-[11px] text-muted-foreground">
+                          {creatorName || "Your creator"}
+                          {productName ? ` · ${productName}` : ""}
+                        </span>
+                      </div>
                       {talkingUrl ? (
                         <>
                           {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
