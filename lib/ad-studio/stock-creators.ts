@@ -58,8 +58,11 @@ export const STOCK_CREATORS: StockCreator[] = [
   {
     id: "ava",
     name: "Ava",
-    vibe: "Girl-next-door · early 20s",
-    bestFor: ["beauty", "skincare", "lifestyle"],
+    vibe: "Relatable beauty creator · 20s",
+    bestFor: ["beauty", "skincare", "lifestyle", "fashion"],
+    // Ships with a 3-shot set (ava.jpg / ava-2.jpg / ava-3.jpg) so
+    // NB2 Edit locks her identity hard across every ad.
+    imageCount: 3,
   },
   {
     id: "maya",
