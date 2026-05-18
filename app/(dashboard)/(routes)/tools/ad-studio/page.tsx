@@ -85,6 +85,19 @@ export default function AdStudioPage() {
   const creatorInputRef = useRef<HTMLInputElement | null>(null);
   const [uploadingCreator, setUploadingCreator] = useState(false);
 
+  // ---- Multi-variant batch (Pivot PR 3 — "fire your agency") ----
+  type BatchJob = {
+    jobId: string;
+    angle: string;
+    label: string;
+    aspectRatio: string;
+    url: string | null;
+    failed: boolean;
+  };
+  const [batchJobs, setBatchJobs] = useState<BatchJob[]>([]);
+  const [batchBusy, setBatchBusy] = useState(false);
+  const batchPollRef = useRef<NodeJS.Timeout | null>(null);
+
   // Full premade reference set when a STOCK creator is picked (sent
   // to the sample endpoint for a much harder identity lock than a
   // single shot). Empty for uploads / trained creators.
@@ -128,6 +141,7 @@ export default function AdStudioPage() {
       if (pollRef.current) clearInterval(pollRef.current);
       if (videoPollRef.current) clearInterval(videoPollRef.current);
       if (talkingPollRef.current) clearInterval(talkingPollRef.current);
+      if (batchPollRef.current) clearInterval(batchPollRef.current);
     },
     [],
   );
@@ -265,6 +279,77 @@ export default function AdStudioPage() {
     }
   };
 
+  // Pivot PR 3: one click → the SAME real creator + real product
+  // fused across all 6 proven ad angles. Faithful path (NB2 Edit),
+  // just fanned out. Each angle polls its own GeneratedImage row.
+  const generateBatch = async () => {
+    if (!productUrl || !creatorUrl || batchBusy) return;
+    setStep(4);
+    setBatchBusy(true);
+    setBatchJobs([]);
+    setResultUrl(null);
+    setVideoUrl(null);
+    try {
+      const res = await fetch("/api/ad-studio/batch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          creatorImageUrl: creatorUrl,
+          creatorRefs: creatorRefs.length > 0 ? creatorRefs : undefined,
+          productImageUrl: productUrl,
+          productType,
+          productName: productName.trim() || undefined,
+          creatorName: creatorName.trim() || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data?.error || "Couldn't start the batch.");
+        setBatchBusy(false);
+        return;
+      }
+      const jobs: BatchJob[] = (data.jobs || []).map((j: any) => ({
+        jobId: j.jobId,
+        angle: j.angle,
+        label: j.label,
+        aspectRatio: j.aspectRatio,
+        url: null,
+        failed: false,
+      }));
+      setBatchJobs(jobs);
+      if (batchPollRef.current) clearInterval(batchPollRef.current);
+      batchPollRef.current = setInterval(async () => {
+        let pending = false;
+        await Promise.all(
+          jobs.map(async (j) => {
+            if (j.url || j.failed) return;
+            try {
+              const r = await fetch(`/api/tools/image/status/${j.jobId}`);
+              const d = await r.json();
+              if (d?.status === "completed" && d?.imageUrl) {
+                j.url = d.imageUrl;
+              } else if (d?.status === "failed") {
+                j.failed = true;
+              } else {
+                pending = true;
+              }
+            } catch {
+              pending = true;
+            }
+          }),
+        );
+        setBatchJobs([...jobs]);
+        if (!pending) {
+          setBatchBusy(false);
+          if (batchPollRef.current) clearInterval(batchPollRef.current);
+        }
+      }, 3000);
+    } catch {
+      toast.error("Something went wrong starting the batch.");
+      setBatchBusy(false);
+    }
+  };
+
   // Animate the approved still into a UGC video via Seedance i2v.
   // Separate one-click step (not auto-chained) — see the endpoint
   // comment for the credit/UX reasoning.
@@ -381,6 +466,9 @@ export default function AdStudioPage() {
     setTalkingBusy(false);
     setTalkingUrl(null);
     if (talkingPollRef.current) clearInterval(talkingPollRef.current);
+    setBatchJobs([]);
+    setBatchBusy(false);
+    if (batchPollRef.current) clearInterval(batchPollRef.current);
   };
 
   return (
@@ -803,24 +891,91 @@ export default function AdStudioPage() {
                 })}
               </div>
 
-              <div className="mt-8 flex justify-between">
+              <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
                 <Button variant="ghost" onClick={() => setStep(2)}>
                   <ArrowLeft className="h-4 w-4 mr-2" /> Back
                 </Button>
-                <Button
-                  onClick={generate}
-                  className="bg-gradient-to-r from-[#6366f1] to-[#8b7bff] text-white"
-                >
-                  <Sparkles className="h-4 w-4 mr-2" /> Generate ad
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="outline" onClick={generate}>
+                    <Sparkles className="h-4 w-4 mr-2" /> Generate this angle
+                  </Button>
+                  <Button
+                    onClick={generateBatch}
+                    className="bg-gradient-to-r from-[#6366f1] to-[#8b7bff] text-white"
+                  >
+                    <Sparkles className="h-4 w-4 mr-2" /> Generate all 6 variants
+                  </Button>
+                </div>
               </div>
+              <p className="mt-2 text-[11px] text-muted-foreground text-right">
+                One run, your real creator + product across all 6 proven ad
+                angles — pick the winners.
+              </p>
             </div>
           )}
 
           {/* ===== STEP 4 — RESULT ===== */}
           {step === 4 && (
             <div className="flex flex-col items-center text-center">
-              {generating ? (
+              {batchJobs.length > 0 ? (
+                <div className="w-full">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold">Your ad variants</h2>
+                    <span className="text-xs text-muted-foreground">
+                      {batchJobs.filter((j) => j.url).length}/{batchJobs.length} ready
+                      {batchBusy ? " · generating…" : ""}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {batchJobs.map((j) => (
+                      <div key={j.jobId} className="text-left">
+                        <div className="relative aspect-[9/16] w-full rounded-lg overflow-hidden border border-border bg-black/40">
+                          {j.url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={j.url}
+                              alt={j.label}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : j.failed ? (
+                            <div className="absolute inset-0 flex items-center justify-center p-2 text-center">
+                              <span className="text-[11px] text-muted-foreground">
+                                Couldn&apos;t render this angle
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <Loader2 className="h-6 w-6 animate-spin text-[#a78bfa]" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between mt-1.5">
+                          <span className="text-[11px] font-medium">
+                            {j.label}
+                          </span>
+                          {j.url && (
+                            <a
+                              href={j.url}
+                              download={`tavira-${j.angle}.png`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-[11px] text-[#a78bfa] hover:underline"
+                            >
+                              Download
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    onClick={resetAll}
+                    className="mt-6 text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5"
+                  >
+                    <RotateCcw className="h-3 w-3" /> Start a new ad
+                  </button>
+                </div>
+              ) : generating ? (
                 <div className="py-16">
                   <Loader2 className="h-10 w-10 animate-spin mx-auto mb-4 text-[#a78bfa]" />
                   <p className="text-sm">Compositing {productName || "your product"} into the scene…</p>
