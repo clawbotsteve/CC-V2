@@ -201,17 +201,24 @@ export function translateFalInputToReplicate(
   // Used for both /flux-lora (Travia's LoRA inference flow) and the
   // legacy /flux-pro/v1.1 endpoint. Replicate input schema:
   //   prompt: string
-  //   hf_lora: string (HuggingFace LoRA URL — we may need to mirror
-  //                    our trained LoRAs there, or pass FAL URLs if
-  //                    Replicate can fetch them)
+  //   lora_weights: string (HF path OR an arbitrary .safetensors URL;
+  //                    our S3-mirrored trained LoRA URLs work directly.
+  //                    Verified against Replicate README/schema
+  //                    2026-05-17. NOT `hf_lora` — that's the community
+  //                    lucataco/flux-dev-lora model, not BFL's.)
   //   lora_scale: 0-1
   //   num_inference_steps: int
   //   guidance: number
   //   aspect_ratio: similar enum to nano-banana-2
   // --------------------------------------------------------------
   if (falEndpoint === "fal-ai/flux-lora" || falEndpoint === "fal-ai/flux-pro/v1.1") {
-    // FAL's lora input shape: loras: [{ path, scale }]. Replicate
-    // expects a single hf_lora string.
+    // FAL's lora input shape: loras: [{ path, scale }]. The mapped
+    // Replicate model black-forest-labs/flux-dev-lora takes the
+    // weights via `lora_weights` (a HF path OR an arbitrary
+    // .safetensors URL — incl. our S3-mirrored trained LoRAs). NOTE:
+    // `hf_lora` is the param name for the *community* lucataco model,
+    // not the BFL model we map to — sending hf_lora here is silently
+    // ignored and produces a non-personalized image.
     const firstLora =
       Array.isArray(falInput.loras) && falInput.loras[0]
         ? falInput.loras[0]
@@ -225,7 +232,7 @@ export function translateFalInputToReplicate(
       aspect_ratio: falInput.aspect_ratio ?? "1:1",
     };
     if (firstLora?.path) {
-      out.hf_lora = firstLora.path;
+      out.lora_weights = firstLora.path;
       out.lora_scale = firstLora.scale ?? 1;
     }
     if (typeof falInput.seed === "number") out.seed = falInput.seed;
