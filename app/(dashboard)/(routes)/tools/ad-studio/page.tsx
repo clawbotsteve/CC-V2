@@ -238,7 +238,7 @@ export default function AdStudioPage() {
       const res = await fetch("/api/ad-studio/animate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageUrl: resultUrl }),
+        body: JSON.stringify({ imageUrl: resultUrl, productType }),
       });
       const data = await res.json();
       if (!res.ok) {

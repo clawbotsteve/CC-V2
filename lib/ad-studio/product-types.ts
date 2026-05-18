@@ -163,6 +163,61 @@ export function productPresentation(key: ProductTypeKey | undefined): string {
 }
 
 /**
+ * Per-type MOTION beat for Seedance image-to-video. A still only
+ * freezes one moment; the i2v model needs to be told what should
+ * physically move in the ~5s clip. Product-type aware for the same
+ * reason the still is: a phone case is tilted so the contents catch
+ * the light; a hat is adjusted; a drink is lifted toward a sip.
+ */
+const PRODUCT_MOTION: Record<ProductTypeKey, string> = {
+  generic:
+    "she holds the product up to the camera and slowly turns it so the label catches the light, small natural micro-expressions and a relaxed smile",
+  hat: "she adjusts the hat on her head and tilts her head slightly, relaxed natural movement, a small smile to camera",
+  eyewear:
+    "she lightly touches the frame and turns her head slightly, relaxed confident micro-movements",
+  apparel:
+    "she shifts and turns slightly to show how it fits, relaxed natural movement, a glance at the camera",
+  footwear:
+    "a gentle camera tilt as she shifts her stance and the footwear is shown clearly",
+  bag: "she lifts and turns the bag slightly to show it off, relaxed natural movement",
+  jewelry:
+    "she moves slightly so the jewelry catches the light, gentle natural movement, a soft smile",
+  watch:
+    "she turns her wrist so the watch face catches the light, subtle natural movement",
+  skincare:
+    "she holds the product near her face and tilts it slightly, calm relaxed skincare-moment movement, a soft smile",
+  makeup:
+    "a small natural application gesture with the product near her face, relaxed and unhurried",
+  haircare:
+    "she runs the product or a hand through her hair in a small natural motion",
+  supplement:
+    "she shakes the bottle gently and shows a capsule or scoop, a natural relaxed gesture and small smile",
+  beverage:
+    "she lifts the drink toward a sip and lowers it again, a relaxed satisfied micro-expression",
+  food: "she lifts it slightly as if about to take a bite, a relaxed enjoyable expression",
+  gadget:
+    "small natural finger movements as she interacts with the device, focused then a glance up with a smile",
+  home: "a small natural gesture using or turning the product in her space",
+};
+
+/**
+ * Build a layered Seedance i2v motion prompt (Higgsfield-style:
+ * shot spec + subject action beat + energy/realism), product-type
+ * aware. Keeps it to the ~5s of subtle motion Seedance does well
+ * (NOT dialogue / multi-shot — that's a different model).
+ */
+export function buildSeedanceMotionPrompt(
+  key: ProductTypeKey | undefined,
+): string {
+  const beat = PRODUCT_MOTION[key ?? "generic"] ?? PRODUCT_MOTION.generic;
+  return [
+    "Vertical 9:16 selfie-style UGC phone video, handheld, subtle natural camera movement, warm natural light, real skin tones, no filter.",
+    `The creator stays consistent and natural: ${beat}.`,
+    "Authentic unpolished UGC energy, the product stays clearly visible, in frame and in sharp focus the whole time. Subtle and real, not over-animated.",
+  ].join(" ");
+}
+
+/**
  * Keyword heuristic — maps a product name / scraped title to a
  * sensible default type. Order matters: most specific first.
  * Returns "generic" when nothing matches (safe fallback = current
