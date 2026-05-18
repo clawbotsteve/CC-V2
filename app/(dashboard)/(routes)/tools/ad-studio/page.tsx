@@ -52,7 +52,7 @@ const STEP_LABELS = ["Product", "Creator", "Angle", "Your ad"];
  * user's actual product — net-negative UX. Backend + code kept;
  * flip to true only if we land an enterprise image+audio model.
  */
-const SHOW_SPOKESPERSON = false;
+const SHOW_SPOKESPERSON = true;
 
 /**
  * Higgsfield-style pre-filled hook script. The talking box should
@@ -420,6 +420,7 @@ export default function AdStudioPage() {
           script: talkingScript.trim(),
           productName: productName.trim() || undefined,
           productType,
+          productImageUrl: productUrl || undefined,
           duration: talkingDuration,
         }),
       });
@@ -1098,20 +1099,21 @@ export default function AdStudioPage() {
                         </span>
                       </p>
                       <p className="text-[11px] text-muted-foreground mt-1">
-                        A consistent Tavira AI spokesperson reads your hook to
-                        camera with real voice, naming your product. ~3 min.
+                        A Tavira AI presenter holds up <strong>your exact
+                        product</strong> and reads your hook to camera with
+                        real voice. ~3–4 min.
                       </p>
-                      {/* Honest expectation-set: this is a SEPARATE
-                          deliverable, not the still's creator/product.
-                          Seedance-2 takes no image (E005), so the
-                          spokesperson + product are generated from text
-                          and won't visually match the still above. */}
+                      {/* Honest expectation-set: the PRODUCT is the
+                          user's real uploaded image (Seedance-2
+                          reference_images — verified not deepfake-gated
+                          for products). The PRESENTER is a generated
+                          Tavira persona, NOT the still's creator (person
+                          images are still E005-blocked). */}
                       <p className="mt-2 text-[11px] text-amber-300/90 bg-amber-400/10 border border-amber-400/20 rounded-md px-2.5 py-1.5">
-                        Heads up: this is its own standalone talking clip — the
-                        spokesperson and product are AI-generated from your
-                        script and <strong>won't exactly match</strong> the
-                        still above. For your exact creator + product, use
-                        "Turn into a video ad" (silent).
+                        The product is <strong>yours, exactly</strong>. The
+                        presenter is a Tavira AI persona — not the creator from
+                        the still above. Want your picked creator + product
+                        instead? Use "Turn into a video ad" (silent).
                       </p>
                       {talkingUrl ? (
                         <>
