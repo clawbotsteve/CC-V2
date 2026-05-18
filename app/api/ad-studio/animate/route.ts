@@ -7,6 +7,7 @@ import { moderateAndLog } from "@/lib/content-moderation";
 import { checkAvailableCredit } from "@/lib/check-available-credit";
 import { ToolType } from "@prisma/client";
 import { requireTermsAccepted } from "@/lib/require-terms-accepted";
+import { buildSeedanceMotionPrompt } from "@/lib/ad-studio/product-types";
 
 /**
  * POST /api/ad-studio/animate
@@ -55,9 +56,12 @@ export async function POST(req: Request) {
     // Natural UGC motion default — subtle, talking-to-camera energy.
     // The still already nails the composition; we just want it to
     // feel alive, not over-animated.
+    // Structured, product-type-aware Seedance motion prompt (Higgsfield-
+    // style layering: shot spec + action beat + realism). Falls back
+    // to "generic" when no type is sent. An explicit prompt still wins.
     const prompt: string =
       (typeof body?.prompt === "string" && body.prompt.trim()) ||
-      "Subtle natural UGC motion: the person talks to the camera with relaxed micro-expressions and small natural gestures, gentle handheld phone-camera movement, the product stays clearly visible and in frame. Authentic, not over-animated.";
+      buildSeedanceMotionPrompt(body?.productType);
 
     const moderation = await moderateAndLog({
       userId,

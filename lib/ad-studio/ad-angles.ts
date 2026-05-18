@@ -138,8 +138,18 @@ export function fillAdAnglePrompt(
   angle: AdAngle,
   vars: { creator?: string; product?: string; presentation?: string },
 ): string {
-  return angle.template
+  const filled = angle.template
     .replaceAll("{presentation}", vars.presentation || productPresentation("generic"))
     .replaceAll("{creator}", vars.creator || "the AI creator in the reference")
     .replaceAll("{product}", vars.product || "the product in the product reference");
+  return `${filled} ${STILL_REALISM}`;
 }
+
+/**
+ * Shared realism layer appended to every still prompt. The single
+ * biggest "looks like real UGC, not an AI ad" lever (lifted from how
+ * the best UGC-video prompts are structured): explicit phone-capture
+ * + real skin + no filter + candid imperfect framing.
+ */
+const STILL_REALISM =
+  "Shot on an iPhone front camera, real skin texture with visible pores and natural imperfections, no beauty filter or retouching, candid slightly imperfect handheld framing — looks like genuine UGC filmed by a real customer on their phone, not a studio ad.";
