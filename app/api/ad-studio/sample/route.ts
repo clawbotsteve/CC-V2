@@ -9,6 +9,11 @@ import { checkAvailableCredit } from "@/lib/check-available-credit";
 import { ToolType } from "@prisma/client";
 import { requireTermsAccepted } from "@/lib/require-terms-accepted";
 import { AD_ANGLES, AdAngleKey, fillAdAnglePrompt } from "@/lib/ad-studio/ad-angles";
+import {
+  ProductTypeKey,
+  detectProductType,
+  productPresentation,
+} from "@/lib/ad-studio/product-types";
 
 /**
  * POST /api/ad-studio/sample
@@ -68,9 +73,21 @@ export async function POST(req: Request) {
     }
 
     const angle = AD_ANGLES.find((a) => a.key === angleKey) || AD_ANGLES[0];
+
+    // Product-type awareness: use the explicit type the client sent,
+    // else auto-detect from the product name (safe "generic" fallback
+    // = the old hold-to-camera behaviour). This is what makes a hat
+    // get WORN and a serum APPLIED instead of every product being
+    // held flat to the chest like a catalog shot.
+    const productTypeKey: ProductTypeKey =
+      (typeof body?.productType === "string" && body.productType) ||
+      detectProductType(body?.productName);
+    const presentation = productPresentation(productTypeKey);
+
     const prompt = fillAdAnglePrompt(angle, {
       creator: body?.creatorName,
       product: body?.productName,
+      presentation,
     });
 
     // Moderation — same pipeline every gen endpoint uses.

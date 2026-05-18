@@ -13,6 +13,11 @@ import { Button } from "@/components/ui/button";
 import { uploadFiles } from "@/lib/utils";
 import { AD_ANGLES, AdAngleKey } from "@/lib/ad-studio/ad-angles";
 import { STOCK_CREATORS, stockCreatorImage, stockCreatorRefs } from "@/lib/ad-studio/stock-creators";
+import {
+  PRODUCT_TYPES,
+  ProductTypeKey,
+  detectProductType,
+} from "@/lib/ad-studio/product-types";
 
 /**
  * Ad Studio — guided UGC-ad creation flow.
@@ -47,6 +52,15 @@ export default function AdStudioPage() {
   // ---- Product ----
   const [productUrl, setProductUrl] = useState<string | null>(null);
   const [productName, setProductName] = useState("");
+  // Product-type awareness — auto-detected from the name, one-tap
+  // override. Drives HOW the creator presents the product (hat worn,
+  // serum applied, etc.). Never required.
+  const [productType, setProductType] = useState<ProductTypeKey>("generic");
+  // Once the user taps a type chip we stop auto-overwriting it.
+  const productTypeTouched = useRef(false);
+  const autoDetectType = (text: string) => {
+    if (!productTypeTouched.current) setProductType(detectProductType(text));
+  };
   const [scrapeInput, setScrapeInput] = useState("");
   const [scraping, setScraping] = useState(false);
   const productInputRef = useRef<HTMLInputElement | null>(null);
@@ -141,7 +155,11 @@ export default function AdStudioPage() {
       }
       if (d?.imageUrl) {
         setProductUrl(d.imageUrl);
-        if (d.title && !productName) setProductName(String(d.title).slice(0, 90));
+        if (d.title && !productName) {
+          const t = String(d.title).slice(0, 90);
+          setProductName(t);
+          autoDetectType(t);
+        }
         toast.success("Product pulled in — looking good.");
       } else {
         toast.error(d?.error || "No product image found. Upload it manually.");
@@ -191,6 +209,7 @@ export default function AdStudioPage() {
           creatorRefs: creatorRefs.length > 0 ? creatorRefs : undefined,
           productImageUrl: productUrl,
           angle,
+          productType,
           productName: productName.trim() || undefined,
           creatorName: creatorName.trim() || undefined,
         }),
@@ -256,6 +275,8 @@ export default function AdStudioPage() {
     setStep(1);
     setProductUrl(null);
     setProductName("");
+    setProductType("generic");
+    productTypeTouched.current = false;
     setScrapeInput("");
     setCreatorUrl(null);
     setCreatorName("");
@@ -389,13 +410,50 @@ export default function AdStudioPage() {
                     </label>
                     <input
                       value={productName}
-                      onChange={(e) => setProductName(e.target.value)}
+                      onChange={(e) => {
+                        setProductName(e.target.value);
+                        autoDetectType(e.target.value);
+                      }}
                       placeholder="e.g. PR-1 Vitamin C Serum"
                       className="mt-2 w-full rounded-lg border border-border bg-black/30 px-3 py-2 text-sm outline-none focus:border-[#6366f1]"
                     />
                     <p className="text-[11px] text-emerald-400 mt-2 flex items-center gap-1">
                       <Check className="h-3 w-3" /> Product ready
                     </p>
+                  </div>
+                </div>
+              )}
+
+              {productUrl && (
+                <div className="mt-6">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Product type
+                  </label>
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    We guessed this from the name — tap to change. It decides how
+                    the creator shows your product (worn, applied, held…).
+                  </p>
+                  <div className="mt-2.5 flex flex-wrap gap-2">
+                    {PRODUCT_TYPES.map((pt) => {
+                      const on = productType === pt.key;
+                      return (
+                        <button
+                          key={pt.key}
+                          type="button"
+                          onClick={() => {
+                            productTypeTouched.current = true;
+                            setProductType(pt.key);
+                          }}
+                          className={`rounded-full border px-3 py-1.5 text-xs transition ${
+                            on
+                              ? "border-[#6366f1] bg-[#6366f1]/20 text-white"
+                              : "border-border bg-black/30 text-muted-foreground hover:border-[#6366f1]/60"
+                          }`}
+                        >
+                          {pt.label}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
