@@ -52,6 +52,21 @@ export interface StockCreator {
    * are added.
    */
   imageCount?: number;
+  /**
+   * Rich text description of the creator for the Seedance-2.0
+   * TALKING-hook (text-to-video). Seedance 2.0 hard-blocks any
+   * human-likeness image input (E005 deepfake gate), so the talking
+   * creator's identity can ONLY come from this persona text. Written
+   * to resemble the roster tile so the picked creator ≈ what the
+   * user sees talking.
+   */
+  persona: string;
+  /**
+   * Locked random seed for the talking-hook. Same persona + same
+   * seed → a consistent-looking creator across every ad, which is
+   * how we get a repeatable "creator" with no uploadable reference.
+   */
+  seed: number;
 }
 
 export const STOCK_CREATORS: StockCreator[] = [
@@ -63,48 +78,72 @@ export const STOCK_CREATORS: StockCreator[] = [
     // Ships with a 3-shot set (ava.jpg / ava-2.jpg / ava-3.jpg) so
     // NB2 Edit locks her identity hard across every ad.
     imageCount: 3,
+    persona:
+      "A 25-year-old Latina woman, warm relatable girl-next-door, long dark wavy brown hair, light freckles across the nose, natural minimal makeup, friendly approachable energy, casual everyday style",
+    seed: 88488,
   },
   {
     id: "maya",
     name: "Maya",
     vibe: "Warm relatable · late 20s",
     bestFor: ["wellness", "supplements", "home"],
+    persona:
+      "A 28-year-old Black woman, warm and relatable, natural voluminous curly hair, soft expressive eyes, genuine easy smile, minimal makeup, cozy everyday style",
+    seed: 41200,
   },
   {
     id: "sofia",
     name: "Sofia",
     vibe: "Polished beauty creator · 20s",
     bestFor: ["beauty", "haircare", "fashion"],
+    persona:
+      "A 24-year-old Latina woman, polished beauty-creator look, sleek glossy dark hair, subtle tasteful glam makeup, confident warm energy",
+    seed: 73355,
   },
   {
     id: "kai",
     name: "Kai",
     vibe: "Fitness guy · 20s",
     bestFor: ["fitness", "supplements", "menswear"],
+    persona:
+      "A 25-year-old East Asian man, fit athletic build, short modern textured haircut, light stubble, friendly confident energy, fitted casual athletic style",
+    seed: 25190,
   },
   {
     id: "noah",
     name: "Noah",
     vibe: "Approachable everyman · 30s",
     bestFor: ["gadgets", "grooming", "outdoor"],
+    persona:
+      "A 34-year-old white man, approachable everyman, short tidy brown hair, short well-kept beard, warm easy genuine smile, casual relaxed style",
+    seed: 60417,
   },
   {
     id: "jada",
     name: "Jada",
     vibe: "Gen-Z hype · early 20s",
     bestFor: ["fashion", "accessories", "trend products"],
+    persona:
+      "A 21-year-old mixed-race Gen-Z woman, warm light-brown skin, bold modern styled hair, expressive lively eyes, playful confident energy, trendy style",
+    seed: 90631,
   },
   {
     id: "elena",
     name: "Elena",
     vibe: "Busy mom · 30s",
     bestFor: ["home", "kids", "wellness", "kitchen"],
+    persona:
+      "A 36-year-old white woman, busy relatable mom, shoulder-length natural brown wavy hair, soft warm genuine smile, light natural skin texture, minimal makeup, casual comfy style",
+    seed: 33874,
   },
   {
     id: "marcus",
     name: "Marcus",
     vibe: "Confident professional · 30s",
     bestFor: ["tech", "finance", "menswear", "grooming"],
+    persona:
+      "A 33-year-old Black man, confident professional, clean short fade haircut, neat short beard, assured friendly energy, smart-casual style",
+    seed: 51208,
   },
 ];
 
@@ -133,4 +172,29 @@ export function stockCreatorIdFromImage(url: string): string | null {
   const m = url.match(/\/creators\/([a-z0-9_-]+)\.jpg$/i);
   if (!m) return null;
   return STOCK_CREATORS.some((s) => s.id === m[1]) ? m[1] : null;
+}
+
+export function getStockCreator(id: string): StockCreator | undefined {
+  return STOCK_CREATORS.find((s) => s.id === id);
+}
+
+/**
+ * Build the Seedance-2.0 text-to-video TALKING-hook prompt: the
+ * creator's persona + a fixed UGC scene/delivery frame + the spoken
+ * line. Returned with the creator's locked seed so the same creator
+ * renders consistently across every ad (Seedance 2.0 takes no image
+ * input — persona + seed IS the identity).
+ */
+export function buildTalkingHookPrompt(
+  c: StockCreator,
+  script: string,
+): { prompt: string; seed: number } {
+  const scene =
+    "Vertical 9:16 selfie-style UGC phone video, warm casual room, soft natural " +
+    "window light, authentic unpolished phone-camera look, natural handheld " +
+    "movement, real skin texture, no filter. The creator talks directly to the " +
+    "front phone camera with genuine, warm, excited energy and natural " +
+    "micro-expressions.";
+  const safe = script.replace(/["\\]/g, "").replace(/\s+/g, " ").trim().slice(0, 240);
+  return { prompt: `${c.persona}. ${scene} They say: "${safe}"`, seed: c.seed };
 }

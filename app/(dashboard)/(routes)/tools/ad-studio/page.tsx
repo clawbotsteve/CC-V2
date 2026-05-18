@@ -12,7 +12,7 @@ import AiAnimatedHeading from "@/components/ai-animated-heading";
 import { Button } from "@/components/ui/button";
 import { uploadFiles } from "@/lib/utils";
 import { AD_ANGLES, AdAngleKey } from "@/lib/ad-studio/ad-angles";
-import { STOCK_CREATORS, stockCreatorImage, stockCreatorRefs } from "@/lib/ad-studio/stock-creators";
+import { STOCK_CREATORS, stockCreatorImage, stockCreatorRefs, stockCreatorIdFromImage } from "@/lib/ad-studio/stock-creators";
 import {
   PRODUCT_TYPES,
   ProductTypeKey,
@@ -88,6 +88,12 @@ export default function AdStudioPage() {
   const [animating, setAnimating] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const videoPollRef = useRef<NodeJS.Timeout | null>(null);
+
+  // ---- Premium "Talking video ad" (Seedance-2 persona+seed T2V) ----
+  const [talkingScript, setTalkingScript] = useState("");
+  const [talkingBusy, setTalkingBusy] = useState(false);
+  const [talkingUrl, setTalkingUrl] = useState<string | null>(null);
+  const talkingPollRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     fetch("/api/character-studio")
@@ -271,6 +277,52 @@ export default function AdStudioPage() {
     }
   };
 
+  // Premium talking-video ad: the picked roster creator speaks the
+  // hook line to camera WITH audio (Seedance-2 persona+seed T2V).
+  // Stock creators only — the model takes no image, identity comes
+  // from the creator's persona text + locked seed.
+  const generateTalkingAd = async () => {
+    const sid = creatorUrl ? stockCreatorIdFromImage(creatorUrl) : null;
+    if (!sid || !talkingScript.trim() || talkingBusy) return;
+    setTalkingBusy(true);
+    setTalkingUrl(null);
+    try {
+      const res = await fetch("/api/ad-studio/talking-ad", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ creatorId: sid, script: talkingScript.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data?.error || "Couldn't start the talking video.");
+        setTalkingBusy(false);
+        return;
+      }
+      const id = data.jobId;
+      if (talkingPollRef.current) clearInterval(talkingPollRef.current);
+      talkingPollRef.current = setInterval(async () => {
+        try {
+          const r = await fetch(`/api/tools/video/status/${id}`);
+          const d = await r.json();
+          if (d?.status === "completed" && (d?.videoUrl || d?.imageUrl)) {
+            setTalkingUrl(d.videoUrl || d.imageUrl);
+            setTalkingBusy(false);
+            if (talkingPollRef.current) clearInterval(talkingPollRef.current);
+          } else if (d?.status === "failed") {
+            toast.error("Talking video failed — try a shorter line or another creator.");
+            setTalkingBusy(false);
+            if (talkingPollRef.current) clearInterval(talkingPollRef.current);
+          }
+        } catch {
+          /* keep polling */
+        }
+      }, 5000);
+    } catch {
+      toast.error("Something went wrong.");
+      setTalkingBusy(false);
+    }
+  };
+
   const resetAll = () => {
     setStep(1);
     setProductUrl(null);
@@ -286,6 +338,10 @@ export default function AdStudioPage() {
     setVideoUrl(null);
     setGenerating(false);
     setAnimating(false);
+    setTalkingScript("");
+    setTalkingBusy(false);
+    setTalkingUrl(null);
+    if (talkingPollRef.current) clearInterval(talkingPollRef.current);
   };
 
   return (
@@ -795,6 +851,75 @@ export default function AdStudioPage() {
                       Like this still? Animate it into a 5s UGC video ad with
                       Seedance — that's what actually runs on TikTok/Meta.
                     </p>
+                  )}
+
+                  {/* Premium: talking video ad — only for roster
+                      creators (Seedance-2 needs a persona, not a
+                      photo). Brand/Agency tier; the API enforces it. */}
+                  {creatorUrl && stockCreatorIdFromImage(creatorUrl) && (
+                    <div className="mt-6 w-full max-w-sm rounded-xl border border-[#6366f1]/40 bg-[#6366f1]/5 p-4 text-left">
+                      <p className="text-sm font-semibold flex items-center gap-1.5">
+                        <Sparkles className="h-4 w-4 text-[#a78bfa]" />
+                        Talking video ad
+                        <span className="text-[10px] uppercase tracking-wide rounded bg-[#6366f1]/30 px-1.5 py-0.5">
+                          Brand · beta
+                        </span>
+                      </p>
+                      <p className="text-[11px] text-muted-foreground mt-1">
+                        Your creator says a hook line to camera — with real
+                        voice. ~3 min to render.
+                      </p>
+                      {talkingUrl ? (
+                        <>
+                          {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                          <video
+                            src={talkingUrl}
+                            controls
+                            autoPlay
+                            loop
+                            className="mt-3 w-full rounded-lg border border-border bg-black"
+                          />
+                          <Button asChild variant="outline" className="mt-3 w-full">
+                            <a href={talkingUrl} download="tavira-talking-ad.mp4" target="_blank" rel="noreferrer">
+                              Download talking video
+                            </a>
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <textarea
+                            value={talkingScript}
+                            onChange={(e) => setTalkingScript(e.target.value.slice(0, 240))}
+                            placeholder={'e.g. "Okay I had to show you guys this — honestly obsessed, you need it."'}
+                            rows={3}
+                            disabled={talkingBusy}
+                            className="mt-3 w-full rounded-lg border border-border bg-black/30 px-3 py-2 text-sm outline-none focus:border-[#6366f1] resize-none"
+                          />
+                          <div className="flex items-center justify-between mt-1">
+                            <span className="text-[10px] text-muted-foreground">
+                              {talkingScript.length}/240
+                            </span>
+                          </div>
+                          <Button
+                            className="mt-2 w-full bg-gradient-to-r from-[#6366f1] to-[#8b7bff] text-white"
+                            onClick={generateTalkingAd}
+                            disabled={talkingBusy || !talkingScript.trim()}
+                          >
+                            {talkingBusy ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Rendering the talking ad…
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="h-4 w-4 mr-2" />
+                                Generate talking video ad
+                              </>
+                            )}
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   )}
 
                   <button

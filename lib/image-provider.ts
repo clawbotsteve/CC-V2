@@ -97,6 +97,13 @@ export const FAL_TO_REPLICATE_MODEL_MAP: Record<string, string> = {
   "fal-ai/bytedance/seedance/v1/pro/reference-to-video": "bytedance/seedance-1-pro",
   "fal-ai/bytedance/seedance-2.0/reference-to-video": "bytedance/seedance-1-pro",
   "fal-ai/bytedance/seedance/v1/pro/fast/image-to-video": "bytedance/seedance-1-pro",
+  // Seedance 2.0 TEXT-to-video (native audio + dialogue). NOTE: this
+  // model's safety layer hard-blocks any human-likeness IMAGE input
+  // (verified E005 across first-frame `image` AND `reference_images`,
+  // any face, prompt-independent). So this path is TEXT-ONLY — the
+  // creator is described via a persona prompt + locked seed for
+  // cross-render consistency. Used for the Ad Studio talking-hook.
+  "fal-ai/bytedance/seedance-2.0/text-to-video": "bytedance/seedance-2.0",
   "fal-ai/veo3.1/fast/image-to-video": "google/veo-3-fast",
   "fal-ai/wan-pro/image-to-video": "wavespeedai/wan-2.2-i2v-a14b",
 
@@ -335,6 +342,30 @@ export function translateFalInputToReplicate(
     if (typeof falInput.keep_original_sound === "boolean") {
       out.keep_original_sound = falInput.keep_original_sound;
     }
+    return out;
+  }
+
+  // --------------------------------------------------------------
+  // bytedance/seedance-2.0 on Replicate — TEXT-to-video w/ audio.
+  // Replicate input schema (verified 2026-05-18):
+  //   prompt: string  (the creator persona + scene + spoken line)
+  //   seed: int        (locked per roster creator → consistent face
+  //                     across renders; this is how we get a
+  //                     repeatable "creator" without an image input)
+  //   duration: int (default 5) | resolution ("720p") | aspect_ratio
+  //   generate_audio: bool (default true) — native synced dialogue
+  // NO image / reference_images here: those E005-block (deepfake
+  // gate). Text-only is the only path this model permits for people.
+  // --------------------------------------------------------------
+  if (falEndpoint === "fal-ai/bytedance/seedance-2.0/text-to-video") {
+    const out: Record<string, any> = {
+      prompt: falInput.prompt,
+      duration: Number(falInput.duration) || 5,
+      resolution: falInput.resolution ?? "720p",
+      aspect_ratio: falInput.aspect_ratio ?? "9:16",
+      generate_audio: falInput.generate_audio !== false,
+    };
+    if (typeof falInput.seed === "number") out.seed = falInput.seed;
     return out;
   }
 
