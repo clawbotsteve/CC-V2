@@ -354,8 +354,13 @@ export function translateFalInputToReplicate(
   //                     repeatable "creator" without an image input)
   //   duration: int (default 5) | resolution ("720p") | aspect_ratio
   //   generate_audio: bool (default true) — native synced dialogue
-  // NO image / reference_images here: those E005-block (deepfake
-  // gate). Text-only is the only path this model permits for people.
+  //   reference_images: string[] — PRODUCT-only refs, referenced in
+  //     the prompt as [Image1]. Verified 2026-05-18: a person image
+  //     E005-blocks (deepfake gate) but a PRODUCT image does NOT —
+  //     so the spokesperson is text/seed (persona) while the user's
+  //     EXACT product comes through as a reference. MUST be an
+  //     https URL the model worker can fetch (http:// hangs → the
+  //     caller re-hosts before passing it here).
   // --------------------------------------------------------------
   if (falEndpoint === "fal-ai/bytedance/seedance-2.0/text-to-video") {
     const out: Record<string, any> = {
@@ -366,6 +371,12 @@ export function translateFalInputToReplicate(
       generate_audio: falInput.generate_audio !== false,
     };
     if (typeof falInput.seed === "number") out.seed = falInput.seed;
+    if (
+      Array.isArray(falInput.reference_images) &&
+      falInput.reference_images.length > 0
+    ) {
+      out.reference_images = falInput.reference_images;
+    }
     return out;
   }
 

@@ -3,6 +3,7 @@ import prismadb from "@/lib/prismadb";
 import { auth } from "@clerk/nextjs/server";
 import { getWebhookUrl } from "@/lib/utils";
 import { submitImageJob } from "@/lib/image-provider";
+import { uploadBlobToReplicate } from "@/lib/replicate-client";
 import { moderateAndLog } from "@/lib/content-moderation";
 import { checkAvailableCredit } from "@/lib/check-available-credit";
 import { ToolType } from "@prisma/client";
@@ -95,14 +96,42 @@ export async function POST(req: Request) {
       );
     }
 
-    // Product woven into the talking scene (Higgsfield-style).
     const productName: string =
       typeof body?.productName === "string" ? body.productName.trim().slice(0, 90) : "";
     const productType: ProductTypeKey =
       (typeof body?.productType === "string" && body.productType) ||
       detectProductType(productName);
-    const productClause = productName
-      ? talkingProductClause(productType, productName)
+
+    // THE breakthrough (verified 2026-05-18): a PRODUCT image as a
+    // Seedance-2 reference_image is NOT deepfake-blocked (only person
+    // images E005). So the presenter is a text/seed persona while the
+    // user's EXACT product comes through as [Image1]. The reference
+    // MUST be an https URL the model worker can fetch — arbitrary
+    // ecom CDN URLs (often http:// or hotlink-protected) hang the
+    // job until it's canceled, so we force-mirror the bytes to a
+    // Replicate file first.
+    const productImageUrl: string | undefined = body?.productImageUrl;
+    let productRef: string | null = null;
+    if (productImageUrl) {
+      try {
+        const res = await fetch(productImageUrl);
+        if (res.ok) {
+          const blob = await res.blob();
+          productRef = await uploadBlobToReplicate(blob, "product.png");
+        }
+      } catch (err) {
+        console.error("[AD-STUDIO_TALKING_AD] product re-host failed", err);
+      }
+    }
+
+    // Reference the product as [Image1] when we have a usable ref so
+    // Seedance-2 renders the EXACT product; else fall back to the
+    // text-only name (approximate).
+    const productLabel = productRef
+      ? `the ${productName || "product"} shown in [Image1]`
+      : productName;
+    const productClause = productLabel
+      ? talkingProductClause(productType, productLabel)
       : undefined;
 
     // Duration: Seedance 2.0 supports 5s or 10s. Default 5.
@@ -157,6 +186,7 @@ export async function POST(req: Request) {
           resolution: "720p",
           aspect_ratio: "9:16",
           generate_audio: true,
+          ...(productRef ? { reference_images: [productRef] } : {}),
         },
         webhookUrl,
       },
