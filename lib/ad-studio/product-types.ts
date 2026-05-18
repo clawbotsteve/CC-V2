@@ -163,6 +163,42 @@ export function productPresentation(key: ProductTypeKey | undefined): string {
 }
 
 /**
+ * Talking-hook product clause (Seedance-2 text-to-video). Unlike
+ * `presentation` (which refers to "the product reference" image),
+ * this is text-only and names the product directly so the talking
+ * creator visibly holds/wears/uses it on camera — Higgsfield-style
+ * (their prompt describes the product inline too). No image input
+ * exists for this model, so the rendered product is described-from-
+ * text (looks like it, not pixel-exact — Phase-2 stitch is exact).
+ */
+const TALKING_CLAUSE: Record<ProductTypeKey, (p: string) => string> = {
+  generic: (p) => `holding ${p} up toward the camera`,
+  hat: (p) => `wearing ${p} on their head`,
+  eyewear: (p) => `wearing ${p}`,
+  apparel: (p) => `wearing ${p}, showing how it looks on`,
+  footwear: (p) => `showing off ${p} on their feet`,
+  bag: (p) => `holding and showing off ${p}`,
+  jewelry: (p) => `wearing ${p}`,
+  watch: (p) => `wearing ${p} on their wrist`,
+  skincare: (p) => `holding ${p} up near their face`,
+  makeup: (p) => `holding ${p} near their face`,
+  haircare: (p) => `holding ${p}`,
+  supplement: (p) => `holding ${p}`,
+  beverage: (p) => `holding ${p}, about to take a sip`,
+  food: (p) => `holding ${p}, about to take a bite`,
+  gadget: (p) => `holding and using ${p}`,
+  home: (p) => `holding and using ${p}`,
+};
+
+export function talkingProductClause(
+  key: ProductTypeKey | undefined,
+  productName?: string,
+): string {
+  const p = (productName && productName.trim()) || "the product";
+  return (TALKING_CLAUSE[key ?? "generic"] ?? TALKING_CLAUSE.generic)(p);
+}
+
+/**
  * Per-type MOTION beat for Seedance image-to-video. A still only
  * freezes one moment; the i2v model needs to be told what should
  * physically move in the ~5s clip. Product-type aware for the same

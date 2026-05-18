@@ -103,6 +103,7 @@ export default function AdStudioPage() {
 
   // ---- Premium "Talking video ad" (Seedance-2 persona+seed T2V) ----
   const [talkingScript, setTalkingScript] = useState("");
+  const [talkingDuration, setTalkingDuration] = useState<5 | 10>(5);
   const [talkingBusy, setTalkingBusy] = useState(false);
   const [talkingUrl, setTalkingUrl] = useState<string | null>(null);
   const talkingPollRef = useRef<NodeJS.Timeout | null>(null);
@@ -321,7 +322,13 @@ export default function AdStudioPage() {
       const res = await fetch("/api/ad-studio/talking-ad", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ creatorId: sid, script: talkingScript.trim() }),
+        body: JSON.stringify({
+          creatorId: sid,
+          script: talkingScript.trim(),
+          productName: productName.trim() || undefined,
+          productType,
+          duration: talkingDuration,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -370,6 +377,7 @@ export default function AdStudioPage() {
     setGenerating(false);
     setAnimating(false);
     setTalkingScript("");
+    setTalkingDuration(5);
     setTalkingBusy(false);
     setTalkingUrl(null);
     if (talkingPollRef.current) clearInterval(talkingPollRef.current);
@@ -954,6 +962,24 @@ export default function AdStudioPage() {
                             <span className="text-[10px] text-muted-foreground">
                               {talkingScript.length}/240
                             </span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] text-muted-foreground">Length</span>
+                              {([5, 10] as const).map((d) => (
+                                <button
+                                  key={d}
+                                  type="button"
+                                  disabled={talkingBusy}
+                                  onClick={() => setTalkingDuration(d)}
+                                  className={`rounded-full border px-2 py-0.5 text-[11px] transition ${
+                                    talkingDuration === d
+                                      ? "border-[#6366f1] bg-[#6366f1]/20 text-white"
+                                      : "border-border bg-black/30 text-muted-foreground hover:border-[#6366f1]/60"
+                                  }`}
+                                >
+                                  {d}s
+                                </button>
+                              ))}
+                            </div>
                           </div>
                           <Button
                             className="mt-2 w-full bg-gradient-to-r from-[#6366f1] to-[#8b7bff] text-white"

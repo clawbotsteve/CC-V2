@@ -187,14 +187,19 @@ export function getStockCreator(id: string): StockCreator | undefined {
  */
 export function buildTalkingHookPrompt(
   c: StockCreator,
-  script: string,
+  opts: { script: string; productClause?: string },
 ): { prompt: string; seed: number } {
+  // Weave the product into the visual scene (Higgsfield-style) so
+  // the creator is visibly presenting it while talking — not a bare
+  // talking head. productClause is text-only (Seedance-2 takes no
+  // image); product fidelity is approximate, exact via Phase-2.
+  const presenting = opts.productClause ? `, ${opts.productClause},` : "";
   const scene =
     "Vertical 9:16 selfie-style UGC phone video, warm casual room, soft natural " +
     "window light, authentic unpolished phone-camera look, natural handheld " +
-    "movement, real skin texture, no filter. The creator talks directly to the " +
-    "front phone camera with genuine, warm, excited energy and natural " +
-    "micro-expressions.";
-  const safe = script.replace(/["\\]/g, "").replace(/\s+/g, " ").trim().slice(0, 240);
+    `movement, real skin texture, no filter. The creator${presenting} talks ` +
+    "directly to the front phone camera with genuine, warm, excited energy and " +
+    "natural micro-expressions.";
+  const safe = opts.script.replace(/["\\]/g, "").replace(/\s+/g, " ").trim().slice(0, 240);
   return { prompt: `${c.persona}. ${scene} They say: "${safe}"`, seed: c.seed };
 }

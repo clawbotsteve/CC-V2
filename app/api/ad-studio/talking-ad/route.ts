@@ -9,6 +9,11 @@ import { ToolType } from "@prisma/client";
 import { requireTermsAccepted } from "@/lib/require-terms-accepted";
 import { resolveAccessTier } from "@/lib/plan-access";
 import { getStockCreator, buildTalkingHookPrompt } from "@/lib/ad-studio/stock-creators";
+import {
+  ProductTypeKey,
+  detectProductType,
+  talkingProductClause,
+} from "@/lib/ad-studio/product-types";
 
 /**
  * POST /api/ad-studio/talking-ad
@@ -90,7 +95,23 @@ export async function POST(req: Request) {
       );
     }
 
-    const { prompt, seed } = buildTalkingHookPrompt(creator, script);
+    // Product woven into the talking scene (Higgsfield-style).
+    const productName: string =
+      typeof body?.productName === "string" ? body.productName.trim().slice(0, 90) : "";
+    const productType: ProductTypeKey =
+      (typeof body?.productType === "string" && body.productType) ||
+      detectProductType(productName);
+    const productClause = productName
+      ? talkingProductClause(productType, productName)
+      : undefined;
+
+    // Duration: Seedance 2.0 supports 5s or 10s. Default 5.
+    const duration = body?.duration === 10 || body?.duration === "10" ? 10 : 5;
+
+    const { prompt, seed } = buildTalkingHookPrompt(creator, {
+      script,
+      productClause,
+    });
 
     const moderation = await moderateAndLog({
       userId,
@@ -132,7 +153,7 @@ export async function POST(req: Request) {
         input: {
           prompt,
           seed,
-          duration: 5,
+          duration,
           resolution: "720p",
           aspect_ratio: "9:16",
           generate_audio: true,
@@ -157,7 +178,7 @@ export async function POST(req: Request) {
         prompt,
         adherence: 0.5,
         aspectRatio: "9:16",
-        duration: 5,
+        duration,
         contentType: "sfw",
         creditVariant: variantKey,
         nsfwFlag: false,
