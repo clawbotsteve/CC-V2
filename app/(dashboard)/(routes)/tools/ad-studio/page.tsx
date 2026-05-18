@@ -968,12 +968,20 @@ export default function AdStudioPage() {
                       </div>
                     ))}
                   </div>
-                  <button
-                    onClick={resetAll}
-                    className="mt-6 text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5"
-                  >
-                    <RotateCcw className="h-3 w-3" /> Start a new ad
-                  </button>
+                  <div className="mt-6 flex items-center justify-center gap-5">
+                    <button
+                      onClick={() => setStep(3)}
+                      className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5"
+                    >
+                      <ArrowLeft className="h-3 w-3" /> Back to edit
+                    </button>
+                    <button
+                      onClick={resetAll}
+                      className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5"
+                    >
+                      <RotateCcw className="h-3 w-3" /> Start a new ad
+                    </button>
+                  </div>
                 </div>
               ) : generating ? (
                 <div className="py-16">
@@ -1150,12 +1158,20 @@ export default function AdStudioPage() {
                   </div>
                   </div>
 
-                  <button
-                    onClick={resetAll}
-                    className="mt-5 text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5"
-                  >
-                    <RotateCcw className="h-3 w-3" /> Start a new ad
-                  </button>
+                  <div className="mt-5 flex items-center justify-center gap-5">
+                    <button
+                      onClick={() => setStep(3)}
+                      className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5"
+                    >
+                      <ArrowLeft className="h-3 w-3" /> Back to edit
+                    </button>
+                    <button
+                      onClick={resetAll}
+                      className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5"
+                    >
+                      <RotateCcw className="h-3 w-3" /> Start a new ad
+                    </button>
+                  </div>
                 </>
               ) : (
                 <div className="py-16">
