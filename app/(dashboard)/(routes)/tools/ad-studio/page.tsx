@@ -896,14 +896,14 @@ export default function AdStudioPage() {
                   <ArrowLeft className="h-4 w-4 mr-2" /> Back
                 </Button>
                 <div className="flex flex-wrap gap-2">
-                  <Button variant="outline" onClick={generate}>
-                    <Sparkles className="h-4 w-4 mr-2" /> Generate this angle
+                  <Button variant="outline" onClick={generateBatch}>
+                    <Sparkles className="h-4 w-4 mr-2" /> Generate all 6 variants
                   </Button>
                   <Button
-                    onClick={generateBatch}
+                    onClick={generate}
                     className="bg-gradient-to-r from-[#6366f1] to-[#8b7bff] text-white"
                   >
-                    <Sparkles className="h-4 w-4 mr-2" /> Generate all 6 variants
+                    <Sparkles className="h-4 w-4 mr-2" /> Generate this angle
                   </Button>
                 </div>
               </div>
