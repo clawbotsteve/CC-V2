@@ -828,7 +828,8 @@ export default function AdStudioPage() {
                 </div>
               ) : resultUrl ? (
                 <>
-                  <div className="relative">
+                  <div className="flex flex-col md:flex-row md:items-start md:justify-center gap-6 w-full md:text-left">
+                  <div className="relative shrink-0 mx-auto md:mx-0">
                     {videoUrl ? (
                       <video
                         src={videoUrl}
@@ -856,7 +857,8 @@ export default function AdStudioPage() {
                     )}
                   </div>
 
-                  <div className="flex gap-3 mt-5 flex-wrap justify-center">
+                  <div className="w-full max-w-sm">
+                  <div className="flex gap-3 flex-wrap">
                     <Button asChild variant="outline">
                       <a
                         href={videoUrl || resultUrl}
@@ -1002,6 +1004,8 @@ export default function AdStudioPage() {
                       )}
                     </div>
                   )}
+                  </div>
+                  </div>
 
                   <button
                     onClick={resetAll}
