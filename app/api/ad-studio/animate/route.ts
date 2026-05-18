@@ -67,6 +67,7 @@ export async function POST(req: Request) {
       userId,
       endpoint: "ad-studio.animate",
       prompt,
+      skipRealPerson: true,
     });
     if (!moderation.allowed) {
       return NextResponse.json({ error: moderation.reason }, { status: 400 });
