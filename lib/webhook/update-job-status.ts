@@ -3,6 +3,38 @@ import { ToolType } from "@prisma/client";
 import { chargeUserForTool, UsageTable } from "../charge-user";
 import { Image } from "@/types/image";
 import { NormalizedError } from "../normalize-fal-error";
+import { isS3Configured, mirrorUrlToS3 } from "../storage/s3";
+
+/**
+ * Best-effort: persist an ephemeral provider URL (replicate.delivery
+ * auto-expires in ~1–24h) onto our own S3 so the asset stays usable
+ * forever. No-op until S3 is configured (UPLOAD_MODE/S3 env), and
+ * NEVER blocks job completion — on any failure we fall back to the
+ * original URL so the user still gets their result.
+ */
+async function persistUrl(
+  sourceUrl: string,
+  usageTable: string,
+  requestId: string,
+): Promise<string> {
+  if (!isS3Configured()) return sourceUrl;
+  if (!/^https?:\/\//i.test(sourceUrl)) return sourceUrl;
+  try {
+    const m = sourceUrl.split("?")[0].match(/\.([a-z0-9]{2,5})$/i);
+    const ext = (m?.[1] || "bin").toLowerCase();
+    return await mirrorUrlToS3(
+      sourceUrl,
+      `generations/${usageTable}/${requestId}`,
+      `asset.${ext}`,
+    );
+  } catch (err) {
+    console.error(
+      `[update-job-status] S3 mirror failed for ${requestId}, keeping ephemeral URL:`,
+      (err as Error)?.message || err,
+    );
+    return sourceUrl;
+  }
+}
 
 // Use exact UsageTable literals here
 const modelToUsageTable: Record<
@@ -43,8 +75,17 @@ export async function updateJobStatus(params: {
   const { usageTable, urlField } = mapping;
 
   if (params.urlValue) {
+    // Mirror the ephemeral provider URL to durable storage so the
+    // user's asset doesn't 404 in a day. Best-effort; falls back to
+    // the original URL on any failure.
+    const durableUrl = await persistUrl(
+      params.urlValue,
+      usageTable,
+      params.requestId,
+    );
+
     const updateData: Record<string, any> = {
-      [urlField]: params.urlValue,
+      [urlField]: durableUrl,
       status: "completed",
       generationTime: new Date(),
     };
