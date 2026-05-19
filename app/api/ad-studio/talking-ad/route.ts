@@ -10,6 +10,10 @@ import {
   submitWaveSpeedI2V,
   isWaveSpeedConfigured,
 } from "@/lib/wavespeed-client";
+import {
+  normalizeTalkingDuration,
+  talkingVariant,
+} from "@/lib/ad-studio/talking-pricing";
 
 /**
  * POST /api/ad-studio/talking-ad
@@ -91,7 +95,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const duration = body?.duration === 10 || body?.duration === "10" ? 10 : 5;
+    const duration = normalizeTalkingDuration(body?.duration);
 
     // The still already contains the exact creator + product, so the
     // prompt only needs to drive MOTION + the spoken line. Dialogue
@@ -113,9 +117,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: moderation.reason }, { status: 400 });
     }
 
-    // Priced as a Seedance video clip (stand-in — dedicated WaveSpeed
-    // credit variant + real cost is a fast-follow).
-    const variantKey = "seedance_v2_ref_5s";
+    // Margin-safe per-duration WaveSpeed credit variant (seeded per
+    // tier in pricing-constants; ~15 cr/sec ≈ ~4× variable cost).
+    const variantKey = talkingVariant(duration);
     const creditCheck = await checkAvailableCredit({
       userId,
       tool: ToolType.VIDEO_GENERATOR,

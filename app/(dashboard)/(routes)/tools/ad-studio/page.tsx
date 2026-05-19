@@ -18,6 +18,7 @@ import {
   ProductTypeKey,
   detectProductType,
 } from "@/lib/ad-studio/product-types";
+import { talkingCredits } from "@/lib/ad-studio/talking-pricing";
 
 /**
  * Ad Studio — guided UGC-ad creation flow.
@@ -124,7 +125,7 @@ export default function AdStudioPage() {
 
   // ---- Premium "Talking video ad" (Seedance-2 persona+seed T2V) ----
   const [talkingScript, setTalkingScript] = useState("");
-  const [talkingDuration, setTalkingDuration] = useState<5 | 10>(5);
+  const [talkingDuration, setTalkingDuration] = useState<5 | 10 | 15>(5);
   const [talkingBusy, setTalkingBusy] = useState(false);
   const [talkingUrl, setTalkingUrl] = useState<string | null>(null);
   const talkingPollRef = useRef<NodeJS.Timeout | null>(null);
@@ -1063,30 +1064,7 @@ export default function AdStudioPage() {
                         Download {videoUrl ? "video" : "9:16 image"}
                       </a>
                     </Button>
-                    {!videoUrl && (
-                      <Button
-                        className="bg-gradient-to-r from-[#6366f1] to-[#8b7bff] text-white"
-                        onClick={animate}
-                        disabled={animating}
-                      >
-                        {animating ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Animating…
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="h-4 w-4 mr-2" /> Turn into a video ad
-                          </>
-                        )}
-                      </Button>
-                    )}
                   </div>
-                  {!videoUrl && !animating && (
-                    <p className="text-[11px] text-muted-foreground mt-2 max-w-xs">
-                      Like this still? Animate it into a 5s UGC video ad with
-                      Seedance — that's what actually runs on TikTok/Meta.
-                    </p>
-                  )}
 
                   {/* Talking video ad — animates the EXACT fused
                       still (creator+product) into a talking clip with
@@ -1132,28 +1110,47 @@ export default function AdStudioPage() {
                             disabled={talkingBusy}
                             className="mt-3 w-full rounded-lg border border-border bg-black/30 px-3 py-2 text-sm outline-none focus:border-[#6366f1] resize-none"
                           />
-                          <div className="flex items-center justify-between mt-1">
+                          <div className="mt-1">
                             <span className="text-[10px] text-muted-foreground">
                               {talkingScript.length}/240
                             </span>
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-[10px] text-muted-foreground">Length</span>
-                              {([5, 10] as const).map((d) => (
-                                <button
-                                  key={d}
-                                  type="button"
-                                  disabled={talkingBusy}
-                                  onClick={() => setTalkingDuration(d)}
-                                  className={`rounded-full border px-2 py-0.5 text-[11px] transition ${
-                                    talkingDuration === d
-                                      ? "border-[#6366f1] bg-[#6366f1]/20 text-white"
-                                      : "border-border bg-black/30 text-muted-foreground hover:border-[#6366f1]/60"
-                                  }`}
-                                >
-                                  {d}s
-                                </button>
-                              ))}
+                          </div>
+                          <div className="mt-3">
+                            <div className="flex items-center justify-between text-[11px] mb-1">
+                              <span className="text-muted-foreground">
+                                Video length
+                              </span>
+                              <span className="font-semibold">
+                                {talkingDuration}s
+                              </span>
                             </div>
+                            <input
+                              type="range"
+                              min={5}
+                              max={15}
+                              step={5}
+                              value={talkingDuration}
+                              disabled={talkingBusy}
+                              onChange={(e) =>
+                                setTalkingDuration(
+                                  Number(e.target.value) as 5 | 10 | 15,
+                                )
+                              }
+                              className="w-full accent-[#6366f1] cursor-pointer"
+                            />
+                            <p className="text-[11px] text-muted-foreground mt-1.5">
+                              Uses{" "}
+                              <span className="text-[#a78bfa] font-semibold">
+                                {talkingCredits(talkingDuration)} credits
+                              </span>{" "}
+                              ·{" "}
+                              {talkingDuration === 5
+                                ? "~3"
+                                : talkingDuration === 10
+                                  ? "~4"
+                                  : "~5"}{" "}
+                              min render
+                            </p>
                           </div>
                           <Button
                             className="mt-2 w-full bg-gradient-to-r from-[#6366f1] to-[#8b7bff] text-white"
@@ -1163,12 +1160,12 @@ export default function AdStudioPage() {
                             {talkingBusy ? (
                               <>
                                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                Rendering the spokesperson video…
+                                Rendering your talking ad…
                               </>
                             ) : (
                               <>
                                 <Sparkles className="h-4 w-4 mr-2" />
-                                Generate spokesperson video
+                                Generate talking video
                               </>
                             )}
                           </Button>
