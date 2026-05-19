@@ -12,6 +12,8 @@ import {
 } from "@/lib/wavespeed-client";
 import {
   normalizeTalkingDuration,
+  normalizeTalkingResolution,
+  normalizeTalkingAspect,
   talkingVariant,
 } from "@/lib/ad-studio/talking-pricing";
 
@@ -96,6 +98,8 @@ export async function POST(req: Request) {
     }
 
     const duration = normalizeTalkingDuration(body?.duration);
+    const resolution = normalizeTalkingResolution(body?.resolution);
+    const aspectRatio = normalizeTalkingAspect(body?.aspectRatio);
 
     // The still already contains the exact creator + product, so the
     // prompt only needs to drive MOTION + the spoken line. Dialogue
@@ -119,7 +123,7 @@ export async function POST(req: Request) {
 
     // Margin-safe per-duration WaveSpeed credit variant (seeded per
     // tier in pricing-constants; ~15 cr/sec ≈ ~4× variable cost).
-    const variantKey = talkingVariant(duration);
+    const variantKey = talkingVariant(duration, resolution);
     const creditCheck = await checkAvailableCredit({
       userId,
       tool: ToolType.VIDEO_GENERATOR,
@@ -141,8 +145,8 @@ export async function POST(req: Request) {
         image: imageUrl,
         prompt,
         duration,
-        resolution: "720p",
-        aspectRatio: "9:16",
+        resolution,
+        aspectRatio,
         generateAudio: true,
       });
       taskId = r.taskId;
@@ -162,7 +166,7 @@ export async function POST(req: Request) {
         videoUrl: "",
         prompt,
         adherence: 0.5,
-        aspectRatio: "9:16",
+        aspectRatio,
         duration,
         contentType: "sfw",
         creditVariant: variantKey,
