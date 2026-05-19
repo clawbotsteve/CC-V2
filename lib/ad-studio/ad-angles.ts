@@ -85,6 +85,7 @@ export const AD_ANGLES: AdAngle[] = [
   {
     key: "virtual_tryon",
     exampleImage: "/ad-angles/virtual_tryon.jpg",
+    exampleVideo: "/ad-angles/virtual_tryon.mp4",
     label: "Virtual try-on",
     blurb: "Creator wearing the apparel, full-body GRWM mirror look. Best for clothing.",
     aspectRatio: "9:16",
