@@ -192,9 +192,16 @@ export function getStockCreator(id: string): StockCreator | undefined {
  * persona anyway — person images are E005-blocked — so a roster pick
  * was never actually required; this removes that artificial gate.
  */
+// Non-roster fallback persona. Deliberately GENDER-NEUTRAL: a
+// roster pick auto-matches that creator's persona+seed (so gender/
+// vibe match the still); only uploaded/non-roster creators hit this,
+// and forcing a specific gender here guarantees the worst-case
+// mismatch (e.g. a male still → female presenter). "Person", not
+// "woman", lets the model pick something less jarring. The exact
+// face still can't match (Seedance-2 E005 on person images).
 export const DEFAULT_TALKING_CREATOR: Pick<StockCreator, "persona" | "seed"> = {
   persona:
-    "A friendly, relatable young woman with natural everyday styling, warm approachable energy, authentic real-person look (not a glossy model)",
+    "A friendly, relatable everyday person with natural styling, warm approachable energy, authentic real-person look (not a glossy model)",
   seed: 70422,
 };
 
