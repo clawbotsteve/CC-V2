@@ -431,6 +431,8 @@ export default function AdStudioPage() {
           duration: talkingDuration,
           resolution: talkingResolution,
           aspectRatio: talkingAspect,
+          angle,
+          productName: productName.trim() || undefined,
         }),
       });
       const data = await res.json();
