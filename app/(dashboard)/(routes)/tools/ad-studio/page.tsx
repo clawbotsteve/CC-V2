@@ -881,16 +881,30 @@ export default function AdStudioPage() {
                             "linear-gradient(150deg,#1e1b3a 0%,#2a1f4d 55%,#15132a 100%)",
                         }}
                       >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={a.exampleImage}
-                          alt={`${a.label} ad example`}
-                          loading="lazy"
-                          className="absolute inset-0 h-full w-full object-cover"
-                          onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).style.display = "none";
-                          }}
-                        />
+                        {a.exampleVideo ? (
+                          // eslint-disable-next-line jsx-a11y/media-has-caption
+                          <video
+                            src={a.exampleVideo}
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            preload="metadata"
+                            className="absolute inset-0 h-full w-full object-cover"
+                          />
+                        ) : (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={a.exampleImage}
+                            alt={`${a.label} ad example`}
+                            loading="lazy"
+                            className="absolute inset-0 h-full w-full object-cover"
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).style.display =
+                                "none";
+                            }}
+                          />
+                        )}
                         {/* Bottom scrim so the label is always
                             readable over either the photo or the
                             gradient fallback. */}
@@ -917,7 +931,7 @@ export default function AdStudioPage() {
                 </Button>
                 <div className="flex flex-wrap gap-2">
                   <Button variant="outline" onClick={generateBatch}>
-                    <Sparkles className="h-4 w-4 mr-2" /> Generate all 6 variants
+                    <Sparkles className="h-4 w-4 mr-2" /> Generate all {AD_ANGLES.length} variants
                   </Button>
                   <Button
                     onClick={generate}
@@ -928,8 +942,8 @@ export default function AdStudioPage() {
                 </div>
               </div>
               <p className="mt-2 text-[11px] text-muted-foreground text-right">
-                One run, your real creator + product across all 6 proven ad
-                angles — pick the winners.
+                One run, your real creator + product across all{" "}
+                {AD_ANGLES.length} proven ad angles — pick the winners.
               </p>
             </div>
           )}
