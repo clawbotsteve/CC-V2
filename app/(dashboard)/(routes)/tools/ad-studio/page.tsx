@@ -79,8 +79,43 @@ function defaultHookScript(productName: string, angle?: AdAngleKey): string {
     : `Okay I had to show you guys this — I genuinely use it every day now and I'm kind of obsessed. You need this.`;
 }
 
+/**
+ * Recent products — localStorage so the user doesn't re-enter the
+ * same product every session. Per-browser (no backend); good enough
+ * for the "don't make me re-paste it" need. Capped + deduped by url.
+ */
+type RecentProduct = { url: string; name: string; type: ProductTypeKey };
+const RECENT_KEY = "tavira_recent_products";
+const RECENT_MAX = 8;
+
+function loadRecentProducts(): RecentProduct[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(RECENT_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr)
+      ? arr.filter((p) => p && typeof p.url === "string").slice(0, RECENT_MAX)
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveRecentProducts(list: RecentProduct[]) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(
+      RECENT_KEY,
+      JSON.stringify(list.slice(0, RECENT_MAX)),
+    );
+  } catch {
+    /* quota / private mode — non-fatal */
+  }
+}
+
 export default function AdStudioPage() {
   const [step, setStep] = useState<Step>(1);
+  const [recentProducts, setRecentProducts] = useState<RecentProduct[]>([]);
 
   // ---- Product ----
   const [productUrl, setProductUrl] = useState<string | null>(null);
@@ -159,6 +194,26 @@ export default function AdStudioPage() {
       })
       .catch(() => {});
   }, []);
+
+  // Load recent products once on mount.
+  useEffect(() => {
+    setRecentProducts(loadRecentProducts());
+  }, []);
+
+  // Upsert the active product into recents (deduped by url) whenever
+  // it's set/updated — captures scrape, upload, and recent-pick.
+  useEffect(() => {
+    if (!productUrl) return;
+    setRecentProducts((prev) => {
+      const next = [
+        { url: productUrl, name: productName, type: productType },
+        ...prev.filter((p) => p.url !== productUrl),
+      ].slice(0, RECENT_MAX);
+      saveRecentProducts(next);
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productUrl, productName, productType]);
 
   useEffect(
     () => () => {
@@ -546,6 +601,51 @@ export default function AdStudioPage() {
                 Paste your product page link — we'll pull the image and name automatically.
                 Or upload a product photo.
               </p>
+
+              {/* Recent products — one-tap reuse, no re-entering. */}
+              {recentProducts.length > 0 && (
+                <div className="mt-5">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                    Recent products
+                  </p>
+                  <div className="flex gap-2 overflow-x-auto pb-1">
+                    {recentProducts.map((p) => (
+                      <button
+                        key={p.url}
+                        type="button"
+                        onClick={() => {
+                          setProductUrl(p.url);
+                          setProductName(p.name || "");
+                          if (p.type) {
+                            productTypeTouched.current = true;
+                            setProductType(p.type);
+                          }
+                        }}
+                        title={p.name || "Product"}
+                        className={`shrink-0 w-20 text-left rounded-lg border overflow-hidden transition ${
+                          productUrl === p.url
+                            ? "border-[#6366f1]"
+                            : "border-border hover:border-[#6366f1]/60"
+                        }`}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={p.url}
+                          alt={p.name || "Product"}
+                          className="h-20 w-20 object-cover bg-black"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).style.display =
+                              "none";
+                          }}
+                        />
+                        <span className="block px-1.5 py-1 text-[10px] text-muted-foreground truncate">
+                          {p.name || "Product"}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* URL scrape */}
               <div className="mt-6">
