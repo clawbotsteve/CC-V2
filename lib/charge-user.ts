@@ -158,6 +158,85 @@ export async function chargeUserForTool({
 }
 
 /**
+ * Charge a COMPUTED credit amount against a usage row (no
+ * ToolCreditCost variant lookup). For formula-priced features —
+ * e.g. WaveSpeed talking video at per-second × resolution. Mirrors
+ * chargeUserForTool's transaction: sets the usage row's creditUsed +
+ * decrements availableCredit / monthlyRemainingCredits. Double-
+ * charge guarded (skips if the row already has creditUsed > 0).
+ */
+export async function chargeExplicitCredits({
+  userId,
+  amount,
+  usageTable,
+  usageId,
+}: {
+  userId: string;
+  amount: number;
+  usageTable: Extract<UsageTable, "GeneratedVideo" | "GeneratedImage">;
+  usageId: string;
+}) {
+  if (amount <= 0) return { success: true, creditUsed: 0 };
+  try {
+    return await prismadb.$transaction(
+      async (tx) => {
+        const row =
+          usageTable === "GeneratedVideo"
+            ? await tx.generatedVideo.findUnique({
+                where: { id: usageId },
+                select: { creditUsed: true },
+              })
+            : await tx.generatedImage.findUnique({
+                where: { id: usageId },
+                select: { creditUsed: true },
+              });
+        if (row && (row.creditUsed ?? 0) > 0) {
+          return { success: true, creditUsed: row.creditUsed, skipped: true };
+        }
+
+        const limit = await tx.userApiLimit.findUnique({ where: { userId } });
+        if (!limit || limit.availableCredit < amount) {
+          // Don't block delivery on a rare post-render shortfall
+          // (preflight covers the normal case). Log + record 0.
+          console.error(
+            `[ChargeExplicit] Insufficient at charge time user=${userId} need=${amount} have=${limit?.availableCredit ?? 0}`,
+          );
+          return { success: false, creditUsed: 0, shortfall: true };
+        }
+
+        const data: any = { creditUsed: amount };
+        if (usageTable === "GeneratedVideo") {
+          await tx.generatedVideo.update({ where: { id: usageId }, data });
+        } else {
+          await tx.generatedImage.update({ where: { id: usageId }, data });
+        }
+
+        const monthlyDeduction = Math.min(
+          limit.monthlyRemainingCredits,
+          amount,
+        );
+        await tx.userApiLimit.update({
+          where: { userId },
+          data: {
+            availableCredit: { decrement: amount },
+            monthlyRemainingCredits: { decrement: monthlyDeduction },
+            creditUsed: { increment: amount },
+          },
+        });
+        console.log(
+          `[ChargeExplicit] Charged user=${userId} amount=${amount} (${usageTable} ${usageId})`,
+        );
+        return { success: true, creditUsed: amount };
+      },
+      { timeout: 10000, maxWait: 10000 },
+    );
+  } catch (err: any) {
+    console.error("[ChargeExplicit] Failed:", err?.message || err);
+    return { success: false, creditUsed: 0, error: true };
+  }
+}
+
+/**
  * Deduct credits directly without tracking in a usage table.
  * Used for synchronous operations like prompt optimization.
  */

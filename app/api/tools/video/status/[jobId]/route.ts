@@ -4,6 +4,8 @@ import { auth } from "@clerk/nextjs/server";
 import { getFalJobResult, getFalJobStatus } from "@/lib/fal-client";
 import { getReplicateJobStatus, extractReplicateImageUrls } from "@/lib/replicate-client";
 import { getWaveSpeedResult } from "@/lib/wavespeed-client";
+import { chargeExplicitCredits } from "@/lib/charge-user";
+import { talkingCredits } from "@/lib/ad-studio/talking-pricing";
 
 function getFalEndpointFromModel(model?: string): string | null {
   if (!model) return null;
@@ -59,6 +61,9 @@ export async function GET(
         status: true,
         videoUrl: true,
         model: true,
+        userId: true,
+        duration: true,
+        creditVariant: true,
       },
     });
 
@@ -73,6 +78,28 @@ export async function GET(
       if (videoJob.model === "wavespeed-seedance2") {
         const w = await getWaveSpeedResult(jobId);
         if (w.status === "completed" && w.videoUrl) {
+          // Charge on completion (computed per-second × resolution).
+          // No WaveSpeed webhook, so this status poll is where the
+          // talking video gets billed. Best-effort + double-charge
+          // guarded inside chargeExplicitCredits.
+          try {
+            const res = (videoJob.creditVariant || "").replace(
+              "wavespeed_talk_",
+              "",
+            );
+            const amount = talkingCredits(videoJob.duration, res);
+            await chargeExplicitCredits({
+              userId: videoJob.userId,
+              amount,
+              usageTable: "GeneratedVideo",
+              usageId: jobId,
+            });
+          } catch (chargeErr) {
+            console.error(
+              "[VIDEO STATUS] talking-video charge failed (delivering anyway):",
+              chargeErr,
+            );
+          }
           await prismadb.generatedVideo.update({
             where: { id: jobId },
             data: { status: "completed", videoUrl: w.videoUrl },

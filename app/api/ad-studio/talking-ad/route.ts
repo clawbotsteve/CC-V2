@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import prismadb from "@/lib/prismadb";
 import { auth } from "@clerk/nextjs/server";
 import { moderateAndLog } from "@/lib/content-moderation";
-import { checkAvailableCredit } from "@/lib/check-available-credit";
-import { ToolType } from "@prisma/client";
 import { requireTermsAccepted } from "@/lib/require-terms-accepted";
 import { resolveAccessTier } from "@/lib/plan-access";
 import {
@@ -15,6 +13,7 @@ import {
   normalizeTalkingResolution,
   normalizeTalkingAspect,
   talkingVariant,
+  talkingCredits,
 } from "@/lib/ad-studio/talking-pricing";
 
 /**
@@ -121,18 +120,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: moderation.reason }, { status: 400 });
     }
 
-    // Margin-safe per-duration WaveSpeed credit variant (seeded per
-    // tier in pricing-constants; ~15 cr/sec ≈ ~4× variable cost).
-    const variantKey = talkingVariant(duration, resolution);
-    const creditCheck = await checkAvailableCredit({
-      userId,
-      tool: ToolType.VIDEO_GENERATOR,
-      variant: variantKey,
+    // Computed per-second × resolution price (single source of truth
+    // in talking-pricing). Charged on completion via
+    // chargeExplicitCredits; preflight just gates affordability.
+    const variantKey = talkingVariant(resolution);
+    const cost = talkingCredits(duration, resolution);
+    const limit = await prismadb.userApiLimit.findUnique({
+      where: { userId },
+      select: { availableCredit: true },
     });
-    if (!creditCheck.canUse) {
+    if ((limit?.availableCredit ?? 0) < cost) {
       return NextResponse.json(
         {
-          error: `Talking video ads need ${creditCheck.creditCost} credits. Top up or upgrade to keep going.`,
+          error: `This talking video needs ${cost} credits (you have ${limit?.availableCredit ?? 0}). Top up or pick a shorter/lower-res clip.`,
           insufficientCredits: true,
         },
         { status: 403 },

@@ -131,7 +131,7 @@ export default function AdStudioPage() {
 
   // ---- Premium "Talking video ad" (Seedance-2 persona+seed T2V) ----
   const [talkingScript, setTalkingScript] = useState("");
-  const [talkingDuration, setTalkingDuration] = useState<5 | 10 | 15>(5);
+  const [talkingDuration, setTalkingDuration] = useState<number>(5);
   const [talkingResolution, setTalkingResolution] =
     useState<TalkingResolution>("720p");
   const [talkingAspect, setTalkingAspect] = useState<TalkingAspect>("9:16");
@@ -1141,13 +1141,11 @@ export default function AdStudioPage() {
                               type="range"
                               min={5}
                               max={15}
-                              step={5}
+                              step={1}
                               value={talkingDuration}
                               disabled={talkingBusy}
                               onChange={(e) =>
-                                setTalkingDuration(
-                                  Number(e.target.value) as 5 | 10 | 15,
-                                )
+                                setTalkingDuration(Number(e.target.value))
                               }
                               className="w-full accent-[#6366f1] cursor-pointer"
                             />
@@ -1156,13 +1154,7 @@ export default function AdStudioPage() {
                               <span className="text-[#a78bfa] font-semibold">
                                 {talkingCredits(talkingDuration, talkingResolution)} credits
                               </span>{" "}
-                              ·{" "}
-                              {talkingDuration === 5
-                                ? "~3"
-                                : talkingDuration === 10
-                                  ? "~4"
-                                  : "~5"}{" "}
-                              min render
+                              · ~{Math.ceil(talkingDuration / 3) + 2} min render
                             </p>
                           </div>
                           <div className="mt-3">
