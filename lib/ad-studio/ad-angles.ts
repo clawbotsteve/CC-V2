@@ -71,7 +71,7 @@ export const AD_ANGLES: AdAngle[] = [
   {
     key: "lifestyle_hold",
     exampleImage: "/ad-angles/lifestyle_hold.jpg",
-    label: "Lifestyle hold",
+    label: "UGC",
     blurb: "Creator holding the product to camera, natural setting. The safe, high-performing default.",
     aspectRatio: "9:16",
     template:

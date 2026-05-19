@@ -849,7 +849,7 @@ export default function AdStudioPage() {
             <div>
               <h2 className="text-xl font-semibold">Pick the ad angle</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                Each angle is a proven paid-social hook. Start with Lifestyle hold —
+                Each angle is a proven paid-social hook. Start with UGC —
                 it's the highest-performing safe default.
               </p>
 
