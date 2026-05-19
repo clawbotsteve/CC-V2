@@ -101,9 +101,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: moderation.reason }, { status: 400 });
     }
 
-    // Credit pre-flight. Ad Studio uses the Nano Banana 2 Edit path,
-    // priced as nano_banana_2_1k (same as Character Studio variations).
-    const variantKey = "nano_banana_2_1k";
+    // GPT Image 2 fusion engine — far more photoreal than NB2
+    // (validated 2026-05-18). Priced as the seeded gpt_image_2_medium
+    // variant (real cost; pricier than NB2 — accepted for quality).
+    const variantKey = "gpt_image_2_medium";
     const creditCheck = await checkAvailableCredit({
       userId,
       tool: ToolType.IMAGE_GENERATOR,
@@ -159,13 +160,14 @@ export async function POST(req: Request) {
 
     const webhookUrl = getWebhookUrl("/api/webhook/image");
 
-    const resp = await submitImageJob(ImageGenerationModel.NanoBanana2, {
+    const resp = await submitImageJob(ImageGenerationModel.GptImage2, {
       input: {
         prompt,
         num_images: 1,
         output_format: "png",
-        output_resolution: "2K",
-        resolution: "2K",
+        quality: "medium",
+        // 9:16 → translator maps to GPT Image 2's closest portrait
+        // (2:3); a true-9:16 crop is applied downstream (PR-B).
         aspect_ratio: angle.aspectRatio,
         aspectRatio: angle.aspectRatio,
         // Creator reference(s) lead, product last. NB2 Edit treats

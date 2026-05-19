@@ -109,7 +109,7 @@ export async function POST(req: Request) {
     // Credit pre-flight for the WHOLE batch — don't let a user kick
     // off 6 jobs they can only afford 2 of (each job deducts on
     // completion via the webhook).
-    const variantKey = "nano_banana_2_1k";
+    const variantKey = "gpt_image_2_medium";
     const creditCheck = await checkAvailableCredit({
       userId,
       tool: ToolType.IMAGE_GENERATOR,
@@ -183,13 +183,12 @@ export async function POST(req: Request) {
     // fine (the client just shows whatever started).
     const results = await Promise.allSettled(
       variants.map(async ({ angle, prompt }) => {
-        const resp = await submitImageJob(ImageGenerationModel.NanoBanana2, {
+        const resp = await submitImageJob(ImageGenerationModel.GptImage2, {
           input: {
             prompt,
             num_images: 1,
             output_format: "png",
-            output_resolution: "2K",
-            resolution: "2K",
+            quality: "medium",
             aspect_ratio: angle.aspectRatio,
             aspectRatio: angle.aspectRatio,
             image_urls: imageUrls,
