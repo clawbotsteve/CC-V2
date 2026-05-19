@@ -18,7 +18,13 @@ import {
   ProductTypeKey,
   detectProductType,
 } from "@/lib/ad-studio/product-types";
-import { talkingCredits } from "@/lib/ad-studio/talking-pricing";
+import {
+  talkingCredits,
+  TALKING_RESOLUTIONS,
+  TALKING_ASPECTS,
+  TalkingResolution,
+  TalkingAspect,
+} from "@/lib/ad-studio/talking-pricing";
 
 /**
  * Ad Studio — guided UGC-ad creation flow.
@@ -126,6 +132,9 @@ export default function AdStudioPage() {
   // ---- Premium "Talking video ad" (Seedance-2 persona+seed T2V) ----
   const [talkingScript, setTalkingScript] = useState("");
   const [talkingDuration, setTalkingDuration] = useState<5 | 10 | 15>(5);
+  const [talkingResolution, setTalkingResolution] =
+    useState<TalkingResolution>("720p");
+  const [talkingAspect, setTalkingAspect] = useState<TalkingAspect>("9:16");
   const [talkingBusy, setTalkingBusy] = useState(false);
   const [talkingUrl, setTalkingUrl] = useState<string | null>(null);
   const talkingPollRef = useRef<NodeJS.Timeout | null>(null);
@@ -421,6 +430,8 @@ export default function AdStudioPage() {
           imageUrl: resultUrl,
           script: talkingScript.trim(),
           duration: talkingDuration,
+          resolution: talkingResolution,
+          aspectRatio: talkingAspect,
         }),
       });
       const data = await res.json();
@@ -471,6 +482,8 @@ export default function AdStudioPage() {
     setAnimating(false);
     setTalkingScript("");
     setTalkingDuration(5);
+    setTalkingResolution("720p");
+    setTalkingAspect("9:16");
     setTalkingBusy(false);
     setTalkingUrl(null);
     if (talkingPollRef.current) clearInterval(talkingPollRef.current);
@@ -1141,7 +1154,7 @@ export default function AdStudioPage() {
                             <p className="text-[11px] text-muted-foreground mt-1.5">
                               Uses{" "}
                               <span className="text-[#a78bfa] font-semibold">
-                                {talkingCredits(talkingDuration)} credits
+                                {talkingCredits(talkingDuration, talkingResolution)} credits
                               </span>{" "}
                               ·{" "}
                               {talkingDuration === 5
@@ -1152,8 +1165,57 @@ export default function AdStudioPage() {
                               min render
                             </p>
                           </div>
+                          <div className="mt-3">
+                            <div className="text-[11px] text-muted-foreground mb-1">
+                              Quality
+                            </div>
+                            <div className="flex gap-2">
+                              {TALKING_RESOLUTIONS.map((r) => (
+                                <button
+                                  key={r}
+                                  type="button"
+                                  disabled={talkingBusy}
+                                  onClick={() => setTalkingResolution(r)}
+                                  className={`flex-1 rounded-lg border px-2 py-1.5 text-[11px] transition ${
+                                    talkingResolution === r
+                                      ? "border-[#6366f1] bg-[#6366f1]/20 text-white"
+                                      : "border-border bg-black/30 text-muted-foreground hover:border-[#6366f1]/60"
+                                  }`}
+                                >
+                                  {r}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="mt-3">
+                            <div className="text-[11px] text-muted-foreground mb-1">
+                              Aspect ratio{" "}
+                              <span className="opacity-60">· no extra cost</span>
+                            </div>
+                            <div className="flex gap-2">
+                              {TALKING_ASPECTS.map((a) => (
+                                <button
+                                  key={a}
+                                  type="button"
+                                  disabled={talkingBusy}
+                                  onClick={() => setTalkingAspect(a)}
+                                  className={`flex-1 rounded-lg border px-2 py-1.5 text-[11px] transition ${
+                                    talkingAspect === a
+                                      ? "border-[#6366f1] bg-[#6366f1]/20 text-white"
+                                      : "border-border bg-black/30 text-muted-foreground hover:border-[#6366f1]/60"
+                                  }`}
+                                >
+                                  {a === "9:16"
+                                    ? "9:16 TikTok"
+                                    : a === "1:1"
+                                      ? "1:1 Feed"
+                                      : "16:9 YT"}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
                           <Button
-                            className="mt-2 w-full bg-gradient-to-r from-[#6366f1] to-[#8b7bff] text-white"
+                            className="mt-3 w-full bg-gradient-to-r from-[#6366f1] to-[#8b7bff] text-white"
                             onClick={generateTalkingAd}
                             disabled={talkingBusy || !talkingScript.trim()}
                           >
