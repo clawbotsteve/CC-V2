@@ -185,8 +185,21 @@ export function getStockCreator(id: string): StockCreator | undefined {
  * renders consistently across every ad (Seedance 2.0 takes no image
  * input — persona + seed IS the identity).
  */
+/**
+ * Default persona for the talking video when the flow isn't using a
+ * Tavira roster creator (uploaded/trained creator, or just a product
+ * + scraped image). The talking presenter is ALWAYS a generated
+ * persona anyway — person images are E005-blocked — so a roster pick
+ * was never actually required; this removes that artificial gate.
+ */
+export const DEFAULT_TALKING_CREATOR: Pick<StockCreator, "persona" | "seed"> = {
+  persona:
+    "A friendly, relatable young woman with natural everyday styling, warm approachable energy, authentic real-person look (not a glossy model)",
+  seed: 70422,
+};
+
 export function buildTalkingHookPrompt(
-  c: StockCreator,
+  c: Pick<StockCreator, "persona" | "seed">,
   opts: { script: string; productClause?: string },
 ): { prompt: string; seed: number } {
   // Weave the product into the visual scene (Higgsfield-style) so
