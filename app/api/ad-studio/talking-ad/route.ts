@@ -9,7 +9,11 @@ import { checkAvailableCredit } from "@/lib/check-available-credit";
 import { ToolType } from "@prisma/client";
 import { requireTermsAccepted } from "@/lib/require-terms-accepted";
 import { resolveAccessTier } from "@/lib/plan-access";
-import { getStockCreator, buildTalkingHookPrompt } from "@/lib/ad-studio/stock-creators";
+import {
+  getStockCreator,
+  buildTalkingHookPrompt,
+  DEFAULT_TALKING_CREATOR,
+} from "@/lib/ad-studio/stock-creators";
 import {
   ProductTypeKey,
   detectProductType,
@@ -62,16 +66,11 @@ export async function POST(req: Request) {
     const script: string =
       typeof body?.script === "string" ? body.script.trim() : "";
 
-    const creator = creatorId ? getStockCreator(creatorId) : undefined;
-    if (!creator) {
-      return NextResponse.json(
-        {
-          error:
-            "Talking video ads need a Tavira roster creator (the talking model can't use an uploaded photo). Pick one from the roster.",
-        },
-        { status: 400 },
-      );
-    }
+    // Roster creator → its persona+seed; otherwise the default
+    // persona. The talking presenter is ALWAYS generated (person
+    // images E005-block), so a roster pick was never required —
+    // the real product comes through via reference_images.
+    const creator = (creatorId && getStockCreator(creatorId)) || DEFAULT_TALKING_CREATOR;
     if (!script) {
       return NextResponse.json(
         { error: "Add a short line for the creator to say." },

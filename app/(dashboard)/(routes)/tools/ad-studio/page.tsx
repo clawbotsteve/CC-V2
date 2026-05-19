@@ -407,8 +407,11 @@ export default function AdStudioPage() {
   // Stock creators only — the model takes no image, identity comes
   // from the creator's persona text + locked seed.
   const generateTalkingAd = async () => {
+    // creatorId is optional now — a roster pick gives a matching
+    // persona+seed; otherwise the endpoint uses a default persona.
+    // The presenter is generated either way (product is the real ref).
     const sid = creatorUrl ? stockCreatorIdFromImage(creatorUrl) : null;
-    if (!sid || !talkingScript.trim() || talkingBusy) return;
+    if (!talkingScript.trim() || talkingBusy) return;
     setTalkingBusy(true);
     setTalkingUrl(null);
     try {
@@ -416,7 +419,7 @@ export default function AdStudioPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          creatorId: sid,
+          creatorId: sid || undefined,
           script: talkingScript.trim(),
           productName: productName.trim() || undefined,
           productType,
@@ -1089,7 +1092,7 @@ export default function AdStudioPage() {
                   {/* Premium: talking video ad — only for roster
                       creators (Seedance-2 needs a persona, not a
                       photo). Brand/Agency tier; the API enforces it. */}
-                  {SHOW_SPOKESPERSON && creatorUrl && stockCreatorIdFromImage(creatorUrl) && (
+                  {SHOW_SPOKESPERSON && creatorUrl && (
                     <div className="mt-6 w-full max-w-sm rounded-xl border border-[#6366f1]/40 bg-[#6366f1]/5 p-4 text-left">
                       <p className="text-sm font-semibold flex items-center gap-1.5">
                         <Sparkles className="h-4 w-4 text-[#a78bfa]" />
