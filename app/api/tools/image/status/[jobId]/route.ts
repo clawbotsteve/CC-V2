@@ -2,7 +2,34 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import prismadb from "@/lib/prismadb";
 import { getFalJobResult, getFalJobStatus } from "@/lib/fal-client";
+import { getReplicateJobStatus, extractReplicateImageUrls } from "@/lib/replicate-client";
 import { ImageGenerationModel } from "@/types/image";
+
+/**
+ * Replicate webhook-miss reconciliation. Production runs
+ * IMAGE_PROVIDER=replicate, but this endpoint previously only polled
+ * FAL/Higgsfield — so a dropped Replicate webhook (e.g. during a
+ * deploy) left the row "queued" forever and the UI spun infinitely.
+ * Self-heal by asking Replicate directly.
+ */
+async function pollReplicateDirect(jobId: string) {
+  try {
+    const p: any = await getReplicateJobStatus(jobId);
+    const st = String(p?.status || "").toLowerCase();
+    if (st === "succeeded") {
+      const url = extractReplicateImageUrls(p?.output)[0];
+      return url
+        ? { status: "completed", imageUrl: url, reason: undefined }
+        : { status: "failed", reason: { message: "No image in output" } };
+    }
+    if (st === "failed" || st === "canceled") {
+      return { status: "failed", reason: { message: String(p?.error || st) } };
+    }
+    return { status: "processing" };
+  } catch {
+    return { status: "processing" };
+  }
+}
 
 const FAL_ENDPOINTS = [
   // Order doesn't matter functionally (we try each until one returns
@@ -110,6 +137,11 @@ async function pollHiggsDirect(jobId: string) {
 }
 
 async function pollProvider(jobId: string) {
+  // Replicate first — it's the production provider. Then FAL, then
+  // Higgsfield (harmless if the id isn't theirs; each returns
+  // "processing" and we fall through).
+  const rep = await pollReplicateDirect(jobId);
+  if (rep.status !== "processing") return rep;
   const fal = await pollFalDirect(jobId);
   if (fal.status !== "processing") return fal;
   return pollHiggsDirect(jobId);

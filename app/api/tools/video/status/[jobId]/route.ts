@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prismadb from "@/lib/prismadb";
 import { auth } from "@clerk/nextjs/server";
 import { getFalJobResult, getFalJobStatus } from "@/lib/fal-client";
+import { getReplicateJobStatus, extractReplicateImageUrls } from "@/lib/replicate-client";
 
 function getFalEndpointFromModel(model?: string): string | null {
   if (!model) return null;
@@ -66,6 +67,38 @@ export async function GET(
 
     // Fallback provider sync when webhook/local callback didn't persist output yet.
     if ((videoJob.status === "queued" || videoJob.status === "processing") && !videoJob.videoUrl) {
+      // Replicate webhook-miss reconciliation FIRST (production
+      // provider; previously only FAL was reconciled here → a
+      // dropped Replicate video webhook span the UI forever).
+      try {
+        const p: any = await getReplicateJobStatus(jobId);
+        const st = String(p?.status || "").toLowerCase();
+        if (st === "succeeded") {
+          const v = extractReplicateImageUrls(p?.output)[0];
+          if (v) {
+            await prismadb.generatedVideo.update({
+              where: { id: jobId },
+              data: { status: "completed", videoUrl: v },
+            });
+            return NextResponse.json(
+              { status: "completed", videoUrl: v },
+              { status: 200 },
+            );
+          }
+        } else if (st === "failed" || st === "canceled") {
+          await prismadb.generatedVideo.update({
+            where: { id: jobId },
+            data: { status: "failed" },
+          });
+          return NextResponse.json(
+            { status: "failed", videoUrl: null },
+            { status: 200 },
+          );
+        }
+      } catch {
+        /* not a Replicate job / transient — fall through to FAL */
+      }
+
       const endpoint = getFalEndpointFromModel(videoJob.model);
       if (endpoint) {
         try {
