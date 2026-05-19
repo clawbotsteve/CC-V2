@@ -101,14 +101,37 @@ export async function POST(req: Request) {
     const aspectRatio = normalizeTalkingAspect(body?.aspectRatio);
 
     // The still already contains the exact creator + product, so the
-    // prompt only needs to drive MOTION + the spoken line. Dialogue
-    // in double quotes = Seedance audio convention. Gender-neutral.
+    // prompt only drives MOTION + the spoken line. Dialogue in double
+    // quotes = Seedance audio convention. Gender-neutral.
     const safe = script.replace(/["\\]/g, "").replace(/\s+/g, " ").trim().slice(0, 240);
-    const prompt =
-      "The person in the image talks directly to the phone front camera with " +
-      "genuine, warm, excited UGC energy, showing the product to the lens, " +
-      "natural handheld movement and micro-expressions, authentic and " +
-      `unpolished. They say: "${safe}"`;
+    const isTryOn = body?.angle === "virtual_tryon";
+    const productName: string =
+      typeof body?.productName === "string"
+        ? body.productName.trim().slice(0, 80)
+        : "";
+    const item = productName || "the item";
+
+    let prompt: string;
+    if (isTryOn) {
+      // Haul → (for longer clips) try-on. The still shows her in a
+      // plain base top holding the garment; animate that, and for
+      // 8s+ add a second beat where she actually puts it on.
+      const putOnBeat =
+        duration >= 8
+          ? ` Partway through she pulls ${item} on over her plain top and turns to show how it fits, posing in it.`
+          : "";
+      prompt =
+        `The person in the image holds up ${item} and talks to the phone ` +
+        "front camera with genuine excited 'get ready with me' energy, " +
+        `natural handheld movement.${putOnBeat} Authentic, unpolished UGC. ` +
+        `They say: "${safe}"`;
+    } else {
+      prompt =
+        "The person in the image talks directly to the phone front camera " +
+        "with genuine, warm, excited UGC energy, showing the product to the " +
+        "lens, natural handheld movement and micro-expressions, authentic " +
+        `and unpolished. They say: "${safe}"`;
+    }
 
     const moderation = await moderateAndLog({
       userId,

@@ -89,13 +89,14 @@ export const AD_ANGLES: AdAngle[] = [
     label: "Virtual try-on",
     blurb: "Creator wearing the apparel, full-body GRWM mirror look. Best for clothing.",
     aspectRatio: "9:16",
-    // Apparel-specialised: force a STANDING, FULL-BODY shot of the
-    // creator actually WEARING the exact garment from the product
-    // image (not holding it). GRWM/mirror aesthetic. {presentation}
-    // still slots the product-type phrasing but the scene hard-locks
-    // full-body try-on framing.
+    // Apparel try-on / haul intro. Deliberately NOT {presentation}
+    // (the apparel presentation says "wearing", which made the fusion
+    // confuse/replace the garment — e.g. a random lotion). Instead:
+    // the creator wears a PLAIN NEUTRAL base top and HOLDS UP the
+    // exact garment from the product image so it's clearly visible
+    // (the haul moment). Hard, explicit, single-product.
     template:
-      "Feature the AI UGC creator from the reference image, keeping their face, hair and body consistent and natural, standing and shown FULL BODY head-to-toe, actually WEARING the exact apparel from the product image fitted naturally on them ({presentation}), a 'get ready with me' fashion-vlog moment in an aesthetic bedroom with a mirror, clothes and a slight creative mess, soft natural daylight, relaxed confident pose showing the whole outfit, authentic iPhone front-camera UGC look with natural HDR and real skin tones, no color grading, vertical 9:16.",
+      "Feature the AI UGC creator from the reference image — same face, hair and body, standing, full body. She is wearing a simple plain solid-colour top and shorts (a neutral base outfit that does NOT compete). She holds UP the exact apparel item shown in the product image with both hands toward the camera so the full garment is clearly and completely visible — a 'get ready with me' clothing-haul moment in an aesthetic bedroom with a mirror and a slight creative mess, soft natural daylight, authentic iPhone front-camera UGC, natural HDR, real skin tones, no color grading, vertical 9:16. Show ONLY the apparel from the product image as the product — absolutely no skincare, cosmetics, bottles or any other product.",
   },
   {
     key: "problem_solution",
