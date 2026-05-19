@@ -65,17 +65,36 @@ export interface AdAngle {
    * public/ad-angles/ to light these up.
    */
   exampleImage: string;
+  /** Optional looping video preview (takes precedence over
+   *  exampleImage in the picker tile). Conventionally
+   *  /ad-angles/{key}.mp4. */
+  exampleVideo?: string;
 }
 
 export const AD_ANGLES: AdAngle[] = [
   {
     key: "lifestyle_hold",
     exampleImage: "/ad-angles/lifestyle_hold.jpg",
+    exampleVideo: "/ad-angles/ugc.mp4",
     label: "UGC",
     blurb: "Creator holding the product to camera, natural setting. The safe, high-performing default.",
     aspectRatio: "9:16",
     template:
       "Feature the AI UGC creator from the reference image, keeping their overall look, hairstyle and vibe consistent and natural, {presentation}, casual authentic UGC selfie framing, soft natural window light, plain modern home interior softly blurred behind, genuine warm half-smile looking at the lens, product clearly visible and in sharp focus with its label readable, shot on a phone front camera, slight imperfection / realism (no studio polish), vertical 9:16.",
+  },
+  {
+    key: "virtual_tryon",
+    exampleImage: "/ad-angles/virtual_tryon.jpg",
+    label: "Virtual try-on",
+    blurb: "Creator wearing the apparel, full-body GRWM mirror look. Best for clothing.",
+    aspectRatio: "9:16",
+    // Apparel-specialised: force a STANDING, FULL-BODY shot of the
+    // creator actually WEARING the exact garment from the product
+    // image (not holding it). GRWM/mirror aesthetic. {presentation}
+    // still slots the product-type phrasing but the scene hard-locks
+    // full-body try-on framing.
+    template:
+      "Feature the AI UGC creator from the reference image, keeping their face, hair and body consistent and natural, standing and shown FULL BODY head-to-toe, actually WEARING the exact apparel from the product image fitted naturally on them ({presentation}), a 'get ready with me' fashion-vlog moment in an aesthetic bedroom with a mirror, clothes and a slight creative mess, soft natural daylight, relaxed confident pose showing the whole outfit, authentic iPhone front-camera UGC look with natural HDR and real skin tones, no color grading, vertical 9:16.",
   },
   {
     key: "problem_solution",
@@ -121,20 +140,6 @@ export const AD_ANGLES: AdAngle[] = [
     aspectRatio: "9:16",
     template:
       "Feature the AI UGC creator from the reference image, keeping their look and vibe consistent and natural, focused engaged expression, mid-action, {presentation}, close-ish UGC framing so the product use is clearly visible, natural everyday lighting, authentic tutorial energy, product in sharp focus, vertical 9:16.",
-  },
-  {
-    key: "virtual_tryon",
-    exampleImage: "/ad-angles/virtual_tryon.jpg",
-    label: "Virtual try-on",
-    blurb: "Creator wearing the apparel, full-body GRWM mirror look. Best for clothing.",
-    aspectRatio: "9:16",
-    // Apparel-specialised: force a STANDING, FULL-BODY shot of the
-    // creator actually WEARING the exact garment from the product
-    // image (not holding it). GRWM/mirror aesthetic. {presentation}
-    // still slots the product-type phrasing but the scene hard-locks
-    // full-body try-on framing.
-    template:
-      "Feature the AI UGC creator from the reference image, keeping their face, hair and body consistent and natural, standing and shown FULL BODY head-to-toe, actually WEARING the exact apparel from the product image fitted naturally on them ({presentation}), a 'get ready with me' fashion-vlog moment in an aesthetic bedroom with a mirror, clothes and a slight creative mess, soft natural daylight, relaxed confident pose showing the whole outfit, authentic iPhone front-camera UGC look with natural HDR and real skin tones, no color grading, vertical 9:16.",
   },
 ];
 
