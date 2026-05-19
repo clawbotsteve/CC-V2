@@ -3,6 +3,8 @@ import prismadb from "@/lib/prismadb";
 import { auth } from "@clerk/nextjs/server";
 import { getWebhookUrl } from "@/lib/utils";
 import { submitImageJob, uploadImageUrlToProvider } from "@/lib/image-provider";
+import { uploadBlobToReplicate } from "@/lib/replicate-client";
+import { cropBufferTo916 } from "@/lib/ad-studio/crop916";
 import { moderateAndLog } from "@/lib/content-moderation";
 import { checkAvailableCredit } from "@/lib/check-available-credit";
 import { ToolType } from "@prisma/client";
@@ -92,11 +94,27 @@ export async function POST(req: Request) {
       );
     }
 
-    // Re-host the still with the active provider so the i2v model
-    // worker can fetch it.
+    // Center-crop the still to true 9:16 first (GPT Image 2 stills
+    // are 2:3) so the video is vertical, then re-host for the i2v
+    // worker. Crop is best-effort — on any failure fall back to the
+    // raw still so the user still gets a video.
     let hostedStill: string;
     try {
-      hostedStill = await uploadImageUrlToProvider(imageUrl);
+      let stillBuf: Buffer | null = null;
+      try {
+        const r = await fetch(imageUrl);
+        if (r.ok) {
+          stillBuf = await cropBufferTo916(Buffer.from(await r.arrayBuffer()));
+        }
+      } catch (cropErr) {
+        console.warn("[AD-STUDIO_ANIMATE] 9:16 crop skipped:", cropErr);
+      }
+      hostedStill = stillBuf
+        ? await uploadBlobToReplicate(
+            new Blob([new Uint8Array(stillBuf)], { type: "image/png" }),
+            "still-9x16.png",
+          )
+        : await uploadImageUrlToProvider(imageUrl);
     } catch (err) {
       console.error("[AD-STUDIO_ANIMATE] still hosting failed", err);
       return NextResponse.json(

@@ -986,13 +986,13 @@ export default function AdStudioPage() {
                                 Use → video
                               </button>
                               <a
-                                href={j.url}
-                                download={`tavira-${j.angle}.png`}
+                                href={`/api/ad-studio/crop?u=${encodeURIComponent(j.url!)}`}
+                                download={`tavira-${j.angle}-9x16.png`}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="text-[11px] text-muted-foreground hover:text-foreground hover:underline"
                               >
-                                Download
+                                Download 9:16
                               </a>
                             </div>
                           )}
@@ -1056,12 +1056,16 @@ export default function AdStudioPage() {
                   <div className="flex gap-3 flex-wrap">
                     <Button asChild variant="outline">
                       <a
-                        href={videoUrl || resultUrl}
-                        download={videoUrl ? "tavira-ad.mp4" : "tavira-ad.png"}
+                        href={
+                          videoUrl
+                            ? videoUrl
+                            : `/api/ad-studio/crop?u=${encodeURIComponent(resultUrl!)}`
+                        }
+                        download={videoUrl ? "tavira-ad.mp4" : "tavira-ad-9x16.png"}
                         target="_blank"
                         rel="noreferrer"
                       >
-                        Download {videoUrl ? "video" : "image"}
+                        Download {videoUrl ? "video" : "9:16 image"}
                       </a>
                     </Button>
                     {!videoUrl && (
