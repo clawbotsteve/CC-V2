@@ -164,8 +164,8 @@ export async function POST(req: Request) {
         prompt,
         num_images: 1,
         output_format: "png",
-        output_resolution: "1K",
-        resolution: "1K",
+        output_resolution: "2K",
+        resolution: "2K",
         aspect_ratio: angle.aspectRatio,
         aspectRatio: angle.aspectRatio,
         // Creator reference(s) lead, product last. NB2 Edit treats

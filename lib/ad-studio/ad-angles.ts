@@ -152,4 +152,4 @@ export function fillAdAnglePrompt(
  * + real skin + no filter + candid imperfect framing.
  */
 const STILL_REALISM =
-  "Shot on an iPhone front camera, real skin texture with visible pores and natural imperfections, no beauty filter or retouching, candid slightly imperfect handheld framing — looks like genuine UGC filmed by a real customer on their phone, not a studio ad.";
+  "Photographed on a recent iPhone front camera (natural phone-lens look, slight wide-angle, true-to-life colours). Hyper-realistic real skin: visible pores, fine texture, faint blemishes and natural under-eye tone, soft natural shine — NOT smoothed, NOT airbrushed, no beauty filter, no CGI/3D/render look. A real lived-in room behind them with believable everyday clutter and depth (not an empty studio backdrop), natural directional window light with soft real shadows. Slightly imperfect handheld framing and focus. Looks like a genuine photo a real customer actually took on their phone — indistinguishable from authentic UGC, absolutely not an AI image or a glossy ad.";
