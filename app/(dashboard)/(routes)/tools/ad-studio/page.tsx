@@ -66,8 +66,14 @@ const SHOW_SPOKESPERSON = true;
  * never be blank — give a strong, product-aware UGC line the user
  * can ship as-is or tweak ("don't make me think").
  */
-function defaultHookScript(productName: string): string {
+function defaultHookScript(productName: string, angle?: AdAngleKey): string {
   const p = productName.trim();
+  if (angle === "virtual_tryon") {
+    // GRWM / try-on energy (condensed from the Higgsfield reference).
+    return p
+      ? `Okay get ready with me — I'm trying on the ${p} and I genuinely don't know if this is crazy or genius. ...Okay no, I kinda love it. I'm wearing this.`
+      : `Okay get ready with me — trying this on and I don't know if it's crazy or genius. ...Okay no, I kinda love it. I'm wearing this.`;
+  }
   return p
     ? `Okay I had to show you guys the ${p} — I genuinely use it every day now and I'm kind of obsessed. You need this.`
     : `Okay I had to show you guys this — I genuinely use it every day now and I'm kind of obsessed. You need this.`;
@@ -169,18 +175,11 @@ export default function AdStudioPage() {
   // blank prompt). Only when still empty + not already rendered, so
   // we never clobber the user's edits.
   useEffect(() => {
-    if (
-      step === 4 &&
-      resultUrl &&
-      !talkingUrl &&
-      creatorUrl &&
-      stockCreatorIdFromImage(creatorUrl) &&
-      !talkingScript
-    ) {
-      setTalkingScript(defaultHookScript(productName));
+    if (step === 4 && resultUrl && !talkingUrl && !talkingScript) {
+      setTalkingScript(defaultHookScript(productName, angle));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, resultUrl, creatorUrl, talkingUrl]);
+  }, [step, resultUrl, talkingUrl, angle]);
 
   const uploadOne = async (
     file: File,
