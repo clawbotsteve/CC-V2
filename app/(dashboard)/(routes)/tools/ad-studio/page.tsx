@@ -407,11 +407,9 @@ export default function AdStudioPage() {
   // Stock creators only — the model takes no image, identity comes
   // from the creator's persona text + locked seed.
   const generateTalkingAd = async () => {
-    // creatorId is optional now — a roster pick gives a matching
-    // persona+seed; otherwise the endpoint uses a default persona.
-    // The presenter is generated either way (product is the real ref).
-    const sid = creatorUrl ? stockCreatorIdFromImage(creatorUrl) : null;
-    if (!talkingScript.trim() || talkingBusy) return;
+    // Animate the EXACT fused still (creator+product) into a talking
+    // video via WaveSpeed Seedance-2 i2v — the real thing.
+    if (!resultUrl || !talkingScript.trim() || talkingBusy) return;
     setTalkingBusy(true);
     setTalkingUrl(null);
     try {
@@ -419,11 +417,8 @@ export default function AdStudioPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          creatorId: sid || undefined,
+          imageUrl: resultUrl,
           script: talkingScript.trim(),
-          productName: productName.trim() || undefined,
-          productType,
-          productImageUrl: productUrl || undefined,
           duration: talkingDuration,
         }),
       });
@@ -1093,34 +1088,23 @@ export default function AdStudioPage() {
                     </p>
                   )}
 
-                  {/* Premium: talking video ad — only for roster
-                      creators (Seedance-2 needs a persona, not a
-                      photo). Brand/Agency tier; the API enforces it. */}
-                  {SHOW_SPOKESPERSON && creatorUrl && (
+                  {/* Talking video ad — animates the EXACT fused
+                      still (creator+product) into a talking clip with
+                      audio via WaveSpeed Seedance-2 i2v. Brand/Agency;
+                      the API enforces the tier + key. */}
+                  {SHOW_SPOKESPERSON && resultUrl && (
                     <div className="mt-6 w-full max-w-sm rounded-xl border border-[#6366f1]/40 bg-[#6366f1]/5 p-4 text-left">
                       <p className="text-sm font-semibold flex items-center gap-1.5">
                         <Sparkles className="h-4 w-4 text-[#a78bfa]" />
-                        AI spokesperson video
+                        Talking video ad
                         <span className="text-[10px] uppercase tracking-wide rounded bg-[#6366f1]/30 px-1.5 py-0.5">
                           Brand · beta
                         </span>
                       </p>
                       <p className="text-[11px] text-muted-foreground mt-1">
-                        A Tavira AI presenter holds up <strong>your exact
-                        product</strong> and reads your hook to camera with
-                        real voice. ~3–4 min.
-                      </p>
-                      {/* Honest expectation-set: the PRODUCT is the
-                          user's real uploaded image (Seedance-2
-                          reference_images — verified not deepfake-gated
-                          for products). The PRESENTER is a generated
-                          Tavira persona, NOT the still's creator (person
-                          images are still E005-blocked). */}
-                      <p className="mt-2 text-[11px] text-amber-300/90 bg-amber-400/10 border border-amber-400/20 rounded-md px-2.5 py-1.5">
-                        The product is <strong>yours, exactly</strong>. The
-                        presenter is a Tavira AI persona — not the creator from
-                        the still above. Want your picked creator + product
-                        instead? Use "Turn into a video ad" (silent).
+                        Animate <strong>this exact still</strong> — your
+                        creator + product, above — into a talking UGC video
+                        with real voice, native 9:16. ~3–5 min.
                       </p>
                       {talkingUrl ? (
                         <>

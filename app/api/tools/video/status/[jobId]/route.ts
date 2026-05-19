@@ -3,6 +3,7 @@ import prismadb from "@/lib/prismadb";
 import { auth } from "@clerk/nextjs/server";
 import { getFalJobResult, getFalJobStatus } from "@/lib/fal-client";
 import { getReplicateJobStatus, extractReplicateImageUrls } from "@/lib/replicate-client";
+import { getWaveSpeedResult } from "@/lib/wavespeed-client";
 
 function getFalEndpointFromModel(model?: string): string | null {
   if (!model) return null;
@@ -67,6 +68,36 @@ export async function GET(
 
     // Fallback provider sync when webhook/local callback didn't persist output yet.
     if ((videoJob.status === "queued" || videoJob.status === "processing") && !videoJob.videoUrl) {
+      // WaveSpeed talking-ad jobs have NO webhook into us — the only
+      // way they resolve is by polling WaveSpeed here.
+      if (videoJob.model === "wavespeed-seedance2") {
+        const w = await getWaveSpeedResult(jobId);
+        if (w.status === "completed" && w.videoUrl) {
+          await prismadb.generatedVideo.update({
+            where: { id: jobId },
+            data: { status: "completed", videoUrl: w.videoUrl },
+          });
+          return NextResponse.json(
+            { status: "completed", videoUrl: w.videoUrl },
+            { status: 200 },
+          );
+        }
+        if (w.status === "failed") {
+          await prismadb.generatedVideo.update({
+            where: { id: jobId },
+            data: { status: "failed" },
+          });
+          return NextResponse.json(
+            { status: "failed", videoUrl: null },
+            { status: 200 },
+          );
+        }
+        return NextResponse.json(
+          { status: "processing", videoUrl: null },
+          { status: 200 },
+        );
+      }
+
       // Replicate webhook-miss reconciliation FIRST (production
       // provider; previously only FAL was reconciled here → a
       // dropped Replicate video webhook span the UI forever).

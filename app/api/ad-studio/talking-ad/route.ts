@@ -1,52 +1,37 @@
 import { NextResponse } from "next/server";
 import prismadb from "@/lib/prismadb";
 import { auth } from "@clerk/nextjs/server";
-import { getWebhookUrl } from "@/lib/utils";
-import { submitImageJob } from "@/lib/image-provider";
-import { uploadBlobToReplicate } from "@/lib/replicate-client";
 import { moderateAndLog } from "@/lib/content-moderation";
 import { checkAvailableCredit } from "@/lib/check-available-credit";
 import { ToolType } from "@prisma/client";
 import { requireTermsAccepted } from "@/lib/require-terms-accepted";
 import { resolveAccessTier } from "@/lib/plan-access";
 import {
-  getStockCreator,
-  buildTalkingHookPrompt,
-  DEFAULT_TALKING_CREATOR,
-} from "@/lib/ad-studio/stock-creators";
-import {
-  ProductTypeKey,
-  detectProductType,
-  talkingProductClause,
-} from "@/lib/ad-studio/product-types";
+  submitWaveSpeedI2V,
+  isWaveSpeedConfigured,
+} from "@/lib/wavespeed-client";
 
 /**
  * POST /api/ad-studio/talking-ad
  *
- * Premium "Talking video ad" — the creator speaks a hook line to
- * camera, WITH native audio, via Seedance 2.0 text-to-video.
+ * The real talking UGC ad: takes the Ad Studio fused still (the
+ * user's EXACT creator holding their EXACT product, from GPT
+ * Image 2) and animates IT into a talking video with native audio
+ * via WaveSpeed's Seedance 2.0 image-to-video.
  *
- * Why text-to-video (not image-to-video): Seedance 2.0's safety
- * layer hard-blocks ANY human-likeness image input (verified E005
- * across first-frame `image` AND `reference_images`, every face,
- * prompt-independent — the deepfake gate). The only path it permits
- * for people is pure text. So the talking creator's identity comes
- * from the roster creator's persona TEXT + a locked seed → the same
- * creator renders consistently across every ad without an uploaded
- * reference. (Validated 2026-05-18: same persona+seed = same
- * creator across different scripts/products.)
+ * Why WaveSpeed (not Replicate): Replicate's Seedance-2 deployment
+ * E005-blocks any person-bearing image; WaveSpeed's allows it
+ * (validated 2026-05-19 — exact creator + product + talking + audio
+ * + native 9:16). FAL had this too but the account is locked.
  *
- * Phase 1 = the talking hook alone (genuinely useful: a talking
- * creator clip with audio). Phase 2 stitches it to a real-product
- * reveal (NB2 still → Seedance-1 motion) — deferred because
- * server-side ffmpeg concat needs Railway infra work.
- *
- * Gated to the top tier (Studio/Brand/Agency) — it's the premium
- * moat feature and Seedance 2.0 is ~10x a normal clip.
+ * No webhook from WaveSpeed → we key the GeneratedVideo row on the
+ * WaveSpeed task id; /api/tools/video/status/[id] reconciles by
+ * polling WaveSpeed (model = "wavespeed-seedance2").
  *
  * Body:
- *   creatorId — a STOCK roster creator id (must have a persona)
- *   script    — the spoken hook line (<= ~240 chars)
+ *   imageUrl  — the fused still (creator+product) to animate (req)
+ *   script    — the spoken hook line (req, <= ~240 chars)
+ *   duration? — 5 (default) | 10
  */
 export async function POST(req: Request) {
   try {
@@ -61,16 +46,27 @@ export async function POST(req: Request) {
       );
     }
 
+    if (!isWaveSpeedConfigured()) {
+      return NextResponse.json(
+        {
+          error:
+            "Talking video ads aren't available right now. Use \"Turn into a video ad\" for a silent version.",
+        },
+        { status: 503 },
+      );
+    }
+
     const body = await req.json();
-    const creatorId: string | undefined = body?.creatorId;
+    const imageUrl: string | undefined = body?.imageUrl;
     const script: string =
       typeof body?.script === "string" ? body.script.trim() : "";
 
-    // Roster creator → its persona+seed; otherwise the default
-    // persona. The talking presenter is ALWAYS generated (person
-    // images E005-block), so a roster pick was never required —
-    // the real product comes through via reference_images.
-    const creator = (creatorId && getStockCreator(creatorId)) || DEFAULT_TALKING_CREATOR;
+    if (!imageUrl) {
+      return NextResponse.json(
+        { error: "Generate the ad still first, then make it talk." },
+        { status: 400 },
+      );
+    }
     if (!script) {
       return NextResponse.json(
         { error: "Add a short line for the creator to say." },
@@ -95,68 +91,30 @@ export async function POST(req: Request) {
       );
     }
 
-    const productName: string =
-      typeof body?.productName === "string" ? body.productName.trim().slice(0, 90) : "";
-    const productType: ProductTypeKey =
-      (typeof body?.productType === "string" && body.productType) ||
-      detectProductType(productName);
-
-    // THE breakthrough (verified 2026-05-18): a PRODUCT image as a
-    // Seedance-2 reference_image is NOT deepfake-blocked (only person
-    // images E005). So the presenter is a text/seed persona while the
-    // user's EXACT product comes through as [Image1]. The reference
-    // MUST be an https URL the model worker can fetch — arbitrary
-    // ecom CDN URLs (often http:// or hotlink-protected) hang the
-    // job until it's canceled, so we force-mirror the bytes to a
-    // Replicate file first.
-    const productImageUrl: string | undefined = body?.productImageUrl;
-    let productRef: string | null = null;
-    if (productImageUrl) {
-      try {
-        const res = await fetch(productImageUrl);
-        if (res.ok) {
-          const blob = await res.blob();
-          productRef = await uploadBlobToReplicate(blob, "product.png");
-        }
-      } catch (err) {
-        console.error("[AD-STUDIO_TALKING_AD] product re-host failed", err);
-      }
-    }
-
-    // Reference the product as [Image1] when we have a usable ref so
-    // Seedance-2 renders the EXACT product; else fall back to the
-    // text-only name (approximate).
-    const productLabel = productRef
-      ? `the ${productName || "product"} shown in [Image1]`
-      : productName;
-    const productClause = productLabel
-      ? talkingProductClause(productType, productLabel)
-      : undefined;
-
-    // Duration: Seedance 2.0 supports 5s or 10s. Default 5.
     const duration = body?.duration === 10 || body?.duration === "10" ? 10 : 5;
 
-    const { prompt, seed } = buildTalkingHookPrompt(creator, {
-      script,
-      productClause,
-    });
+    // The still already contains the exact creator + product, so the
+    // prompt only needs to drive MOTION + the spoken line. Dialogue
+    // in double quotes = Seedance audio convention. Gender-neutral.
+    const safe = script.replace(/["\\]/g, "").replace(/\s+/g, " ").trim().slice(0, 240);
+    const prompt =
+      "The person in the image talks directly to the phone front camera with " +
+      "genuine, warm, excited UGC energy, showing the product to the lens, " +
+      "natural handheld movement and micro-expressions, authentic and " +
+      `unpolished. They say: "${safe}"`;
 
     const moderation = await moderateAndLog({
       userId,
       endpoint: "ad-studio.talking-ad",
       prompt,
-      // Ad copy names the customer's brand/product — the celebrity
-      // classifier false-positives on it ("Reps FUTR" → realperson).
       skipRealPerson: true,
     });
     if (!moderation.allowed) {
       return NextResponse.json({ error: moderation.reason }, { status: 400 });
     }
 
-    // Priced as a Seedance video clip. NOTE: reuses the existing
-    // seedance_v2_ref_5s variant as a stand-in — Seedance 2.0 is
-    // pricier than Seedance-1, a dedicated credit variant is a
-    // fast-follow before wide release.
+    // Priced as a Seedance video clip (stand-in — dedicated WaveSpeed
+    // credit variant + real cost is a fast-follow).
     const variantKey = "seedance_v2_ref_5s";
     const creditCheck = await checkAvailableCredit({
       userId,
@@ -173,25 +131,19 @@ export async function POST(req: Request) {
       );
     }
 
-    const webhookUrl = getWebhookUrl("/api/webhook/video");
-
-    const resp = await submitImageJob(
-      "fal-ai/bytedance/seedance-2.0/text-to-video",
-      {
-        input: {
-          prompt,
-          seed,
-          duration,
-          resolution: "720p",
-          aspect_ratio: "9:16",
-          generate_audio: true,
-          ...(productRef ? { reference_images: [productRef] } : {}),
-        },
-        webhookUrl,
-      },
-    );
-
-    if (!resp?.request_id) {
+    let taskId: string;
+    try {
+      const r = await submitWaveSpeedI2V({
+        image: imageUrl,
+        prompt,
+        duration,
+        resolution: "720p",
+        aspectRatio: "9:16",
+        generateAudio: true,
+      });
+      taskId = r.taskId;
+    } catch (err: any) {
+      console.error("[AD-STUDIO_TALKING_AD] WaveSpeed submit failed", err?.message || err);
       return NextResponse.json(
         { error: "Couldn't start the talking video. Please try again." },
         { status: 502 },
@@ -200,9 +152,9 @@ export async function POST(req: Request) {
 
     await prismadb.generatedVideo.create({
       data: {
-        id: resp.request_id,
+        id: taskId,
         userId,
-        model: "seedance2-talking",
+        model: "wavespeed-seedance2",
         videoUrl: "",
         prompt,
         adherence: 0.5,
@@ -215,7 +167,7 @@ export async function POST(req: Request) {
       },
     });
 
-    return NextResponse.json({ jobId: resp.request_id });
+    return NextResponse.json({ jobId: taskId });
   } catch (err: any) {
     console.error("[AD-STUDIO_TALKING_AD]", err?.message || err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
