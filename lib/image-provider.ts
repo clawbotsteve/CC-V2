@@ -170,6 +170,16 @@ export function translateFalInputToReplicate(
       number_of_images: falInput.num_images ?? 1,
       output_format: falInput.output_format ?? "png",
     };
+    // Image-fusion (Ad Studio): GPT Image 2 takes reference images
+    // via `input_images`. We pass the creator ref(s) + product the
+    // same way the NB2 path does (FAL `image_urls` / `image_url`).
+    // GPT Image 2 produces markedly more photoreal fusions than NB2
+    // (validated 2026-05-18) — Ad Studio's still engine.
+    const refs: string[] = [];
+    if (Array.isArray(falInput.image_urls)) refs.push(...falInput.image_urls);
+    if (typeof falInput.image_url === "string" && falInput.image_url)
+      refs.push(falInput.image_url);
+    if (refs.length > 0) out.input_images = refs.slice(0, 10);
     return out;
   }
 
