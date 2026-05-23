@@ -240,26 +240,27 @@ export default function GenerateImagePage() {
             </HowToUseDrawer>
           </div>
 
-          <div className="hidden sm:block text-sm text-muted-foreground self-end">Configure on the left → generate on the left panel</div>
         </div>
 
-        <div className="w-full pt-8">
-          <div className="grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-6">
+        <div className="w-full pt-6">
+          <div className="grid grid-cols-1 xl:grid-cols-[340px_1fr] gap-6">
             {/*
               Form panel layout: pin to viewport with internal scroll so the
               Generate button is ALWAYS visible without page-scroll. Settings
               area scrolls inside the card; the action bar at the bottom is
               non-shrinking. On mobile (no `xl:` breakpoint), the panel keeps
-              its natural height so the page scrolls normally.
+              its natural height so the page scrolls normally. Tightened
+              2026-05-20: panel header dropped (redundant with page header),
+              col width 360→340, paddings reduced so the full settings block
+              fits above the Generate button on a normal laptop without any
+              internal scroll — matches the WaveSpeed reference layout.
             */}
             <aside className="rounded-2xl border border-border bg-card/60 flex flex-col xl:sticky xl:top-24 xl:max-h-[calc(100vh-7rem)]">
-              <h3 className="px-4 pt-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">Image Generation Settings</h3>
-
-              <div className="px-4 flex-1 overflow-y-auto">
+              <div className="px-4 pt-4 pb-1 flex-1 overflow-y-auto">
                 <ImageSettingsPanel form={form} setForm={setForm} trainedModels={trainedModels} imageUploadRef={uploadRefs} />
               </div>
 
-              <div className="px-4 pb-4 pt-3 border-t border-border bg-card/60 backdrop-blur-sm">
+              <div className="px-4 pb-3 pt-2 border-t border-border bg-card/60 backdrop-blur-sm">
                 <ActionButtons
                   handleGenerate={handleGenerate}
                   isLoading={isLoading}
