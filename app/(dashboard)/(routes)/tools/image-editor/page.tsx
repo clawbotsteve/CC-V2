@@ -130,12 +130,13 @@ export default function ImageEditPage() {
 
   return (
     <PageContainer>
-      <div className="w-full p-4 md:p-8">
+      <div className="w-full px-4 md:px-6 pt-1 md:pt-2 pb-4 md:pb-6">
         {/* header */}
-        <div className="py-4 md:sticky top-0 z-[9] bg-background flex flex-col sm:flex-row gap-4 sm:gap-0 justify-between border-b border-foreground/40">
+        <div className="py-1 md:sticky top-0 z-[9] bg-background flex flex-col sm:flex-row gap-2 sm:gap-0 justify-between border-b border-foreground/40">
 
           <div className="flex gap-6">
             <AiAnimatedHeading
+              compact
               heading="Image Editor"
               description="Transform and edit your images with AI"
               icon={<Pencil className="h-6 w-6" />}
@@ -170,7 +171,7 @@ export default function ImageEditPage() {
         </div>
 
         {/* content */}
-        <div className="w-full pt-8">
+        <div className="w-full pt-3">
           <div className="grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-6">
             <aside className="rounded-2xl border border-border bg-card/60 p-4 h-fit xl:sticky xl:top-24">
               <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">
