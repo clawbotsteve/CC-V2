@@ -111,11 +111,12 @@ export default function FaceSwapPage() {
 
   return (
     <PageContainer>
-      <div className="w-full p-4 md:p-8">
+      <div className="w-full px-4 md:px-6 pt-1 md:pt-2 pb-4 md:pb-6">
         {/* header */}
-        <div className="py-4 md:sticky top-0 z-[9] bg-background flex flex-col sm:flex-row gap-4 sm:gap-0 justify-between border-b border-foreground/40">
+        <div className="py-1 md:sticky top-0 z-[9] bg-background flex flex-col sm:flex-row gap-2 sm:gap-0 justify-between border-b border-foreground/40">
           <div className="flex gap-6">
             <AiAnimatedHeading
+              compact
               heading="Faceswap"
               description="Create and manage your face swap transformations"
               icon={<WandSparkles className="h-6 w-6" />}
@@ -163,7 +164,7 @@ export default function FaceSwapPage() {
         </div>
 
         {/* content */}
-        <div className="w-full pt-12">
+        <div className="w-full pt-3">
           <FaceSwapHistory
             images={generations}
             isLoading={isLoadingImages}
