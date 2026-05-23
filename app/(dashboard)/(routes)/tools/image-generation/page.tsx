@@ -218,10 +218,23 @@ export default function GenerateImagePage() {
 
   return (
     <PageContainer>
-      <div className="w-full p-4 md:p-8">
-        <div className="py-4 md:sticky top-0 z-[9] bg-background flex flex-col sm:flex-row gap-4 sm:gap-0 justify-between border-b border-foreground/40">
+      {/*
+        Page-chrome trim (2026-05-20 pass 2): the prior trim got the
+        settings panel itself tight, but the OUTER chrome (huge top
+        padding, oversized heading band, narrow 340px column, fat
+        horizontal page padding) left a sea of unused dark space. This
+        pass pulls the heading up closer to the nav, widens the
+        settings column 340→380px (more breathing room inside the
+        card the user explicitly asked for), stretches the sticky
+        card vertically so it fills more of the viewport, and trims
+        the outer page padding so the layout reaches closer to the
+        viewport edges on wide screens.
+      */}
+      <div className="w-full px-4 md:px-6 pt-1 md:pt-2 pb-4 md:pb-6">
+        <div className="py-1 md:sticky top-0 z-[9] bg-background flex flex-col sm:flex-row gap-2 sm:gap-0 justify-between border-b border-foreground/40">
           <div className="flex gap-6">
             <AiAnimatedHeading
+              compact
               heading="Image Generator"
               description="Create production-ready images in a few clicks"
               icon={<Sparkles className="h-6 w-6" />}
@@ -240,26 +253,26 @@ export default function GenerateImagePage() {
             </HowToUseDrawer>
           </div>
 
-          <div className="hidden sm:block text-sm text-muted-foreground self-end">Configure on the left → generate on the left panel</div>
         </div>
 
-        <div className="w-full pt-8">
-          <div className="grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-6">
+        <div className="w-full pt-3">
+          <div className="grid grid-cols-1 xl:grid-cols-[380px_1fr] gap-5">
             {/*
               Form panel layout: pin to viewport with internal scroll so the
               Generate button is ALWAYS visible without page-scroll. Settings
               area scrolls inside the card; the action bar at the bottom is
               non-shrinking. On mobile (no `xl:` breakpoint), the panel keeps
-              its natural height so the page scrolls normally.
+              its natural height so the page scrolls normally. The sticky
+              card uses top-20 + max-h calc(100vh-5rem) so it pins right
+              under the (now slimmer) heading band and stretches down for
+              the full visible viewport — "full length" per the user's note.
             */}
-            <aside className="rounded-2xl border border-border bg-card/60 flex flex-col xl:sticky xl:top-24 xl:max-h-[calc(100vh-7rem)]">
-              <h3 className="px-4 pt-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">Image Generation Settings</h3>
-
-              <div className="px-4 flex-1 overflow-y-auto">
+            <aside className="rounded-2xl border border-border bg-card/60 flex flex-col xl:sticky xl:top-20 xl:max-h-[calc(100vh-5rem)]">
+              <div className="px-5 pt-5 pb-1 flex-1 overflow-y-auto">
                 <ImageSettingsPanel form={form} setForm={setForm} trainedModels={trainedModels} imageUploadRef={uploadRefs} />
               </div>
 
-              <div className="px-4 pb-4 pt-3 border-t border-border bg-card/60 backdrop-blur-sm">
+              <div className="px-5 pb-4 pt-3 border-t border-border bg-card/60 backdrop-blur-sm">
                 <ActionButtons
                   handleGenerate={handleGenerate}
                   isLoading={isLoading}

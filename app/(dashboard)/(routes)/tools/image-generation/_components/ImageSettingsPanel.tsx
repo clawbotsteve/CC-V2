@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Info } from "lucide-react";
+import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { ImageGenerationInput, ImageGenerationModel, NanoBananaResolution } from "@/types/image";
@@ -99,9 +99,16 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
   ] as const;
 
   return (
-    <div className="space-y-4">
+    // Tightened layout (2026-05-20): each field block uses no extra
+    // vertical padding so the whole panel fits above the Generate
+    // button without internal scrolling on a normal laptop viewport.
+    // Pairs of small controls (aspect / quality / format / count) are
+    // grouped into 2-col grids at the bottom — same density trick the
+    // WaveSpeed UI uses. Verbose "Info" helper paragraphs were pruned
+    // to one-liners (plan-lock messages kept — they're load-bearing).
+    <div className="space-y-3">
       {/* Unified model selector (text-to-image + image-to-image together) */}
-      <div className="space-y-1 py-2">
+      <div className="space-y-1">
         <label className="text-sm font-medium text-foreground">Model</label>
         <Select
           value={form.model}
@@ -170,7 +177,7 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
             }
           }}
         >
-          <SelectTrigger className="w-full h-10">
+          <SelectTrigger className="w-full h-9">
             <SelectValue placeholder="Select a model" />
           </SelectTrigger>
           <SelectContent>
@@ -186,14 +193,11 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
             ))}
           </SelectContent>
         </Select>
-        <p className="text-xs text-muted-foreground flex items-center gap-1">
-          <Info className="w-3 h-3" /> Choose any model — mode is handled automatically
-        </p>
       </div>
 
       {/* GPT Image 2 — Quality picker. Free + Beginner locked to "medium". */}
       {isGptImage2 && (
-        <div className="space-y-1 py-2">
+        <div className="space-y-1">
           <label className="text-sm font-medium text-foreground">Quality</label>
           <Select
             value={form.quality ?? "medium"}
@@ -202,7 +206,7 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
               setForm((f) => ({ ...f, quality: value as "low" | "medium" | "high" }))
             }
           >
-            <SelectTrigger className="w-full h-10">
+            <SelectTrigger className="w-full h-9">
               <SelectValue placeholder="Quality" />
             </SelectTrigger>
             <SelectContent>
@@ -226,20 +230,19 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
               </SelectItem>
             </SelectContent>
           </Select>
-          <p className="text-xs text-muted-foreground flex items-center gap-1">
-            <Info className="w-3 h-3" />
-            {isFreeTier
-              ? "Free plan is locked to medium. Upgrade to access higher quality."
-              : isBeginnerTier
-                ? "Beginner plan is locked to medium. Upgrade to Starter for high quality."
-                : "Higher quality looks better but costs more credits per generation."}
-          </p>
+          {qualityLockedToMedium && (
+            <p className="text-[11px] text-muted-foreground">
+              {isFreeTier
+                ? "Free plan is locked to medium — upgrade for higher quality."
+                : "Beginner is locked to medium — upgrade to Starter for high."}
+            </p>
+          )}
         </div>
       )}
 
       {/* Trained LoRA Selector - only show for LoRA model */}
       {isLora && (
-        <div className="space-y-1 py-2">
+        <div className="space-y-1">
           <label className="text-sm font-medium text-foreground">Trained LoRA</label>
         <Select
           value={form.lora_id}
@@ -247,7 +250,7 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
             setForm((f) => ({ ...f, lora_id: value }))
           }
         >
-          <SelectTrigger className="w-full h-10">
+          <SelectTrigger className="w-full h-9">
             <SelectValue placeholder="Select a model" />
           </SelectTrigger>
 
@@ -268,18 +271,15 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
             ))}
           </SelectContent>
         </Select>
-          <p className="text-xs text-muted-foreground flex items-center gap-1">
-            <Info className="w-3 h-3" /> Select a custom trained model
-          </p>
         </div>
       )}
 
       {/* Reference Image Upload - show for image-to-image models + Nano Banana 2 multi-image input */}
       {(isImageToImage || isNanoBanana2) && (
-        <div className="space-y-1 py-2">
+        <div className="space-y-1">
           <label className="text-sm font-medium text-foreground">
             {isNanoBanana2
-              ? "Input Photos (optional, up to 5)"
+              ? "Input Photos (up to 5)"
               : isSoul2
                 ? "Reference Image (required)"
                 : `Reference Image ${isNanoBannaPro ? "(required)" : "(optional)"}`}
@@ -291,24 +291,14 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
             update={(data) => updateForm(setForm, data)}
             maxFiles={isNanoBanana2 ? 5 : 1}
           />
-          <p className="text-xs text-muted-foreground flex items-center gap-1">
-            <Info className="w-3 h-3" />{" "}
-            {isNanoBanana2
-              ? "Upload up to 5 photos to guide Nano Banana 2."
-              : isSoul2
-                ? "Soul 2.0 uses your reference photo to lock the character's identity."
-                : "Upload an image to transform or edit"}
-          </p>
         </div>
       )}
 
       {/* Prompt */}
-      <div className="space-y-1 py-2">
-        <div className="flex items-center justify-between gap-2">
-          <label className="text-sm font-medium text-foreground">Prompt</label>
-        </div>
+      <div className="space-y-1">
+        <label className="text-sm font-medium text-foreground">Prompt</label>
         <Textarea
-          className="min-h-[100px]"
+          className="min-h-[80px]"
           placeholder="Describe the image you want to generate..."
           value={form.prompt}
           onChange={(e) => updateForm(setForm, { prompt: e.target.value })}
@@ -323,9 +313,16 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
         />
       </div>
 
+      {/* ─────────────────────────────────────────────────────────────
+          Secondary settings — packed into a 2-column grid so the panel
+          fits above the Generate button without scrolling. Each block
+          is a grid cell; cells that need full width set `col-span-2`.
+          ───────────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 gap-x-3 gap-y-3">
+
       {/* Aspect ratio for Nano models: always write BOTH aspect_ratio + image_size */}
       {isNanoModel && (
-        <div className="space-y-1 py-2">
+        <div className="space-y-1">
           <label className="text-sm font-medium">Aspect ratio</label>
           <Select
             value={((form.aspect_ratio as AspectRatio) || imageSizeToAspectMap[form.image_size as ImageSize] || AspectRatio.Ratio1_1) as string}
@@ -339,7 +336,7 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
               }));
             }}
           >
-            <SelectTrigger className="w-full h-10">
+            <SelectTrigger className="w-full h-9">
               <SelectValue placeholder="1:1" />
             </SelectTrigger>
             <SelectContent className="w-[170px] border-white/10 bg-[#1b1b1f] p-1.5">
@@ -363,7 +360,7 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
 
       {/* Aspect ratio for non-Nano image-to-image models */}
       {isImageToImage && !isNanoModel && (
-        <div className="space-y-1 py-2">
+        <div className="space-y-1">
           <label className="text-sm font-medium">Aspect ratio</label>
           <Select
             value={form.aspect_ratio ?? "auto"}
@@ -374,7 +371,7 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
               }))
             }
           >
-            <SelectTrigger className="w-full h-10">
+            <SelectTrigger className="w-full h-9">
               <SelectValue placeholder="auto" />
             </SelectTrigger>
             <SelectContent className="w-[170px] border-white/10 bg-[#1b1b1f] p-1.5">
@@ -405,7 +402,7 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
 
       {/* Aspect ratio for text-to-image models */}
       {isTextToImage && (
-        <div className="space-y-1 py-2">
+        <div className="space-y-1">
           <label className="text-sm font-medium">Aspect ratio</label>
           <Select
             value={((form.image_size && imageSizeToAspectMap[form.image_size as ImageSize]) || "auto") as string}
@@ -416,7 +413,7 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
               }))
             }
           >
-            <SelectTrigger className="w-full h-10">
+            <SelectTrigger className="w-full h-9">
               <SelectValue placeholder="auto" />
             </SelectTrigger>
             <SelectContent className="w-[170px] border-white/10 bg-[#1b1b1f] p-1.5">
@@ -445,14 +442,39 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
         </div>
       )}
 
-      {/* Output Resolution (Nano Banana 2 + Nano Banana 2 Edit) */}
+      {/* Output Format — paired with Aspect on row 1 of the grid
+          (user feedback 2026-05-20: pair the two compact controls;
+          push the slider to its own full-width row below). */}
+      <div className="space-y-1">
+        <div className="flex justify-between">
+          <label className="text-sm font-medium">Format</label>
+          <span className="text-xs font-medium uppercase text-muted-foreground">{form.output_format}</span>
+        </div>
+        <div className="flex gap-1.5">
+          {([OutputFormat.Png, OutputFormat.Jpeg] as const).map((format) => (
+            <button
+              key={format}
+              onClick={() => setForm(f => ({ ...f, output_format: format }))}
+              className={`flex-1 px-2 py-1.5 rounded-md text-xs font-medium border
+                ${form.output_format === format
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-muted text-muted-foreground border-muted"}`}
+            >
+              {format.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Output Resolution (Nano Banana 2 + Nano Banana 2 Edit) —
+          full-width row beneath Aspect|Format. */}
       {(isNanoBanana2 || isNanoBannaPro) && (
-        <div className="space-y-1 py-2">
+        <div className="space-y-1 col-span-2">
           <div className="flex justify-between">
-            <label className="text-sm font-medium">Output Resolution</label>
-            <span className="text-sm font-medium uppercase">{form.output_resolution ?? "1k"}</span>
+            <label className="text-sm font-medium">Resolution</label>
+            <span className="text-xs font-medium uppercase text-muted-foreground">{form.output_resolution ?? "1k"}</span>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-1.5">
             {(["1k", "2k", "4k"] as NanoBananaResolution[]).map((res) => {
               const lockedFor4K = res === "4k" && resolutionMax2K;
               return (
@@ -462,7 +484,7 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
                   onClick={() =>
                     !lockedFor4K && setForm((f) => ({ ...f, output_resolution: res }))
                   }
-                  className={`flex-1 px-3 py-1.5 rounded-md text-sm font-medium border transition ${
+                  className={`flex-1 px-2 py-1.5 rounded-md text-xs font-medium border transition ${
                     (form.output_resolution ?? "1k") === res
                       ? "bg-primary text-primary-foreground border-primary"
                       : lockedFor4K
@@ -476,52 +498,39 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
               );
             })}
           </div>
-          <p className="text-xs text-muted-foreground flex items-center gap-1">
-            <Info className="w-3 h-3" />
-            {resolutionMax2K
-              ? "4K is available on Starter and above. Beginner is capped at 2K."
-              : "Credits by resolution: 1K = 2, 2K = 3, 4K = 4"}
-          </p>
         </div>
       )}
 
       {/* Soul 2.0 — resolution picker (Higgsfield enum: 720p / 1080p only) */}
       {isSoul2 && (
-        <div className="space-y-1 py-2">
+        <div className="space-y-1 col-span-2">
           <div className="flex justify-between">
             <label className="text-sm font-medium">Resolution</label>
-            <span className="text-sm font-medium uppercase">{form.soul_resolution ?? "720p"}</span>
+            <span className="text-xs font-medium uppercase text-muted-foreground">{form.soul_resolution ?? "720p"}</span>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-1.5">
             {(["720p", "1080p"] as const).map((res) => (
               <button
                 key={res}
                 onClick={() => setForm((f) => ({ ...f, soul_resolution: res }))}
-                className={`flex-1 px-3 py-1.5 rounded-md text-sm font-medium border transition ${
+                className={`flex-1 px-2 py-1.5 rounded-md text-xs font-medium border transition ${
                   (form.soul_resolution ?? "720p") === res
                     ? "bg-primary text-primary-foreground border-primary"
                     : "bg-muted text-muted-foreground border-muted hover:border-foreground/30"
                 }`}
               >
-                <div className="flex items-center justify-between gap-2">
-                  <span>{res.toUpperCase()}</span>
-                  <span className="text-[10px] opacity-70">
-                    {res === "720p" ? "5 cr" : "8 cr"}
-                  </span>
-                </div>
+                {res.toUpperCase()}
               </button>
             ))}
           </div>
-          <p className="text-xs text-muted-foreground flex items-center gap-1">
-            <Info className="w-3 h-3" /> 1080p produces sharper output but costs more credits per generation.
-          </p>
         </div>
       )}
 
-      {/* Number of Images */}
-      <div className="space-y-1 py-2">
+      {/* Number of Images — full-width row at the bottom so the
+          slider gets the whole width of the card. */}
+      <div className="space-y-1 col-span-2">
         <div className="flex justify-between items-center">
-          <label className="text-sm font-medium">Number of Images</label>
+          <label className="text-sm font-medium">Images</label>
           <span className="text-sm font-medium">{form.num_images}</span>
         </div>
         <Slider
@@ -531,19 +540,15 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
           step={1}
           onValueChange={(val) => setForm((f) => ({ ...f, num_images: val[0] }))}
         />
-        <div className="flex justify-between text-[11px] text-muted-foreground">
-          <span>1</span>
-          <span>2</span>
-          <span>3</span>
-          <span>4</span>
+        <div className="flex justify-between text-[10px] text-muted-foreground">
+          <span>1</span><span>2</span><span>3</span><span>4</span>
         </div>
       </div>
 
-      {/* Sliders */}
+      {/* LoRA advanced sliders — full-width inside the grid (rare model). */}
       {isLora && (
         <>
-          {/* Inference Steps */}
-          <div className="space-y-1 py-2">
+          <div className="space-y-1 col-span-2">
             <div className="flex justify-between items-center">
               <label className="text-sm font-medium">Inference Steps</label>
               <span className="text-sm font-medium">{form.num_inference_steps}</span>
@@ -556,13 +561,7 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
               onValueChange={(val) => setForm(f => ({ ...f, num_inference_steps: val[0] }))}
             />
           </div>
-        </>
-      )}
-
-      {isLora && (
-        <>
-          {/* Guidance Scale */}
-          <div className="space-y-1 py-2">
+          <div className="space-y-1 col-span-2">
             <div className="flex justify-between items-center">
               <label className="text-sm font-medium">Guidance Scale</label>
               <span className="text-sm font-medium">{form.guidance_scale}</span>
@@ -578,29 +577,7 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
         </>
       )}
 
-      {/* Safety controls removed for simpler phase-1 UI */}
-
-      {/* Output Format */}
-      <div className="space-y-1 py-2">
-        <div className="flex justify-between">
-          <label className="text-sm font-medium">Output Format</label>
-          <span className="text-sm font-medium">{form.output_format}</span>
-        </div>
-        <div className="flex gap-2">
-          {([OutputFormat.Png, OutputFormat.Jpeg] as const).map((format) => (
-            <button
-              key={format}
-              onClick={() => setForm(f => ({ ...f, output_format: format }))}
-              className={`flex-1 px-3 py-1.5 rounded-md text-sm font-medium border
-                ${form.output_format === format
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-muted text-muted-foreground border-muted"}`}
-            >
-              {format}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div >
+      </div>{/* end secondary-settings grid */}
+    </div>
   );
 }
