@@ -24,7 +24,7 @@ export default function AiAnimatedHeading({ heading, description, icon, children
       <div className={`flex flex-col ${compact ? "gap-0.5" : "gap-2"}`}>
         <h1
           className={`${
-            compact ? "text-xl md:text-2xl" : "text-2xl md:text-5xl"
+            compact ? "text-2xl md:text-3xl" : "text-2xl md:text-5xl"
           } tracking-tight flex gap-2`}
         >
           <AnimatedGradientText className="font-black italic px-2">

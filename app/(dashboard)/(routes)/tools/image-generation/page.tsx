@@ -230,14 +230,14 @@ export default function GenerateImagePage() {
         the outer page padding so the layout reaches closer to the
         viewport edges on wide screens.
       */}
-      <div className="w-full px-4 md:px-6 pt-3 md:pt-4 pb-4 md:pb-6">
-        <div className="py-2 md:sticky top-0 z-[9] bg-background flex flex-col sm:flex-row gap-2 sm:gap-0 justify-between border-b border-foreground/40">
+      <div className="w-full px-4 md:px-6 pt-1 md:pt-2 pb-4 md:pb-6">
+        <div className="py-1 md:sticky top-0 z-[9] bg-background flex flex-col sm:flex-row gap-2 sm:gap-0 justify-between border-b border-foreground/40">
           <div className="flex gap-6">
             <AiAnimatedHeading
               compact
               heading="Image Generator"
               description="Create production-ready images in a few clicks"
-              icon={<Sparkles className="h-5 w-5" />}
+              icon={<Sparkles className="h-6 w-6" />}
             >
               <CreditCostDisplay creditCosts={creditCosts} toolType={ToolType.IMAGE_GENERATOR} />
             </AiAnimatedHeading>
@@ -255,7 +255,7 @@ export default function GenerateImagePage() {
 
         </div>
 
-        <div className="w-full pt-4">
+        <div className="w-full pt-3">
           <div className="grid grid-cols-1 xl:grid-cols-[380px_1fr] gap-5">
             {/*
               Form panel layout: pin to viewport with internal scroll so the
