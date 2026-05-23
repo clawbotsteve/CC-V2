@@ -442,9 +442,34 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
         </div>
       )}
 
-      {/* Output Resolution (Nano Banana 2 + Nano Banana 2 Edit) */}
+      {/* Output Format — paired with Aspect on row 1 of the grid
+          (user feedback 2026-05-20: pair the two compact controls;
+          push the slider to its own full-width row below). */}
+      <div className="space-y-1">
+        <div className="flex justify-between">
+          <label className="text-sm font-medium">Format</label>
+          <span className="text-xs font-medium uppercase text-muted-foreground">{form.output_format}</span>
+        </div>
+        <div className="flex gap-1.5">
+          {([OutputFormat.Png, OutputFormat.Jpeg] as const).map((format) => (
+            <button
+              key={format}
+              onClick={() => setForm(f => ({ ...f, output_format: format }))}
+              className={`flex-1 px-2 py-1.5 rounded-md text-xs font-medium border
+                ${form.output_format === format
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-muted text-muted-foreground border-muted"}`}
+            >
+              {format.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Output Resolution (Nano Banana 2 + Nano Banana 2 Edit) —
+          full-width row beneath Aspect|Format. */}
       {(isNanoBanana2 || isNanoBannaPro) && (
-        <div className="space-y-1">
+        <div className="space-y-1 col-span-2">
           <div className="flex justify-between">
             <label className="text-sm font-medium">Resolution</label>
             <span className="text-xs font-medium uppercase text-muted-foreground">{form.output_resolution ?? "1k"}</span>
@@ -478,7 +503,7 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
 
       {/* Soul 2.0 — resolution picker (Higgsfield enum: 720p / 1080p only) */}
       {isSoul2 && (
-        <div className="space-y-1">
+        <div className="space-y-1 col-span-2">
           <div className="flex justify-between">
             <label className="text-sm font-medium">Resolution</label>
             <span className="text-xs font-medium uppercase text-muted-foreground">{form.soul_resolution ?? "720p"}</span>
@@ -501,8 +526,9 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
         </div>
       )}
 
-      {/* Number of Images */}
-      <div className="space-y-1">
+      {/* Number of Images — full-width row at the bottom so the
+          slider gets the whole width of the card. */}
+      <div className="space-y-1 col-span-2">
         <div className="flex justify-between items-center">
           <label className="text-sm font-medium">Images</label>
           <span className="text-sm font-medium">{form.num_images}</span>
@@ -516,28 +542,6 @@ export default function ImageSettingsPanel({ form, setForm, trainedModels, image
         />
         <div className="flex justify-between text-[10px] text-muted-foreground">
           <span>1</span><span>2</span><span>3</span><span>4</span>
-        </div>
-      </div>
-
-      {/* Output Format */}
-      <div className="space-y-1">
-        <div className="flex justify-between">
-          <label className="text-sm font-medium">Format</label>
-          <span className="text-xs font-medium uppercase text-muted-foreground">{form.output_format}</span>
-        </div>
-        <div className="flex gap-1.5">
-          {([OutputFormat.Png, OutputFormat.Jpeg] as const).map((format) => (
-            <button
-              key={format}
-              onClick={() => setForm(f => ({ ...f, output_format: format }))}
-              className={`flex-1 px-2 py-1.5 rounded-md text-xs font-medium border
-                ${form.output_format === format
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-muted text-muted-foreground border-muted"}`}
-            >
-              {format.toUpperCase()}
-            </button>
-          ))}
         </div>
       </div>
 

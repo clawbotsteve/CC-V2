@@ -234,9 +234,10 @@ export default function GenerateImagePage() {
         <div className="py-2 md:sticky top-0 z-[9] bg-background flex flex-col sm:flex-row gap-2 sm:gap-0 justify-between border-b border-foreground/40">
           <div className="flex gap-6">
             <AiAnimatedHeading
+              compact
               heading="Image Generator"
               description="Create production-ready images in a few clicks"
-              icon={<Sparkles className="h-6 w-6" />}
+              icon={<Sparkles className="h-5 w-5" />}
             >
               <CreditCostDisplay creditCosts={creditCosts} toolType={ToolType.IMAGE_GENERATOR} />
             </AiAnimatedHeading>
