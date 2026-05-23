@@ -211,11 +211,12 @@ export default function GenerateVideoPage() {
 
   return (
     <PageContainer>
-      <div className="w-full p-4 md:p-8">
+      <div className="w-full px-4 md:px-6 pt-1 md:pt-2 pb-4 md:pb-6">
         {/* header */}
-        <div className="py-4 md:sticky top-0 z-[9] bg-background flex flex-col sm:flex-row gap-4 sm:gap-0 justify-between border-b border-foreground/40">
+        <div className="py-1 md:sticky top-0 z-[9] bg-background flex flex-col sm:flex-row gap-2 sm:gap-0 justify-between border-b border-foreground/40">
           <div className="flex gap-6">
             <AiAnimatedHeading
+              compact
               heading="Video Generator"
               description="Transform your images into videos with AI"
               icon={<Video className="h-6 w-6" />}
@@ -251,7 +252,7 @@ export default function GenerateVideoPage() {
         </div>
 
         {/* content */}
-        <div className="w-full pt-8">
+        <div className="w-full pt-3">
           <div className="grid grid-cols-1 xl:grid-cols-[360px_1fr] gap-6">
             <aside className="rounded-2xl border border-border bg-card/60 p-2.5 h-fit xl:sticky xl:top-16 xl:max-h-[calc(100vh-5rem)] xl:flex xl:flex-col">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
