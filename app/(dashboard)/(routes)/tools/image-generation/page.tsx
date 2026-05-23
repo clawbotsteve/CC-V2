@@ -261,14 +261,18 @@ export default function GenerateImagePage() {
               Form panel layout: pin to viewport with internal scroll so the
               Generate button is ALWAYS visible without page-scroll. Settings
               area scrolls inside the card; the action bar at the bottom is
-              non-shrinking. On mobile (no `xl:` breakpoint), the panel keeps
-              its natural height so the page scrolls normally. The sticky
-              card uses top-20 + max-h calc(100vh-5rem) so it pins right
-              under the (now slimmer) heading band and stretches down for
-              the full visible viewport — "full length" per the user's note.
+              non-shrinking.
+              `xl:self-start` is load-bearing (2026-05-23): without it the
+              grid's default `align-self: stretch` makes this aside match
+              the (much taller) results column height. Combined with the
+              inner `flex-1` scroll container, that pushed the Generate
+              button to the bottom of the card and opened a huge dead
+              zone between the last setting and the button. With
+              self-start the aside hugs content; the max-h cap still
+              kicks in for models whose settings overflow.
             */}
-            <aside className="rounded-2xl border border-border bg-card/60 flex flex-col xl:sticky xl:top-20 xl:max-h-[calc(100vh-5rem)]">
-              <div className="px-5 pt-5 pb-1 flex-1 overflow-y-auto">
+            <aside className="rounded-2xl border border-border bg-card/60 flex flex-col xl:sticky xl:top-20 xl:self-start xl:max-h-[calc(100vh-5rem)]">
+              <div className="px-5 pt-5 pb-1 flex-1 min-h-0 overflow-y-auto">
                 <ImageSettingsPanel form={form} setForm={setForm} trainedModels={trainedModels} imageUploadRef={uploadRefs} />
               </div>
 
