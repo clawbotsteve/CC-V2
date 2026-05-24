@@ -101,12 +101,7 @@ export async function mirrorUrlToS3(
   // 4. Return the regional path-style URL. Works for any S3-compatible
   //    backend as long as the bucket policy allows public reads on
   //    the prefix.
-  const endpoint = process.env.AWS_S3_ENDPOINT;
-  if (endpoint) {
-    // Custom endpoint (R2, Backblaze etc.) — use path-style URL.
-    return `${endpoint.replace(/\/$/, "")}/${BUCKET}/${key}`;
-  }
-  return `https://${BUCKET}.s3.${REGION}.amazonaws.com/${key}`;
+  return buildPublicUrl(key);
 }
 
 /**
@@ -132,6 +127,41 @@ export async function uploadBufferToS3(
   );
   const endpoint = process.env.AWS_S3_ENDPOINT;
   if (endpoint) {
+    return `${endpoint.replace(/\/$/, "")}/${BUCKET}/${key}`;
+  }
+  return `https://${BUCKET}.s3.${REGION}.amazonaws.com/${key}`;
+}
+
+/**
+ * Build the publicly-fetchable URL for an uploaded object.
+ *
+ * Cloudflare R2 (and most non-AWS S3-compatible backends) split the
+ * S3 API endpoint from the public-read URL:
+ *   - AWS_S3_ENDPOINT          → authenticated S3 API (uploads/PUTs)
+ *     e.g. https://<acct>.r2.cloudflarestorage.com
+ *   - AWS_S3_PUBLIC_URL_BASE   → unauthenticated public reads
+ *     e.g. https://pub-xxx.r2.dev   OR   https://assets.your.domain
+ *
+ * Replicate's training worker fetches the LoRA via the returned URL,
+ * so it MUST be the public one — not the S3 API endpoint (which
+ * requires auth to read).
+ *
+ * For plain AWS S3 the regional path-style URL is publicly readable
+ * when the bucket policy allows it, so AWS_S3_PUBLIC_URL_BASE can
+ * be omitted and we fall back to the legacy regional URL.
+ */
+function buildPublicUrl(key: string): string {
+  const publicBase = process.env.AWS_S3_PUBLIC_URL_BASE;
+  if (publicBase) {
+    // R2 / custom domain — the path-style URL does NOT include the
+    // bucket name (R2 public URLs are bucket-rooted).
+    return `${publicBase.replace(/\/$/, "")}/${key}`;
+  }
+  const endpoint = process.env.AWS_S3_ENDPOINT;
+  if (endpoint) {
+    // Legacy fallback for S3-compatible endpoints with no public URL
+    // configured. Works for some backends; on R2 this won't actually
+    // be publicly fetchable — operator should set AWS_S3_PUBLIC_URL_BASE.
     return `${endpoint.replace(/\/$/, "")}/${BUCKET}/${key}`;
   }
   return `https://${BUCKET}.s3.${REGION}.amazonaws.com/${key}`;
