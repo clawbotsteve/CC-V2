@@ -27,6 +27,7 @@ import prismadb from "@/lib/prismadb";
 import { chargeUserForTool } from "@/lib/charge-user";
 import { ToolType } from "@prisma/client";
 import { mirrorUrlToS3, isS3Configured } from "@/lib/storage/s3";
+import { extractWeightsUrl } from "@/lib/replicate-training";
 
 interface ReplicateTrainingPayload {
   id: string;
@@ -78,13 +79,17 @@ export async function POST(req: NextRequest) {
     }
 
     // FAILED / CANCELED branch — same handling as the FAL path.
+    // characterStudioStep flipped to "complete" too so the wizard
+    // exits its training-loading state and shows the failure UI
+    // instead of spinning forever.
     if (status === "failed" || status === "canceled") {
       await prismadb.influencer.update({
         where: { id: requestId },
         data: {
           status: "failed",
           updatedAt: new Date(),
-        },
+          characterStudioStep: "complete",
+        } as any,
       });
       console.warn(`[REPLICATE TRAIN WEBHOOK] training failed ${requestId}: ${error}`);
       return new NextResponse("Marked failed", { status: 200 });
@@ -144,7 +149,11 @@ export async function POST(req: NextRequest) {
           // null configUrl gracefully (existing FLUX_1 path doesn't
           // require it for inference).
           updatedAt: new Date(),
-        },
+          // 2026-05-23: wizard checks this field — not just status —
+          // to exit the polling state. Bug parallel to the FAL
+          // webhook fix in /api/webhook/(ai)/train.
+          characterStudioStep: "complete",
+        } as any,
       });
 
       // Charge credits using the same path the FAL webhook used.
@@ -177,24 +186,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-/**
- * Extract the trained-LoRA weights URL from Replicate's training
- * output payload. The shape varies slightly between trainer models —
- * try the known locations in order.
- */
-function extractWeightsUrl(output: unknown): string | null {
-  if (!output) return null;
-  if (typeof output === "string") return output;
-  if (Array.isArray(output)) {
-    // Some trainers return an array; first element is usually the weights URL.
-    const first = output[0];
-    return typeof first === "string" ? first : null;
-  }
-  if (typeof output === "object") {
-    const o = output as Record<string, unknown>;
-    if (typeof o.weights === "string") return o.weights;
-    if (typeof o.url === "string") return o.url;
-    if (typeof o.lora === "string") return o.lora;
-  }
-  return null;
-}
+// extractWeightsUrl moved to lib/replicate-training.ts so the
+// manual-recovery endpoint (/api/character-studio/[id]/training-status)
+// can import it too — Next.js App Router forbids non-route exports
+// from route files.

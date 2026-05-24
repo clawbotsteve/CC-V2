@@ -57,6 +57,13 @@ export async function POST(req: NextRequest) {
 
     // Handle successful training
     if (status === "OK" && payload?.config_file) {
+      // characterStudioStep MUST be set here too (2026-05-23 bug fix):
+      // the Character Studio wizard checks this field — not just
+      // Influencer.status — to decide whether to keep polling. Without
+      // it, users got stuck on "Training…" forever even though the
+      // LoRA was trained and ready in the DB. The manual-recovery
+      // poller did set this field, which is why some users unstuck
+      // and others didn't. Webhook + poller now both set it.
       await prismadb.influencer.update({
         where: { id: influencer.id },
         data: {
@@ -64,7 +71,8 @@ export async function POST(req: NextRequest) {
           updatedAt: new Date(),
           loraUrl: payload.diffusers_lora_file?.url ?? null,
           configUrl: payload.config_file?.url ?? null,
-        },
+          characterStudioStep: "complete",
+        } as any,
       });
 
       await chargeUserForTool({
