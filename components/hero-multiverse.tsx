@@ -83,9 +83,12 @@ function MobileHero({ onPrimaryCta, ctaHref }: HeroMultiverseProps) {
 
         {/* Headline + gradient phrase. Static (no scramble) on mobile —
             cycling animations have been historically flaky on mobile
-            WebKit, and the static gradient phrase reads instantly. */}
+            WebKit, and the static gradient phrase reads instantly.
+            Pivot 2026-05-23 → Stance A: body copy now mirrors the
+            desktop "one face / every niche / every platform" frame so
+            the message is consistent between viewports. */}
         <h1 className="font-display text-4xl font-extrabold tracking-tight leading-[1.05] text-foreground">
-          This is where you build
+          Build
         </h1>
         <h1 className="font-display text-4xl font-extrabold tracking-tight leading-[1.05] mt-1">
           <span className="bg-gradient-to-r from-[#6366f1] to-[#a78bfa] bg-clip-text text-transparent">
@@ -94,13 +97,13 @@ function MobileHero({ onPrimaryCta, ctaHref }: HeroMultiverseProps) {
         </h1>
 
         <p className="text-sm text-muted-foreground mt-5 max-w-[320px] leading-relaxed">
-          Build AI influencers that post, grow, and generate income — without you lifting a finger.
+          One face. Every niche. Every platform. Train a consistent character, generate unlimited content, grow your audience anywhere.
         </p>
 
         <div className="mt-7 w-full max-w-[320px]">
           {ctaHref ? (
             <Link href={ctaHref} className="hero-cta hero-cta--mobile">
-              <span>GENERATE YOUR FIRST IMAGE</span>
+              <span>START BUILDING</span>
               <ArrowRight className="h-4 w-4" />
             </Link>
           ) : (
@@ -109,7 +112,7 @@ function MobileHero({ onPrimaryCta, ctaHref }: HeroMultiverseProps) {
               onClick={onPrimaryCta}
               className="hero-cta hero-cta--mobile"
             >
-              <span>GENERATE YOUR FIRST IMAGE</span>
+              <span>START BUILDING</span>
               <ArrowRight className="h-4 w-4" />
             </button>
           )}
@@ -170,23 +173,27 @@ function DesktopHero({ onPrimaryCta, ctaHref }: HeroMultiverseProps) {
           className="object-cover"
         />
 
-        {/* OPAQUE BLACKOUT band across the bottom 36% of the hero —
+        {/* OPAQUE BLACKOUT band across the bottom 40% of the hero —
             covers the baked-into-pixels typography (Tavira headline,
             tagline, "One face. Infinite possibilities", trust marks,
             and the amber CTA) so we can render fresh HTML overlays
             on top of it as the single source of truth.
 
-            Why blackout, not just gradient: the baked typo
-            ("possiibilities", "IDENITTY") would still read through
-            a soft gradient. A near-opaque band hides it completely
-            and gives us a clean canvas. Top edge fades to transparent
-            so the join into the cityscape isn't a hard line. */}
+            Pivot 2026-05-23: bumped bottom values from 0.96/0.94 to
+            FULLY opaque (1.0) because the 4% bleed was rendering as
+            a visible ghost behind the new headline. Also bumped
+            height 36→40% so the baked text near the top of the
+            footer area gets fully covered. Soft fade in the top 20%
+            keeps the join into the cityscape from being a hard line.
+            Why blackout not soft gradient: the baked typo
+            ("possiibilities", "IDENITTY") still reads through a
+            translucent layer. */}
         <div
           className="absolute inset-x-0 bottom-0 pointer-events-none"
           style={{
-            height: "36%",
+            height: "40%",
             background:
-              "linear-gradient(to top, rgba(8,8,12,0.96) 0%, rgba(8,8,12,0.94) 50%, rgba(8,8,12,0.78) 75%, rgba(8,8,12,0.4) 92%, rgba(8,8,12,0) 100%)",
+              "linear-gradient(to top, rgba(8,8,12,1) 0%, rgba(8,8,12,1) 65%, rgba(8,8,12,0.92) 80%, rgba(8,8,12,0.55) 92%, rgba(8,8,12,0) 100%)",
           }}
         />
 
@@ -211,19 +218,27 @@ function DesktopHero({ onPrimaryCta, ctaHref }: HeroMultiverseProps) {
           </div>
         </div>
 
-        {/* ===== Lower-left: HTML headline + tagline (single source of truth) ===== */}
+        {/* ===== Lower-left: HTML headline + tagline (single source of truth) =====
+            Pivot 2026-05-23 → Stance A (AI influencer creator platform):
+            Brand-forward "Tavira" stays huge. Subhead changed from a
+            cute italic "your AI influencer" tagline to an action verb
+            ("Build your AI influencer") that maps the brand to what
+            the visitor came here to do. Body copy drops the LoRA
+            jargon and the asterisk footnote-without-a-footnote, and
+            broadens "what you can do with this" to include every
+            downstream platform a course-graduate might post on. */}
         <div className="absolute bottom-[6%] md:bottom-[8%] left-[4%] md:left-[5%] lg:left-[6%] z-10 max-w-[60%] md:max-w-[55%] lg:max-w-[55%]">
           <h1 className="font-display font-bold leading-[0.92] tracking-tight text-[#f5f0e6]">
             <span className="block text-4xl sm:text-6xl md:text-7xl lg:text-9xl">
               Tavira<span className="text-[#a78bfa]">*</span>
             </span>
           </h1>
-          <p className="font-display italic text-sm sm:text-lg md:text-xl lg:text-2xl text-[#f5f0e6]/95 mt-1">
-            your AI influencer<span className="text-[#a78bfa] not-italic">*</span>
+          <p className="font-display text-base sm:text-xl md:text-2xl lg:text-3xl text-[#f5f0e6] mt-2 md:mt-3 font-semibold tracking-tight">
+            Build your AI influencer.
           </p>
-          <p className="text-[10px] sm:text-xs md:text-sm text-white/70 mt-2 md:mt-3 max-w-md">
-            <span className="font-semibold text-white/90">One face. Infinite possibilities.</span>
-            <span className="block sm:inline sm:ml-1">Built with consistency. Powered by LoRA.</span>
+          <p className="text-[10px] sm:text-xs md:text-sm text-white/75 mt-2 md:mt-3 max-w-md leading-relaxed">
+            <span className="font-semibold text-white/90">One face. Every niche. Every platform.</span>
+            <span className="block sm:inline sm:ml-1">Train a consistent character, generate unlimited content, grow your audience anywhere.</span>
           </p>
         </div>
 
@@ -231,12 +246,12 @@ function DesktopHero({ onPrimaryCta, ctaHref }: HeroMultiverseProps) {
         <div className="absolute bottom-[6%] md:bottom-[8%] right-[4%] md:right-[5%] lg:right-[6%] z-10 flex flex-col items-end gap-2 md:gap-3">
           {ctaHref ? (
             <Link href={ctaHref} className="hero-cta">
-              <span>GENERATE YOUR FIRST IMAGE</span>
+              <span>START BUILDING</span>
               <ArrowRight className="h-5 w-5 md:h-6 md:w-6" />
             </Link>
           ) : (
             <button type="button" onClick={onPrimaryCta} className="hero-cta">
-              <span>GENERATE YOUR FIRST IMAGE</span>
+              <span>START BUILDING</span>
               <ArrowRight className="h-5 w-5 md:h-6 md:w-6" />
             </button>
           )}
