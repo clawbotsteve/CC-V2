@@ -6,6 +6,21 @@ import { getReplicateJobStatus, extractReplicateImageUrls } from "@/lib/replicat
 import { getWaveSpeedResult } from "@/lib/wavespeed-client";
 import { chargeExplicitCredits } from "@/lib/charge-user";
 import { talkingCredits } from "@/lib/ad-studio/talking-pricing";
+import { persistUrl } from "@/lib/webhook/update-job-status";
+
+/**
+ * Tiny wrapper so the three reconciliation branches below don't
+ * each repeat the persistUrl try/catch. Always returns a string —
+ * the original URL if S3 isn't configured or mirroring fails.
+ */
+async function durableVideoUrl(rawUrl: string, jobId: string): Promise<string> {
+  try {
+    return await persistUrl(rawUrl, "GeneratedVideo", jobId);
+  } catch (err) {
+    console.warn("[VIDEO STATUS] S3 mirror failed; keeping provider URL:", err);
+    return rawUrl;
+  }
+}
 
 function getFalEndpointFromModel(model?: string): string | null {
   if (!model) return null;
@@ -100,12 +115,15 @@ export async function GET(
               chargeErr,
             );
           }
+          // Mirror to S3 before persisting — WaveSpeed video URLs
+          // may also expire; defense in depth.
+          const durable = await durableVideoUrl(w.videoUrl, jobId);
           await prismadb.generatedVideo.update({
             where: { id: jobId },
-            data: { status: "completed", videoUrl: w.videoUrl },
+            data: { status: "completed", videoUrl: durable },
           });
           return NextResponse.json(
-            { status: "completed", videoUrl: w.videoUrl },
+            { status: "completed", videoUrl: durable },
             { status: 200 },
           );
         }
@@ -134,12 +152,15 @@ export async function GET(
         if (st === "succeeded") {
           const v = extractReplicateImageUrls(p?.output)[0];
           if (v) {
+            // Mirror replicate.delivery URL to S3 before saving —
+            // it expires in ~24h otherwise.
+            const durable = await durableVideoUrl(v, jobId);
             await prismadb.generatedVideo.update({
               where: { id: jobId },
-              data: { status: "completed", videoUrl: v },
+              data: { status: "completed", videoUrl: durable },
             });
             return NextResponse.json(
-              { status: "completed", videoUrl: v },
+              { status: "completed", videoUrl: durable },
               { status: 200 },
             );
           }
@@ -168,12 +189,13 @@ export async function GET(
             const syncedVideoUrl = extractVideoUrl(falResult);
 
             if (syncedVideoUrl) {
+              const durable = await durableVideoUrl(syncedVideoUrl, jobId);
               await prismadb.generatedVideo.update({
                 where: { id: jobId },
-                data: { status: "completed", videoUrl: syncedVideoUrl },
+                data: { status: "completed", videoUrl: durable },
               });
 
-              return NextResponse.json({ status: "completed", videoUrl: syncedVideoUrl }, { status: 200 });
+              return NextResponse.json({ status: "completed", videoUrl: durable }, { status: 200 });
             }
           }
 
@@ -182,11 +204,12 @@ export async function GET(
             const falResultAny: any = await getFalJobResult(endpoint, jobId);
             const directVideoUrl = extractVideoUrl(falResultAny);
             if (directVideoUrl) {
+              const durable = await durableVideoUrl(directVideoUrl, jobId);
               await prismadb.generatedVideo.update({
                 where: { id: jobId },
-                data: { status: "completed", videoUrl: directVideoUrl },
+                data: { status: "completed", videoUrl: durable },
               });
-              return NextResponse.json({ status: "completed", videoUrl: directVideoUrl }, { status: 200 });
+              return NextResponse.json({ status: "completed", videoUrl: durable }, { status: 200 });
             }
           } catch {}
 

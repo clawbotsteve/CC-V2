@@ -11,8 +11,15 @@ import { isS3Configured, mirrorUrlToS3 } from "../storage/s3";
  * forever. No-op until S3 is configured (UPLOAD_MODE/S3 env), and
  * NEVER blocks job completion — on any failure we fall back to the
  * original URL so the user still gets their result.
+ *
+ * Exported so the webhook-miss reconciliation paths in the status
+ * polling endpoints (/api/tools/image/status, /api/tools/video/status)
+ * can use the exact same mirror logic as the webhook handlers. Until
+ * 2026-05-25 those endpoints saved raw replicate.delivery URLs that
+ * 404'd in 24h — the webhook path was protected, the safety-net path
+ * wasn't. Same helper everywhere → no drift.
  */
-async function persistUrl(
+export async function persistUrl(
   sourceUrl: string,
   usageTable: string,
   requestId: string,
