@@ -4,6 +4,7 @@ import prismadb from "@/lib/prismadb";
 import { getFalJobResult, getFalJobStatus } from "@/lib/fal-client";
 import { getReplicateJobStatus, extractReplicateImageUrls } from "@/lib/replicate-client";
 import { ImageGenerationModel } from "@/types/image";
+import { persistUrl } from "@/lib/webhook/update-job-status";
 
 /**
  * Replicate webhook-miss reconciliation. Production runs
@@ -170,19 +171,41 @@ export async function GET(
     if (imageJob.status === "queued" || imageJob.status === "processing" || !imageJob.imageUrl) {
       const provider: any = await pollProvider(jobId);
       if (provider.status === "completed" || provider.status === "failed") {
+        // 2026-05-25: mirror the provider URL to durable S3 BEFORE
+        // saving it on the row. Without this, a webhook-miss followed
+        // by recovery here would save a raw replicate.delivery /
+        // FAL CDN URL that 404s in ~24h — the exact silent-death bug
+        // that wiped the existing image library. persistUrl() is
+        // no-op when S3 isn't configured (keeps the original URL),
+        // so this is safe on dev/staging too.
+        let durableImageUrl = provider.imageUrl;
+        if (provider.status === "completed" && provider.imageUrl) {
+          try {
+            durableImageUrl = await persistUrl(
+              provider.imageUrl,
+              "GeneratedImage",
+              jobId,
+            );
+          } catch (mirrorErr) {
+            console.warn("[IMAGE STATUS] S3 mirror failed; keeping provider URL:", mirrorErr);
+          }
+        }
         try {
           await prismadb.generatedImage.update({
             where: { id: jobId },
             data: {
               status: provider.status,
-              imageUrl: provider.imageUrl ?? imageJob.imageUrl,
+              imageUrl: durableImageUrl ?? imageJob.imageUrl,
               reason: provider.reason ?? imageJob.reason,
             },
           });
         } catch (persistErr) {
           console.warn("[IMAGE STATUS] Could not persist provider status to DB:", persistErr);
         }
-        return NextResponse.json(provider, { status: 200 });
+        return NextResponse.json(
+          { ...provider, imageUrl: durableImageUrl ?? provider.imageUrl },
+          { status: 200 },
+        );
       }
     }
 
