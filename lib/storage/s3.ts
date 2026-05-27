@@ -125,11 +125,14 @@ export async function uploadBufferToS3(
       ContentType: contentType,
     }),
   );
-  const endpoint = process.env.AWS_S3_ENDPOINT;
-  if (endpoint) {
-    return `${endpoint.replace(/\/$/, "")}/${BUCKET}/${key}`;
-  }
-  return `https://${BUCKET}.s3.${REGION}.amazonaws.com/${key}`;
+  // 2026-05-25 fix: was returning the S3 API endpoint URL
+  // ({endpoint}/{bucket}/{key} = ...r2.cloudflarestorage.com/...),
+  // which on R2 requires auth to read — so Replicate's worker got a
+  // 400 fetching uploaded reference images (Kling video, ad products,
+  // etc.). Route through buildPublicUrl() like mirrorUrlToS3 does so
+  // we return the PUBLIC pub-...r2.dev URL. (PR #128 only fixed
+  // mirrorUrlToS3; this is the parallel fix for uploadBufferToS3.)
+  return buildPublicUrl(key);
 }
 
 /**
