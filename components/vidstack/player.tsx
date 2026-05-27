@@ -71,7 +71,17 @@ export function Player({
       ref={player}
       src={src}
       title={title}
-      crossorigin="anonymous"
+      // NOTE (2026-05-25): crossorigin removed. With crossorigin set,
+      // the browser requires the media host to return CORS headers
+      // (Access-Control-Allow-Origin). Our R2 public bucket
+      // (pub-...r2.dev) does NOT send them, so every video rendered
+      // as a black player after the FAL→R2 storage migration (FAL's
+      // CDN had sent permissive CORS). We don't use the features that
+      // need crossorigin (canvas capture / cross-origin caption
+      // tracks), so dropping it makes plain playback work regardless
+      // of the asset host's CORS config. If canvas/thumbnail features
+      // are ever needed, add a CORS policy on the R2 bucket and put
+      // crossorigin="anonymous" back.
       playsinline
       onProviderChange={onProviderChange}
       onCanPlay={onCanPlay}
