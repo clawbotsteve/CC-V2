@@ -11,7 +11,9 @@ const navItems = [
   { label: "Video", href: "/tools/video-generation" },
   { label: "Edit", href: "/tools/image-editor" },
   { label: "Character", href: "/tools/influencers" },
-  { label: "Apps", href: "/dashboard" },
+  // "Apps" → "Ad Studio" (2026-05-25) to match the signed-in nav,
+  // where Ad Studio was promoted to a top-level section.
+  { label: "Ad Studio", href: "/tools/ad-studio" },
 ];
 
 export const LandingNavbar = () => {

@@ -22,6 +22,7 @@ import {
   Brush,
   ChevronDown,
   Mail,
+  Megaphone,
 } from "lucide-react";
 import { useUserContext } from "./user-context";
 import {
@@ -101,21 +102,28 @@ const navLinks = [
         { name: "Influencer Builder", desc: "Create custom AI personas" },
         { name: "Soul ID", desc: "Consistent identity setup" },
       ],
+      // Ad Studio moved OUT to its own top-level nav section
+      // (2026-05-25) — it's the flagship workflow now, not a sub-item
+      // buried under Character. See the standalone "Ad Studio" entry
+      // below.
       models: [
-        { name: "Ad Studio", desc: "Product + AI creator → UGC ad creative", href: "/tools/ad-studio", badge: "NEW" },
         { name: "Character Studio", desc: "Niche → reference → variations → LoRA → 15 prompts", href: "/tools/character-studio" },
         { name: "LoRA Training", desc: "Train your custom character", href: "/tools/influencers?model=lora-training" },
         { name: "Avatar to Video", desc: "Turn avatars into clips", href: "/tools/influencers?model=avatar-to-video" },
       ],
     },
   },
-  { label: "Apps", href: "/tools" },
+  // Ad Studio — promoted to its own top-level section (replaced the
+  // old generic "Apps" → /tools link, 2026-05-25). Links straight into
+  // the full guided Ad Studio workflow.
+  { label: "Ad Studio", href: "/tools/ad-studio" },
   { label: "Earn Now", href: "/dashboard/affiliate" },
   { label: "Community", href: "https://www.skool.com/aimodelforge/about", external: true },
 ];
 
 const mobileNavItems = [
   { label: "Explore", icon: Sparkles, href: "/dashboard" },
+  { label: "Ad Studio", icon: Megaphone, href: "/tools/ad-studio" },
   { label: "Image", icon: Image, href: "/tools/image-generation" },
   { label: "Video", icon: Video, href: "/tools/video-generation" },
   { label: "Enhance", icon: Brush, href: "/tools/face-enhance" },
