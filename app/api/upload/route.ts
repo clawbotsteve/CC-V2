@@ -1,22 +1,23 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
-import { randomUUID } from "crypto";
 import { File } from "buffer";
 import { makeUrlFriendlyFilename } from "@/lib/utils";
+import { uploadBufferToS3 } from "@/lib/storage/s3";
 
 // Configure route to handle large file uploads (up to 100MB)
 export const maxDuration = 300; // 5 minutes
 export const runtime = 'nodejs';
 
-const s3 = new S3Client({
-  region: process.env.AWS_REGION!,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-  },
-});
+// NOTE (2026-05-25): this route previously instantiated its OWN
+// S3Client with no `endpoint` set. That works for AWS S3 but HANGS on
+// Cloudflare R2 — with AWS_REGION=auto + R2 creds, the SDK builds a
+// bogus s3.auto.amazonaws.com endpoint and the PutObject blocks until
+// the 300s timeout (the "Uploading files…" spinner-of-death). It also
+// built an AWS-style public URL that R2 doesn't serve. Both are fixed
+// by delegating to lib/storage/s3.ts#uploadBufferToS3, which already
+// handles the R2 endpoint (AWS_S3_ENDPOINT) + public URL base
+// (AWS_S3_PUBLIC_URL_BASE). One S3 config for the whole app, no drift.
 
 export async function POST(req: Request) {
   try {
@@ -92,21 +93,13 @@ export async function POST(req: Request) {
         console.log(`[DEBUG] Generated unique filename: ${uniqueName}`);
 
         if (mode === "s3") {
-          const bucket = process.env.S3_UPLOAD_BUCKET!;
           const key = `uploads/${uniqueName}`;
-          console.log(`[DEBUG] Uploading to S3 bucket: ${bucket}, key: ${key}`);
+          console.log(`[DEBUG] Uploading to S3/R2, key: ${key}`);
 
-          await s3.send(
-            new PutObjectCommand({
-              Bucket: bucket,
-              Key: key,
-              Body: buffer,
-              ContentType: file.type,
-            })
-          );
-
-          const url = `https://${bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
-          console.log(`[DEBUG] Uploaded to S3, URL: ${url}`);
+          // Delegates to the shared helper → correct R2 endpoint +
+          // public URL. Returns the durable, publicly-fetchable URL.
+          const url = await uploadBufferToS3(buffer, key, file.type);
+          console.log(`[DEBUG] Uploaded to S3/R2, URL: ${url}`);
 
           uploadedFiles.push({
             name: file.name,
