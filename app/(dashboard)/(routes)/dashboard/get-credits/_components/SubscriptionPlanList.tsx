@@ -11,6 +11,24 @@ import { toast } from "sonner";
 import { useUserContext } from "@/components/layout/user-context";
 import { useUser } from "@clerk/nextjs";
 
+// Tiers hidden from the in-app upgrade UI (2026-05-25) — keep in sync
+// with the public pricing page (app/pricing/page.tsx). Beginner was
+// cut for choice-paralysis (0 subs); Brand/Agency were the ecom-pivot
+// B2B tiers, dropped when we walked the pivot back to an AI-influencer
+// creator platform. Existing subscribers on any of these KEEP their
+// plan (rows remain in the DB) — they're just no longer offered as
+// upgrade/downgrade options. plan_free is hidden because you can't
+// "subscribe" to free from here.
+const HIDDEN_UPGRADE_TIERS = new Set<string>([
+  "plan_free",
+  "plan_beginner",
+  "plan_beginner_3month",
+  "plan_brand",
+  "plan_brand_3month",
+  "plan_agency",
+  "plan_agency_3month",
+]);
+
 export const SubscriptionPlanList = () => {
   const { userId, plan, plans, isLoading } = useUserContext();
   const { user } = useUser()
@@ -78,7 +96,7 @@ export const SubscriptionPlanList = () => {
         </>
       )}
 
-      {!isLoading && plans?.filter((p) => p.tier !== "plan_free")?.map((p) => {
+      {!isLoading && plans?.filter((p) => !HIDDEN_UPGRADE_TIERS.has(p.tier))?.map((p) => {
         const isCurrent = p.tier === plan;
         const planKey = TIER_KEY_MAP[p.tier] as PlanKey;
 
