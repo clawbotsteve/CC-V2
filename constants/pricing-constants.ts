@@ -903,26 +903,26 @@ export const PLAN_MAPS: Record<PlanKey, {
 
   Studio: {
     name: "Studio Plan",
-    description: "For agencies and operators at serious scale.",
+    description: "For full-time creators running multiple AI characters.",
     features: [
       "Everything in Creator",
       "2,000 credits/month",
       "10 AI influencer slots",
       "Veo 3.1 access",
-      "Highest concurrency",
-      "Priority rendering",
+      "Commercial-use license",
+      "Highest priority rendering",
     ],
   },
   Studio3Month: {
     name: "Studio Plan (3 month)",
-    description: "For agencies and operators at serious scale.",
+    description: "For full-time creators running multiple AI characters.",
     features: [
       "Everything in Creator",
       "2,000 credits/month",
       "10 AI influencer slots",
       "Veo 3.1 access",
-      "Highest concurrency",
-      "Priority rendering",
+      "Commercial-use license",
+      "Highest priority rendering",
     ],
   },
 
