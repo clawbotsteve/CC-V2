@@ -88,7 +88,7 @@ function MobileHero({ onPrimaryCta, ctaHref }: HeroMultiverseProps) {
             desktop "one face / every niche / every platform" frame so
             the message is consistent between viewports. */}
         <h1 className="font-display text-4xl font-extrabold tracking-tight leading-[1.05] text-foreground">
-          Build
+          This is where you build
         </h1>
         <h1 className="font-display text-4xl font-extrabold tracking-tight leading-[1.05] mt-1">
           <span className="bg-gradient-to-r from-[#6366f1] to-[#a78bfa] bg-clip-text text-transparent">
@@ -234,7 +234,7 @@ function DesktopHero({ onPrimaryCta, ctaHref }: HeroMultiverseProps) {
             </span>
           </h1>
           <p className="font-display text-base sm:text-xl md:text-2xl lg:text-3xl text-[#f5f0e6] mt-2 md:mt-3 font-semibold tracking-tight">
-            Build your AI influencer.
+            This is where you build your AI influencer.
           </p>
           <p className="text-[10px] sm:text-xs md:text-sm text-white/75 mt-2 md:mt-3 max-w-md leading-relaxed">
             <span className="font-semibold text-white/90">One face. Every niche. Every platform.</span>
