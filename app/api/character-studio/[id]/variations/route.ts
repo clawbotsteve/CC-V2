@@ -5,7 +5,6 @@ import { getWebhookUrl } from "@/lib/utils";
 // Provider-routed. Picks FAL or Replicate based on IMAGE_PROVIDER.
 import { submitImageJob as submitFalJob, uploadImageUrlToProvider as uploadImageUrlToFalStorage } from "@/lib/image-provider";
 import { ImageGenerationModel } from "@/types/image";
-import { moderateAndLog } from "@/lib/content-moderation";
 import { checkAvailableCredit } from "@/lib/check-available-credit";
 import { ToolType } from "@prisma/client";
 import { VARIATION_PROMPTS } from "@/lib/character-studio/variation-prompts";
@@ -97,24 +96,28 @@ export async function POST(
     const webhookUrl = getWebhookUrl("/api/webhook/image");
     const jobIds: string[] = [];
 
-    // Submit each variation as its own job. We do them serially (not
-    // Promise.all) so we don't slam the FAL queue with six concurrent
-    // submits — the cost is ~6 × 200ms which is fine for a wizard
-    // step. Each successful submit creates a corresponding
-    // GeneratedImage row that the webhook will fill in.
-    for (const variation of VARIATION_PROMPTS) {
-      // Each variation prompt also goes through moderation. They're
-      // hand-tuned and shouldn't fail, but defense in depth.
-      const moderation = await moderateAndLog({
-        userId,
-        endpoint: "character-studio.variation",
-        prompt: variation.prompt,
-      });
-      if (!moderation.allowed) {
-        console.warn("[CHARACTER-STUDIO_VARIATIONS] variation blocked by moderation", variation.number);
-        continue;
-      }
+    // Submit each variation as its own job. We do them serially so
+    // we don't slam the provider queue with concurrent submits — the
+    // cost is ~3 × 200ms which is fine for a wizard step. Each
+    // successful submit creates a corresponding GeneratedImage row
+    // that the webhook will fill in.
+    //
+    // NOTE (2026-05-25): moderation step REMOVED here. The variation
+    // prompts are hardcoded in lib/character-studio/variation-prompts.ts
+    // — written and reviewed by us, not user input. Running runtime
+    // moderation on trusted internal prompts added zero safety AND
+    // false-positived on benign portrait-photography terms ("fitted
+    // top", "denim jacket", "skin pore detail"). Replicate dashboard
+    // showed 1 of 3 reaching them — 2 were silently dropped by the
+    // moderation pre-check. Moderation still runs on user-input
+    // prompts elsewhere (e.g. the niche prompt in /prompts).
+    //
+    // Also surfaces submission failures (failedSubmissions array) in
+    // the response so the frontend can show "X of N variations failed"
+    // instead of spinning forever on missing GeneratedImage rows.
+    const failedSubmissions: Array<{ number: number; reason: string }> = [];
 
+    for (const variation of VARIATION_PROMPTS) {
       try {
         const resp = await submitFalJob(ImageGenerationModel.NanoBanana2, {
           input: {
@@ -130,7 +133,13 @@ export async function POST(
           webhookUrl,
         });
 
-        if (!resp?.request_id) continue;
+        if (!resp?.request_id) {
+          failedSubmissions.push({
+            number: variation.number,
+            reason: "Provider returned no request_id",
+          });
+          continue;
+        }
         jobIds.push(resp.request_id);
 
         await prismadb.generatedImage.create({
@@ -146,8 +155,14 @@ export async function POST(
             status: "queued",
           },
         });
-      } catch (jobErr) {
-        console.error("[CHARACTER-STUDIO_VARIATIONS] variation submit failed", variation.number, jobErr);
+      } catch (jobErr: any) {
+        const reason = jobErr?.message || String(jobErr).slice(0, 200);
+        console.error(
+          "[CHARACTER-STUDIO_VARIATIONS] variation submit failed",
+          variation.number,
+          reason,
+        );
+        failedSubmissions.push({ number: variation.number, reason });
       }
     }
 
@@ -166,7 +181,13 @@ export async function POST(
       },
     });
 
-    return NextResponse.json({ character: updated, jobIds });
+    return NextResponse.json({
+      character: updated,
+      jobIds,
+      attempted: VARIATION_PROMPTS.length,
+      succeeded: jobIds.length,
+      failedSubmissions,
+    });
   } catch (err: any) {
     console.error("[CHARACTER-STUDIO_VARIATIONS]", err?.message || err);
     return NextResponse.json(
