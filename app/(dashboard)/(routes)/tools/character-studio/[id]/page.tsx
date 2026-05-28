@@ -563,7 +563,15 @@ function StepVariations({
   // LoRA training needs ≥4 references to converge. Server-side ZIP
   // build also enforces this floor — keep the client gate matched so
   // users aren't stuck if one tile fails.
-  const canContinue = usable.length >= 4 && allSettled;
+  // Threshold scales with the prompt count instead of being hardcoded
+  // (was `>= 4`, which was correct for the old 6-variation system but
+  // permanently disabled the button after we trimmed to 3, then again
+  // when we redesigned to 4 angles). Require all variations to
+  // succeed — the per-tile "Retry this tile" button is the escape
+  // hatch when one fails. Strict-all is the right default for LoRA
+  // training quality (a missing back view notably hurts the model's
+  // ability to generate non-front shots).
+  const canContinue = usable.length >= VARIATION_PROMPTS.length && allSettled;
 
   const reroll = async () => {
     setWorking(true);
@@ -611,9 +619,10 @@ function StepVariations({
 
   return (
     <div>
-      <h2 className="text-xl font-semibold">Step 3 · Three variations</h2>
+      <h2 className="text-xl font-semibold">Step 3 · Reference angles</h2>
       <p className="text-sm text-muted-foreground mt-1">
-        Same person, three angles + one wildcard outfit. These become the LoRA training set.
+        Same person from {VARIATION_PROMPTS.length} angles (front, side, back, portrait). With the
+        base reference, these become the {VARIATION_PROMPTS.length + 1}-image LoRA training set.
       </p>
 
       <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -696,9 +705,9 @@ function StepVariations({
           className="bg-gradient-to-r from-[#6366f1] to-[#8b7bff] text-white"
         >
           {canContinue
-            ? `Continue to training (${usable.length}/6 ready)`
+            ? `Continue to training (${usable.length}/${VARIATION_PROMPTS.length} ready)`
             : allSettled
-              ? `Need at least 4 — retry tiles below (${usable.length}/6)`
+              ? `Retry the missing tile${usable.length === VARIATION_PROMPTS.length - 1 ? "" : "s"} below (${usable.length}/${VARIATION_PROMPTS.length})`
               : `Waiting (${usable.length}/${variationIds.length})…`}
           {canContinue && (
             <>
