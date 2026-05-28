@@ -352,7 +352,7 @@ function StepReference({
                     toast.error(data?.error || "Couldn't start variations.");
                     return;
                   }
-                  toast.success("Generating 6 variations…");
+                  toast.success("Generating 3 variations…");
                   onDone();
                 } catch (err) {
                   console.error(err);
@@ -611,9 +611,9 @@ function StepVariations({
 
   return (
     <div>
-      <h2 className="text-xl font-semibold">Step 3 · Six variations</h2>
+      <h2 className="text-xl font-semibold">Step 3 · Three variations</h2>
       <p className="text-sm text-muted-foreground mt-1">
-        Same person, six different angles + one wildcard. These become the LoRA training set.
+        Same person, three angles + one wildcard outfit. These become the LoRA training set.
       </p>
 
       <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-3">
