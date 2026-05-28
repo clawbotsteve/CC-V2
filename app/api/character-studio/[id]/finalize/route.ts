@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 import prismadb from "@/lib/prismadb";
 import { auth } from "@clerk/nextjs/server";
 import axios from "axios";
@@ -8,6 +9,7 @@ import { CURRENT_TRAINING_CONSENT_VERSION } from "@/constants/constants";
 import { InfluencerModel } from "@/types/influencer";
 import { canUseCharacterStudio, resolveAccessTier } from "@/lib/plan-access";
 import { PLAN_CREATOR, PLAN_STUDIO } from "@/constants";
+import { uploadBufferToS3 } from "@/lib/storage/s3";
 
 interface FinalizeBody {
   /**
@@ -73,11 +75,23 @@ async function buildAndHostTrainingZip(urls: string[]): Promise<string> {
     compressionOptions: { level: 6 },
   });
 
-  // Upload the ZIP directly to FAL storage using the FAL client. This
-  // skips our /api/upload round-trip and means /api/ai/train just gets
-  // a public URL it can hand straight to the training endpoint.
-  const { fal } = await import("@fal-ai/client");
-  return fal.storage.upload(new Blob([zipBytes], { type: "application/zip" }));
+  // 2026-05-28 fix: was fal.storage.upload(). The FAL API key no
+  // longer has storage access since the FAL→Replicate migration —
+  // the call returns 403 Forbidden, which gets caught by the outer
+  // try/catch in finalize() and surfaces as a generic "Forbidden"
+  // toast on the wizard's "Continue to training" button with no clue
+  // what actually failed. Wasted hours debugging the plan gate before
+  // tracing it to here.
+  //
+  // Upload to our own R2 bucket instead. The training worker just
+  // needs a publicly-fetchable URL it can pull the ZIP from, which
+  // R2's pub-*.r2.dev URL provides. Same end result as FAL storage,
+  // now on infrastructure we actually control.
+  return uploadBufferToS3(
+    Buffer.from(zipBytes),
+    `training-zips/${randomUUID()}.zip`,
+    "application/zip",
+  );
 }
 
 /**
