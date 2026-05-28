@@ -1,33 +1,36 @@
 /**
- * The 3 variation prompts used in Step 3 of the Character Studio
- * wizard. Each prompt is run through Nano Banana 2 Edit using the
- * base reference image from Step 2, producing a consistent character
- * in 3 different poses / outfits / lighting setups.
+ * The 4 variation prompts used in Step 3 of the Character Studio
+ * wizard. Each prompt runs through Nano Banana 2 Edit using the base
+ * reference image from Step 2, producing the same character from a
+ * different angle.
  *
- * Trimmed 6→3 (2026-05-25, founder call): faster wizard, lower
- * credit cost, fewer chances for one job to fail and block training.
- * Trade-off: a Flux Dev LoRA trained on 3 references is more prone
- * to overfitting than one trained on 6-10 — the trained character
- * may not generalize as well to brand-new poses / styles. If output
- * quality suffers in practice, bumping back to 5 is a 2-line change
- * (restore the dropped entries from git history).
+ * Why these four specifically (2026-05-28 redesign):
+ *   Character LoRA training benefits most from FULL ANGLE COVERAGE
+ *   of one subject (front / side / back / front-portrait) — much more
+ *   than it does from varied poses or outfits of the same angle. The
+ *   earlier "Three-quarter / Full-body / Wildcard outdoor" set under-
+ *   sampled the back + profile views, which made trained LoRAs weak
+ *   at generating non-front shots.
  *
- * The 3 kept were chosen for maximum diversity (the lever that
- * matters most for LoRA generalization at small dataset sizes):
- *   - Three-quarter portrait → clean face/identity anchor
- *   - Full-body standing → body proportions + full silhouette
- *   - Wildcard outdoor golden hour → different outfit + lighting
- *     (prevents the LoRA overfitting to one outfit / one studio look)
+ *   The Base reference (Step 2) + these 4 → 5 reference images
+ *   covering 360°, which is the canonical Flux Dev LoRA training set
+ *   for character likeness.
  *
- * Dropped (more redundant against the three above):
- *   - Profile silhouette (vs. three-quarter — similar face data)
- *   - Half-body action gesture (vs. three-quarter)
- *   - Close-up beauty crop (vs. three-quarter)
+ *     1. Full-body FRONT       → primary likeness anchor
+ *     2. Full-body SIDE profile→ jawline, hairline, body silhouette
+ *     3. Full-body BACK        → hairstyle, back proportions
+ *     4. Half-body FRONT       → face/skin detail close, neutral pose
  *
- * Each variation inherits the SUBJECT from the base reference and
- * replaces the SCENE / POSE / LIGHTING. Nano Banana 2 Edit handles
- * the identity preservation natively — we don't need to re-describe
- * the character.
+ * Why concrete prompts and not "now from a different angle":
+ *   Nano Banana 2 Edit is much more reliable when told exactly what
+ *   to produce. Each prompt locks the wardrobe (neutral basics so the
+ *   LoRA doesn't overfit to one outfit), backdrop (plain studio so
+ *   nothing competes with the subject), and lighting (soft even).
+ *   The only variable across the four IS the angle.
+ *
+ * Each variation INHERITS the subject from the base reference and
+ * REPLACES the framing / angle. Nano Banana 2 Edit handles identity
+ * preservation natively — we don't need to re-describe the person.
  */
 
 export interface VariationPrompt {
@@ -40,27 +43,27 @@ export interface VariationPrompt {
 export const VARIATION_PROMPTS: VariationPrompt[] = [
   {
     number: 1,
-    label: "Three-quarter portrait, soft daylight",
+    label: "Full-body front view",
     prompt:
-      "Same person from the reference image, three-quarter angle portrait turned 30 degrees from camera, looking softly into camera with a small natural smile, soft diffused daylight from a tall window camera-left, plain warm-cream studio backdrop, clean simple wardrobe (neutral solid t-shirt or light knit), shallow depth of field, photoreal skin pore detail, identical face and identity to the reference image, 9:16.",
+      "Same person from the reference image, full-body standing pose facing camera straight-on, shoulders square to camera, arms relaxed at sides, weight even on both feet, neutral natural facial expression looking directly into the lens, plain light-gray seamless studio backdrop, soft even studio lighting from front and slightly above, clean simple wardrobe (well-fitted neutral solid t-shirt and simple bottoms), full head-to-toe visible in frame with a small margin around the body, photoreal proportions and skin texture, identical face and identity to the reference image, 9:16.",
   },
   {
     number: 2,
-    label: "Full-body standing pose, natural daylight",
+    label: "Full-body side profile",
     prompt:
-      "Same person from the reference image, full-body standing pose, weight on one foot in a relaxed contrapposto, hands loose at sides or one in pocket, neutral facial expression looking past camera, plain mid-gray seamless backdrop, soft natural daylight from above, simple wardrobe (well-fitted neutral basics — fitted top, simple bottoms), full head-to-toe visible in frame, photoreal proportions and clothing texture, identical face and identity to the reference image, 9:16.",
+      "Same person from the reference image, full-body 90-degree side profile view (body and head fully turned to face camera-right, NOT looking at camera), standing upright with weight even on both feet, arms relaxed at sides, head looking forward in true side profile so only one ear, cheek, and jawline are visible to camera, plain light-gray seamless studio backdrop, soft even studio lighting, clean simple wardrobe (the same well-fitted neutral solid t-shirt and simple bottoms as the front view), full head-to-toe visible in frame, photoreal jawline + hairline silhouette, identical body and hairstyle to the reference image, 9:16.",
   },
   {
     number: 3,
-    label: "Wildcard: outdoor golden hour",
-    // Specific concrete scene > vague "pick the contrast that differs."
-    // Nano Banana 2 Edit is much more reliable when we tell it what to
-    // produce instead of asking it to make creative decisions. The
-    // earlier prompt left too much to the model and was the only one
-    // of the six that didn't reliably complete.
+    label: "Full-body back view",
     prompt:
-      "Same person from the reference image, now standing on a city sidewalk at golden hour, wearing a denim jacket over a cream tank top and faded blue jeans, soft warm late-afternoon sunlight from camera-right casting long shadows, candid mid-stride caught looking back over the shoulder at camera with a small natural smile, blurred warm-toned urban background (out-of-focus brick storefront, string lights), photoreal skin texture and hair backlit by the sun, identical face and identity to the reference image, 9:16.",
-    isWildcard: true,
+      "Same person from the reference image, full-body view from directly behind, person standing facing away from camera with back fully to the lens (face NOT visible), shoulders square, arms relaxed at sides, full hairstyle visible from the back, plain light-gray seamless studio backdrop, soft even studio lighting, clean simple wardrobe (the same well-fitted neutral solid t-shirt and simple bottoms), full head-to-toe visible in frame, photoreal hair texture and back proportions, identical body and hairstyle to the reference image, 9:16.",
+  },
+  {
+    number: 4,
+    label: "Front portrait close-up",
+    prompt:
+      "Same person from the reference image, half-body front-facing portrait framed from waist up, shoulders square to camera, looking directly into the lens with a small natural relaxed expression, soft diffused daylight from a tall window camera-left for gentle dimensional shading, plain warm-cream studio backdrop, clean simple wardrobe (light knit or solid t-shirt), shallow depth of field with sharp focus on the face, photoreal skin pore detail and catchlights in the eyes, identical face and identity to the reference image, 9:16.",
   },
 ];
 
