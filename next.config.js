@@ -98,6 +98,22 @@ const nextConfig = {
         hostname: "**.replicate.delivery",
         pathname: "/**",
       },
+      // Cloudflare R2 public bucket URLs (pub-<hex>.r2.dev). All
+      // user-uploaded and mirrored assets land here after the
+      // FAL→R2 storage migration. Without this whitelist Next.js
+      // <Image> silently refuses to render any of them — the exact
+      // bug that hit Character Studio's variation tiles (2026-05-25).
+      // Wildcard covers any future R2 bucket / custom subdomain.
+      {
+        protocol: "https",
+        hostname: "**.r2.dev",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "**.r2.cloudflarestorage.com",
+        pathname: "/**",
+      },
     ],
   },
   async headers() {
