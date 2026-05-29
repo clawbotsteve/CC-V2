@@ -95,7 +95,13 @@ export const FAL_TO_REPLICATE_MODEL_MAP: Record<string, string> = {
   // the v2.6 line, and they also have a v3 if we want to upgrade).
   "fal-ai/kling-video/v2.6/standard/motion-control": "kwaivgi/kling-v2.6-motion-control",
   "fal-ai/bytedance/seedance/v1/pro/reference-to-video": "bytedance/seedance-1-pro",
-  "fal-ai/bytedance/seedance-2.0/reference-to-video": "bytedance/seedance-1-pro",
+  // Was incorrectly mapped to seedance-1-pro — meaning every Seedance
+  // 2.0 reference-to-video call was silently routed to the older 1.0
+  // model. Fixed 2026-05-29: 2.0 → 2.0. Brings native audio,
+  // intelligent duration control, and the multi-reference inputs the
+  // 2.0 marketing actually promises. (Translate function below also
+  // updated to build the 2.0 input shape.)
+  "fal-ai/bytedance/seedance-2.0/reference-to-video": "bytedance/seedance-2.0",
   "fal-ai/bytedance/seedance/v1/pro/fast/image-to-video": "bytedance/seedance-1-pro",
   // Seedance 2.0 TEXT-to-video (native audio + dialogue). NOTE: this
   // model's safety layer hard-blocks any human-likeness IMAGE input
@@ -372,21 +378,42 @@ export function translateFalInputToReplicate(
   //     https URL the model worker can fetch (http:// hangs → the
   //     caller re-hosts before passing it here).
   // --------------------------------------------------------------
-  if (falEndpoint === "fal-ai/bytedance/seedance-2.0/text-to-video") {
+  if (
+    falEndpoint === "fal-ai/bytedance/seedance-2.0/text-to-video" ||
+    falEndpoint === "fal-ai/bytedance/seedance-2.0/reference-to-video"
+  ) {
+    // Shared input shape for both Seedance 2.0 entry points: the
+    // model itself doesn't distinguish text-to-video vs
+    // reference-to-video at the API level — both take `prompt`,
+    // and presence of `reference_images` triggers reference mode.
+    // (Verified against bytedance/seedance-2.0 Replicate API page.)
     const out: Record<string, any> = {
       prompt: falInput.prompt,
       duration: Number(falInput.duration) || 5,
       resolution: falInput.resolution ?? "720p",
       aspect_ratio: falInput.aspect_ratio ?? "9:16",
+      // Native audio is a headline 2.0 feature — keep it on by
+      // default. UI toggle still wins when explicitly set to false.
       generate_audio: falInput.generate_audio !== false,
     };
     if (typeof falInput.seed === "number") out.seed = falInput.seed;
-    if (
-      Array.isArray(falInput.reference_images) &&
-      falInput.reference_images.length > 0
-    ) {
-      out.reference_images = falInput.reference_images;
+
+    // Reference images can arrive in any of the legacy FAL field
+    // shapes (image_urls array, single image_url, or the modern
+    // reference_images). Collapse them into Seedance 2.0's
+    // reference_images array.
+    const refs: string[] = [];
+    if (Array.isArray(falInput.reference_images)) {
+      refs.push(...falInput.reference_images);
     }
+    if (Array.isArray(falInput.image_urls)) {
+      refs.push(...falInput.image_urls);
+    }
+    if (typeof falInput.image_url === "string" && falInput.image_url) {
+      refs.push(falInput.image_url);
+    }
+    if (refs.length > 0) out.reference_images = refs;
+
     return out;
   }
 
@@ -405,7 +432,6 @@ export function translateFalInputToReplicate(
   // --------------------------------------------------------------
   if (
     falEndpoint === "fal-ai/bytedance/seedance/v1/pro/reference-to-video" ||
-    falEndpoint === "fal-ai/bytedance/seedance-2.0/reference-to-video" ||
     falEndpoint === "fal-ai/bytedance/seedance/v1/pro/fast/image-to-video"
   ) {
     // FAL's reference flow uses image_urls (array); image-to-video
