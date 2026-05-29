@@ -68,12 +68,17 @@ export const DownloadButton = forwardRef<
         }, 100);
       } catch (error) {
         console.error("Download failed:", error);
-        const link = document.createElement("a");
-        link.href = fileUrl;
-        link.download =
+        // Cross-origin fetch failed — almost certainly R2's pub-*.r2.dev
+        // not sending CORS headers. Route through our server-side proxy
+        // (/api/download) which re-streams the asset with the proper
+        // Content-Disposition header so the browser downloads it
+        // instead of opening it inline. See app/api/download/route.ts.
+        const downloadName =
           fileName || `download-${Date.now()}.${defaultExtension}`;
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
+        const proxyUrl = `/api/download?url=${encodeURIComponent(fileUrl)}&name=${encodeURIComponent(downloadName)}`;
+        const link = document.createElement("a");
+        link.href = proxyUrl;
+        link.download = downloadName;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
