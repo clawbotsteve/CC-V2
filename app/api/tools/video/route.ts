@@ -12,6 +12,7 @@ import { getFalJobResult } from "@/lib/fal-client";
 import { canUseVideoModel, requiredPlanForVideoModel, resolveAccessTier } from "@/lib/plan-access";
 import { moderateAndLog } from "@/lib/content-moderation";
 import { requireTermsAccepted } from "@/lib/require-terms-accepted";
+import { submitWaveSpeedI2V, isWaveSpeedConfigured } from "@/lib/wavespeed-client";
 
 function getFalEndpointFromModel(model?: string): string | null {
   if (!model) return null;
@@ -173,6 +174,82 @@ export async function POST(req: Request) {
     }
 
     console.log("[VIDEO TOOLS] POST - Submitting video generation request");
+
+    // ────────────────────────────────────────────────────────────────
+    // Seedance 2.0 → WaveSpeed (2026-05-29). Replaces the Replicate
+    // path for this model. Reason: Replicate's Seedance-2 deployment
+    // E005-blocks any person-bearing input image (deepfake gate),
+    // which makes Seedance unusable for the AI-influencer use case
+    // (animating a creator face). WaveSpeed's deployment of the same
+    // model doesn't enforce that block, so users can finally animate
+    // their trained characters / uploaded references. Same Bytedance
+    // Seedance 2.0 model under the hood, different host.
+    //
+    // Routing inline here (not via image-provider abstraction) because
+    // the image-provider only knows FAL ↔ Replicate. WaveSpeed has no
+    // webhook, so completion is detected by the status-poll endpoint —
+    // see app/api/tools/video/status/[jobId]/route.ts for the matching
+    // poll branch keyed on model === "wavespeed-seedance2".
+    if (data.model === VideoModel.Seedance2Ref) {
+      if (!isWaveSpeedConfigured()) {
+        console.error("[VIDEO TOOLS] POST - WaveSpeed not configured but Seedance requested");
+        return NextResponse.json(
+          { error: "Seedance 2.0 isn't available right now. Pick a different model." },
+          { status: 503 },
+        );
+      }
+
+      let taskId: string;
+      try {
+        const r = await submitWaveSpeedI2V({
+          image: data.image_url!,
+          prompt: data.prompt,
+          duration: data.duration!,
+          resolution: (data.resolution as any) ?? "720p",
+          aspectRatio: (data.aspect_ratio as any) ?? "9:16",
+          generateAudio: data.generate_audio !== false,
+        });
+        taskId = r.taskId;
+      } catch (err: any) {
+        console.error("[VIDEO TOOLS][seedance→wavespeed] submit failed", err?.message || err);
+        return NextResponse.json(
+          { error: "Couldn't start Seedance video. Please try again." },
+          { status: 502 },
+        );
+      }
+
+      const nsfwFlagWs = !data.enable_safety_checker;
+      await prismadb.generatedVideo.create({
+        data: {
+          id: taskId,
+          userId,
+          // Use the existing "wavespeed-seedance2" identifier the
+          // status endpoint already recognizes — it polls WaveSpeed
+          // and mirrors the output to R2 there. Credit-charging
+          // branches on creditVariant prefix (wavespeed_talk_* → use
+          // talkingCredits; seedance_v2_ref_* → use the standard
+          // chargeUserForTool with this variant). Both modes share
+          // the same WaveSpeed poll.
+          model: "wavespeed-seedance2",
+          prompt: data.prompt,
+          negativePrompt: "",
+          adherence: 0,
+          aspectRatio: data.aspect_ratio!,
+          duration: data.duration!,
+          contentType: nsfwFlagWs ? "nsfw" : "sfw",
+          nsfwFlag: nsfwFlagWs,
+          variant: data.variant,
+          creditVariant: getVideoCreditVariant(data),
+          videoUrl: null,
+          status: "queued",
+          creditUsed: 0,
+        },
+      });
+
+      console.log(`[VIDEO TOOLS][seedance→wavespeed] queued taskId=${taskId}`);
+      return NextResponse.json({ jobId: taskId }, { status: 200 });
+    }
+    // ────────────────────────────────────────────────────────────────
 
     // /api/ai/video sits behind Clerk middleware (the route matcher in
     // middleware.ts includes /api/ai*). When this route calls itself via

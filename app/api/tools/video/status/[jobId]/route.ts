@@ -4,9 +4,10 @@ import { auth } from "@clerk/nextjs/server";
 import { getFalJobResult, getFalJobStatus } from "@/lib/fal-client";
 import { getReplicateJobStatus, extractReplicateImageUrls } from "@/lib/replicate-client";
 import { getWaveSpeedResult } from "@/lib/wavespeed-client";
-import { chargeExplicitCredits } from "@/lib/charge-user";
+import { chargeExplicitCredits, chargeUserForTool } from "@/lib/charge-user";
 import { talkingCredits } from "@/lib/ad-studio/talking-pricing";
 import { persistUrl } from "@/lib/webhook/update-job-status";
+import { ToolType } from "@prisma/client";
 
 /**
  * Tiny wrapper so the three reconciliation branches below don't
@@ -93,25 +94,42 @@ export async function GET(
       if (videoJob.model === "wavespeed-seedance2") {
         const w = await getWaveSpeedResult(jobId);
         if (w.status === "completed" && w.videoUrl) {
-          // Charge on completion (computed per-second × resolution).
-          // No WaveSpeed webhook, so this status poll is where the
-          // talking video gets billed. Best-effort + double-charge
-          // guarded inside chargeExplicitCredits.
+          // Charge on completion. Two callers share this WaveSpeed
+          // branch — they need different charge models:
+          //
+          //   • Ad Studio talking-ad: variant looks like
+          //     "wavespeed_talk_720p_5s" → computed pricing
+          //     (per-second × resolution) via talkingCredits().
+          //   • Regular video gen (Seedance via WaveSpeed,
+          //     2026-05-29): variant looks like "seedance_v2_ref_5s"
+          //     → standard discrete-tier credit cost via
+          //     chargeUserForTool() with the variant lookup.
+          //
+          // Branch on the variant prefix. Both are double-charge
+          // guarded by their respective charge helpers.
           try {
-            const res = (videoJob.creditVariant || "").replace(
-              "wavespeed_talk_",
-              "",
-            );
-            const amount = talkingCredits(videoJob.duration, res);
-            await chargeExplicitCredits({
-              userId: videoJob.userId,
-              amount,
-              usageTable: "GeneratedVideo",
-              usageId: jobId,
-            });
+            const variant = videoJob.creditVariant || "";
+            if (variant.startsWith("wavespeed_talk_")) {
+              const res = variant.replace("wavespeed_talk_", "");
+              const amount = talkingCredits(videoJob.duration, res);
+              await chargeExplicitCredits({
+                userId: videoJob.userId,
+                amount,
+                usageTable: "GeneratedVideo",
+                usageId: jobId,
+              });
+            } else {
+              await chargeUserForTool({
+                userId: videoJob.userId,
+                tool: ToolType.VIDEO_GENERATOR,
+                variant,
+                usageId: jobId,
+                usageTable: "GeneratedVideo",
+              });
+            }
           } catch (chargeErr) {
             console.error(
-              "[VIDEO STATUS] talking-video charge failed (delivering anyway):",
+              "[VIDEO STATUS] wavespeed video charge failed (delivering anyway):",
               chargeErr,
             );
           }
