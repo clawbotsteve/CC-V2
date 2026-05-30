@@ -66,7 +66,16 @@ export default function VideoSettingsPanel({
           const newVariant = getVideoVariant(newModel, newDuration);
           // All available models enforce safety (platform is SFW-only as of 2026-04-29).
           const enable_safety_checker = true;
-          const generate_audio = newModel === VideoModel.Kling ? (form.generate_audio ?? true) : false;
+          // Audio support: Kling 2.6 and Seedance 2.0 (via WaveSpeed)
+          // both natively generate audio. Default ON for both, OFF for
+          // models without audio support. Was hardcoded `false` for
+          // anything-not-Kling — meant Seedance silently lost audio
+          // even after we routed it through WaveSpeed (which supports
+          // audio just fine). Verified 2026-05-30 against the
+          // wavespeed-ai/bytedance/seedance-2.0/i2v API.
+          const supportsAudio =
+            newModel === VideoModel.Kling || newModel === VideoModel.Seedance2Ref;
+          const generate_audio = supportsAudio ? (form.generate_audio ?? true) : false;
           const keep_original_sound = newModel === VideoModel.KlingMotionControl ? (form.keep_original_sound ?? true) : form.keep_original_sound;
           const seedance_resolution = isSwitchingToSeedance
             ? (form.seedance_resolution ?? SEEDANCE_DEFAULT_RESOLUTION)
@@ -170,8 +179,9 @@ export default function VideoSettingsPanel({
         </>
       )}
 
-      {/* Kling 2.6 audio toggle */}
-      {form.model === VideoModel.Kling && (
+      {/* Audio toggle — shown for any model that natively generates
+          audio (Kling 2.6 + Seedance 2.0). Both default ON. */}
+      {(form.model === VideoModel.Kling || form.model === VideoModel.Seedance2Ref) && (
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <label className="text-sm font-medium text-foreground">Generate Audio</label>
@@ -195,7 +205,10 @@ export default function VideoSettingsPanel({
             </div>
           </div>
           <p className="text-xs text-muted-foreground flex items-center gap-1">
-            <Info className="w-3 h-3" /> Turn audio off for cheaper Kling 2.6 credits.
+            <Info className="w-3 h-3" />
+            {form.model === VideoModel.Kling
+              ? "Turn audio off for cheaper Kling 2.6 credits."
+              : "Seedance 2.0 generates synced audio natively via WaveSpeed."}
           </p>
         </div>
       )}
