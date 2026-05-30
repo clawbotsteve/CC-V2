@@ -201,11 +201,16 @@ export async function POST(req: Request) {
 
       let taskId: string;
       try {
+        // Regular Seedance video gen has no user-facing resolution
+        // picker (variants like seedance_v2_ref_5s/_10s are
+        // duration-based, not resolution-based) — hardcode 720p.
+        // Talking-ad path uses its own per-resolution variants and
+        // doesn't share this code.
         const r = await submitWaveSpeedI2V({
           image: data.image_url!,
           prompt: data.prompt,
           duration: data.duration!,
-          resolution: (data.resolution as any) ?? "720p",
+          resolution: "720p",
           aspectRatio: (data.aspect_ratio as any) ?? "9:16",
           generateAudio: data.generate_audio !== false,
         });
