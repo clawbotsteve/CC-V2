@@ -14,6 +14,7 @@ import { ActionButtons } from "@/components/generate-button";
 import { Sparkles } from "lucide-react";
 import { AuthWallModal } from "@/components/auth-wall-modal";
 import { OutOfFreeCreditsModal } from "@/components/out-of-free-credits-modal";
+import PostOnboardingCelebrationModal from "@/components/onboard/PostOnboardingCelebrationModal";
 import { GeneratedImageList } from "./_components/GeneratedImageList";
 import { ImageUploadHandle } from "@/components/image-upload";
 import ImageSettingsPanel from "./_components/ImageSettingsPanel";
@@ -41,6 +42,16 @@ export default function GenerateImagePage() {
   const [form, setForm] = useState<ImageGenerationInput>(defaultImageGenerationForm);
   const pollingRefs = useRef<Record<string, NodeJS.Timeout>>({});
   const appliedQueryRef = useRef<string | null>(null);
+
+  // Post-onboarding celebration: fires ONCE for users who came straight
+  // from the questionnaire and just saw their first generation complete.
+  // Gives them the upgrade prompt + 3 follow-up prompts at the emotional
+  // peak. See components/onboard/PostOnboardingCelebrationModal.tsx for
+  // the flag-clear / one-shot semantics.
+  const [celebrationOpen, setCelebrationOpen] = useState(false);
+  const [celebrationImage, setCelebrationImage] = useState<string | undefined>(undefined);
+  const [celebrationBasePrompt, setCelebrationBasePrompt] = useState<string | undefined>(undefined);
+  const celebrationFiredRef = useRef(false);
 
   // Mirror the server-side getImageCreditVariant() so the Generate button
   // shows the actual credit cost the API will charge. If these drift, the
@@ -174,6 +185,34 @@ export default function GenerateImagePage() {
     };
   }, []);
 
+  // Watch the generations list for the first COMPLETED row when the
+  // user came in via onboarding. Fires the celebration modal exactly
+  // once — the modal itself clears the localStorage flag on any user
+  // action (close / upgrade / try-prompt) so it can't re-fire.
+  useEffect(() => {
+    if (celebrationFiredRef.current || celebrationOpen) return;
+    if (typeof window === "undefined") return;
+    let active: string | null = null;
+    try {
+      active = window.localStorage.getItem("tavira_onboarding_active");
+    } catch {
+      return;
+    }
+    if (active !== "1") return;
+
+    // Find the most recent completed generation with an actual URL.
+    // The list is already sorted recent-first by fetchGenerations.
+    const firstCompleted = generations.find(
+      (g) => g.status === "completed" && Boolean(g.imageUrl),
+    );
+    if (!firstCompleted) return;
+
+    celebrationFiredRef.current = true;
+    setCelebrationImage(firstCompleted.imageUrl ?? undefined);
+    setCelebrationBasePrompt(firstCompleted.prompt ?? undefined);
+    setCelebrationOpen(true);
+  }, [generations, celebrationOpen]);
+
   useEffect(() => {
     const modelParam = searchParams.get("model");
     const promptParam = searchParams.get("prompt");
@@ -298,6 +337,13 @@ export default function GenerateImagePage() {
       <AuthWallModal
         open={authWallOpen}
         onOpenChange={setAuthWallOpen}
+      />
+
+      <PostOnboardingCelebrationModal
+        open={celebrationOpen}
+        onClose={() => setCelebrationOpen(false)}
+        imageUrl={celebrationImage}
+        basePrompt={celebrationBasePrompt}
       />
 
       <OutOfFreeCreditsModal
