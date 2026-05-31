@@ -170,6 +170,21 @@ export default function OnboardingQuestionnaire({ open, onClose }: Props) {
     // Mark onboarding done, then redirect to the image-gen tool with the
     // prompt pre-filled. The image-gen page reads ?prompt= and ?model= from
     // the URL and pre-fills the form.
+    //
+    // Also set a localStorage flag so the image-gen page knows this user
+    // is fresh from onboarding — on their FIRST successful generation it
+    // fires the PostOnboardingCelebrationModal (the "build the full
+    // character with Character Studio" upgrade hook). Flag is cleared
+    // once the celebration is shown OR dismissed, so it's strictly
+    // one-shot per session.
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem("tavira_onboarding_active", "1");
+      } catch {
+        /* localStorage unavailable (incognito, etc.) — celebration just
+           won't fire; no functional break */
+      }
+    }
     await handleSkipOrComplete();
     const url = new URL("/tools/image-generation", window.location.origin);
     url.searchParams.set("model", "gpt-image-2");
@@ -215,10 +230,10 @@ export default function OnboardingQuestionnaire({ open, onClose }: Props) {
           {step === 1 && (
             <>
               <DialogTitle className="text-xl font-semibold text-white">
-                What are you creating?
+                Let&apos;s build your AI character
               </DialogTitle>
               <p className="text-sm text-zinc-400">
-                We&apos;ll tailor a starter prompt to what you&apos;re building.
+                A few quick questions and we&apos;ll generate your first one — free.
               </p>
               <div className="grid gap-2">
                 {GOAL_OPTIONS.map((o) => (
@@ -317,11 +332,11 @@ export default function OnboardingQuestionnaire({ open, onClose }: Props) {
           {step === 4 && (
             <>
               <DialogTitle className="text-xl font-semibold text-white">
-                Your model is ready
+                Your AI character is ready
               </DialogTitle>
               <p className="text-sm text-zinc-400">
-                Edit the prompt if you&apos;d like, then generate your first image — it&apos;ll
-                use your free trial credit.
+                Tweak the prompt if you&apos;d like, then hit generate — uses your
+                free trial credit. ~30 seconds.
               </p>
               <Textarea
                 value={synthesizedPrompt}
@@ -374,7 +389,7 @@ export default function OnboardingQuestionnaire({ open, onClose }: Props) {
               className="bg-emerald-400 text-black hover:bg-emerald-300"
             >
               <Sparkles className="mr-2 h-4 w-4" />
-              Generate my model
+              Generate my character
             </Button>
           )}
         </div>
