@@ -53,6 +53,24 @@ export default function GenerateImagePage() {
   const [celebrationBasePrompt, setCelebrationBasePrompt] = useState<string | undefined>(undefined);
   const celebrationFiredRef = useRef(false);
 
+  // Pre-generation hint: pulsing-glow animation on the Generate button
+  // when the user just landed from onboarding and hasn't clicked yet.
+  // Bookend to the celebration modal — that fires AFTER, this guides
+  // them BEFORE. Turns off the moment they click Generate (isGenerating
+  // flips true) or once we have any completed generation in the list.
+  const [showGenerateHint, setShowGenerateHint] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let active: string | null = null;
+    try {
+      active = window.localStorage.getItem("tavira_onboarding_active");
+    } catch {
+      return;
+    }
+    const hasAnyGenerations = generations.length > 0;
+    setShowGenerateHint(active === "1" && !hasAnyGenerations && !isGenerating);
+  }, [generations.length, isGenerating]);
+
   // Mirror the server-side getImageCreditVariant() so the Generate button
   // shows the actual credit cost the API will charge. If these drift, the
   // user sees one number on the button and gets billed another. The /api/tools/image
@@ -316,14 +334,46 @@ export default function GenerateImagePage() {
               </div>
 
               <div className="px-5 pb-4 pt-3 border-t border-border bg-card/60 backdrop-blur-sm">
-                <ActionButtons
-                  handleGenerate={handleGenerate}
-                  isLoading={isLoading}
-                  isGenerating={isGenerating}
-                  creditCosts={creditCosts!}
-                  toolType={ToolType.IMAGE_GENERATOR}
-                  variant={selectedCreditVariant}
-                />
+                {/*
+                  Onboarding hint: when the user just came from the
+                  questionnaire and hasn't generated yet, wrap the
+                  Generate button in a pulsing glow + a small "👇
+                  Generate your character" caption to draw the eye
+                  past the (pre-filled) prompt field straight to the
+                  action. Auto-dismisses when isGenerating flips true
+                  or any generation lands in the list.
+                */}
+                {showGenerateHint && (
+                  <div className="mb-2 flex items-center justify-center gap-2 text-xs text-[#c4b5fd]">
+                    <span className="animate-bounce">👇</span>
+                    <span className="font-medium">Click Generate to see your character</span>
+                  </div>
+                )}
+                <div className={showGenerateHint ? "rounded-xl tavira-generate-hint-pulse" : ""}>
+                  <ActionButtons
+                    handleGenerate={handleGenerate}
+                    isLoading={isLoading}
+                    isGenerating={isGenerating}
+                    creditCosts={creditCosts!}
+                    toolType={ToolType.IMAGE_GENERATOR}
+                    variant={selectedCreditVariant}
+                  />
+                </div>
+                <style jsx>{`
+                  .tavira-generate-hint-pulse {
+                    animation: tavira-pulse 1.6s ease-in-out infinite;
+                  }
+                  @keyframes tavira-pulse {
+                    0%, 100% {
+                      box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.55),
+                                  0 0 0 0 rgba(139, 123, 255, 0.35);
+                    }
+                    50% {
+                      box-shadow: 0 0 0 6px rgba(99, 102, 241, 0),
+                                  0 0 24px 4px rgba(139, 123, 255, 0.55);
+                    }
+                  }
+                `}</style>
               </div>
             </aside>
 
