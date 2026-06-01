@@ -1,9 +1,21 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { fal } from "@fal-ai/client";
+import OpenAI from "openai";
 import { moderateAndLog } from "@/lib/content-moderation";
 
-fal.config({ credentials: process.env.FAL_API_KEY! });
+// Use OpenAI directly (was fal.subscribe("fal-ai/any-llm", ...) — 2026-05-31).
+// Our FAL API key no longer has access after the FAL→Replicate migration,
+// so the FAL proxy returned 403 Forbidden, caught by the outer try/catch
+// here, and surfaced as the generic "Failed to build your prompt" toast
+// in the onboarding modal. OPENAI_API_KEY is already set on Railway for
+// content moderation and other paths — reuse it.
+let openaiClient: OpenAI | null = null;
+function getOpenAI(): OpenAI {
+  if (!openaiClient) {
+    openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+  return openaiClient;
+}
 
 /**
  * Build a polished GPT Image 2 prompt from the onboarding answers.
@@ -50,16 +62,17 @@ export async function POST(req: Request) {
     // produces a much better prompt with this than with raw JSON.
     const hint = buildAnswerSummary(answers);
 
-    const result = await fal.subscribe("fal-ai/any-llm", {
-      input: {
-        model: "openai/gpt-4o-mini",
-        prompt: hint,
-        system_prompt: SYSTEM_PROMPT,
-      },
-      logs: false,
+    const completion = await getOpenAI().chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: hint },
+      ],
+      temperature: 0.8,
+      max_tokens: 300,
     });
 
-    const raw = (result?.data as any)?.output;
+    const raw = completion.choices?.[0]?.message?.content;
     let prompt = typeof raw === "string" ? raw.trim() : "";
 
     // Strip any wrapping quotes the LLM may have added.
