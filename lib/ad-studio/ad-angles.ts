@@ -99,13 +99,24 @@ export const AD_ANGLES: AdAngle[] = [
       "Feature the AI UGC creator from the reference image — same face, hair and body, standing, full body. She is wearing a simple plain solid-colour top and shorts (a neutral base outfit that does NOT compete). She holds UP the exact apparel item shown in the product image with both hands toward the camera so the full garment is clearly and completely visible — a 'get ready with me' clothing-haul moment in an aesthetic bedroom with a mirror and a slight creative mess, soft natural daylight, authentic iPhone front-camera UGC, natural HDR, real skin tones, no color grading, vertical 9:16. Show ONLY the apparel from the product image as the product — absolutely no skincare, cosmetics, bottles or any other product.",
   },
   {
+    // Key intentionally still "problem_solution" (don't migrate — any
+    // persisted ad-angle selections in the DB key off this string and
+    // a rename would orphan them). The user-facing slot has been
+    // repurposed into a Try-On-Haul angle now that we have a strong
+    // video preview for it; the template below is the haul prompt.
     key: "problem_solution",
     exampleImage: "/ad-angles/problem_solution.jpg",
-    label: "Problem → solution",
-    blurb: "Creator mid-explanation gesturing at the product as the fix. Highest-converting ad hook.",
+    exampleVideo: "/ad-angles/problem_solution.mp4",
+    label: "Try On Haul",
+    blurb: "Excited 'haul moment' — creator pulling pieces out of a bag/box, full-body energy. Highest-engagement format for apparel + accessories.",
     aspectRatio: "9:16",
+    // Try-On Haul template. Sibling of virtual_tryon but framed as the
+    // HAUL MOMENT (excited reveal, full-body energy, multiple pieces
+    // implied) rather than a static GRWM mirror look. Same "neutral
+    // base outfit + hold up the exact product" guard rails to keep
+    // NB2 Edit from substituting a different item.
     template:
-      "Feature the AI UGC creator from the reference image, keeping their look and vibe consistent and natural, caught mid-sentence talking directly to the camera with an expressive 'here's what fixed it' energy while {presentation}, casual bathroom or bedroom UGC setting softly blurred, honest direct-address energy, natural phone-camera look with realistic skin texture, product label sharp and readable, vertical 9:16.",
+      "Feature the AI UGC creator from the reference image — same face, hair and body, standing full-body. She is wearing a simple plain solid-colour base outfit (neutral, non-competing) and excitedly holds UP the exact apparel/accessory item from the product image with both hands toward the camera so the full product is clearly and completely visible — a high-energy 'try-on haul' reveal moment, big genuine smile, slightly bouncy candid energy. Aesthetic bedroom with a mirror, a shopping bag visible nearby, soft natural daylight, authentic iPhone front-camera UGC look, natural HDR, real skin tones, no color grading, vertical 9:16. Show ONLY the item from the product image as the product — absolutely no skincare, cosmetics, bottles or any other product.",
   },
   {
     key: "testimonial",
@@ -137,6 +148,7 @@ export const AD_ANGLES: AdAngle[] = [
   {
     key: "demo",
     exampleImage: "/ad-angles/demo.jpg",
+    exampleVideo: "/ad-angles/demo.mp4",
     label: "Demo / how-to",
     blurb: "Creator actively using or applying the product, mid-action.",
     aspectRatio: "9:16",
