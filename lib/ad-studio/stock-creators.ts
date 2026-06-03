@@ -87,8 +87,14 @@ export const STOCK_CREATORS: StockCreator[] = [
     name: "Maya",
     vibe: "Warm relatable · late 20s",
     bestFor: ["wellness", "supplements", "home"],
+    // Synced to the shipped portrait (maya.jpg) — South Asian woman
+    // with long straight dark hair, not the original "Black/curly"
+    // description. Talking-hook video uses persona text alone (Seedance
+    // 2.0 blocks human-likeness image input), so this MUST match the
+    // picker tile or the still and the video read as two different
+    // people.
     persona:
-      "A 28-year-old Black woman, warm and relatable, natural voluminous curly hair, soft expressive eyes, genuine easy smile, minimal makeup, cozy everyday style",
+      "A 28-year-old South Asian woman, warm and relatable, long straight dark hair, soft expressive brown eyes, genuine easy smile, minimal makeup, cozy everyday style",
     seed: 41200,
   },
   {
