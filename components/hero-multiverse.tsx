@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ScanFace, LayoutGrid, TrendingUp } from "lucide-react";
 
@@ -162,38 +161,50 @@ function DesktopHero({ onPrimaryCta, ctaHref }: HeroMultiverseProps) {
           (calc(100vh - 56px) + object-cover + Ken Burns scale)
           produced ugly horizontal cropping that ate the baked
           headline on the left edge. Anchoring back to 1920×1072
-          shows the entire image cleanly with no cropping games. */}
+          shows the entire video cleanly with no cropping games. */}
       <div className="relative w-full" style={{ aspectRatio: "1920 / 1072" }}>
-        <Image
-          src="/hero/hero-multiverse.jpg"
-          alt="Tavira — your AI influencer. A solo creator on a hilltop with their laptop, surrounded by floating holographic windows each showing the same AI character in a different scene: fitness coach, fashion model, podcast host, lifestyle creator."
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover"
+        {/*
+          2026-06-03: switched from static hero-multiverse.jpg to an
+          autoplay looping MP4 (Tavira-Hero.mp4). The old JPG had
+          headline / tagline / CTA copy baked into pixels which was
+          impossible to update without re-rendering the asset and
+          required a near-opaque blackout band to hide. New video
+          has NO baked text — the entire HTML overlay below (Tavira*
+          headline, subhead, CTA, trust marks) is the single source
+          of truth for the message.
+          - autoPlay + muted + loop + playsInline = autoplays inline
+            on iOS Safari too (which requires `muted` AND `playsInline`).
+          - preload="auto" tradeoff: ~10MB upfront on first paint, but
+            metadata-only would mean a black flash before playback
+            kicks in. The hero is the page's most important visual;
+            eat the bandwidth.
+          - poster attribute kept (the old JPG) so a frame shows
+            INSTANTLY before the video first paints, esp. on slower
+            connections.
+        */}
+        <video
+          src="/hero/Tavira-Hero.mp4"
+          poster="/hero/hero-multiverse.jpg"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          className="absolute inset-0 h-full w-full object-cover"
+          aria-label="Tavira — your AI influencer creator. Cinematic intro showcasing AI characters across niches."
         />
 
-        {/* OPAQUE BLACKOUT band across the bottom 40% of the hero —
-            covers the baked-into-pixels typography (Tavira headline,
-            tagline, "One face. Infinite possibilities", trust marks,
-            and the amber CTA) so we can render fresh HTML overlays
-            on top of it as the single source of truth.
-
-            Pivot 2026-05-23: bumped bottom values from 0.96/0.94 to
-            FULLY opaque (1.0) because the 4% bleed was rendering as
-            a visible ghost behind the new headline. Also bumped
-            height 36→40% so the baked text near the top of the
-            footer area gets fully covered. Soft fade in the top 20%
-            keeps the join into the cityscape from being a hard line.
-            Why blackout not soft gradient: the baked typo
-            ("possiibilities", "IDENITTY") still reads through a
-            translucent layer. */}
+        {/* Bottom gradient — soft fade for legibility of the
+            overlay headline + CTA only. The video has no baked-in
+            text to cover, so this is just typographic contrast,
+            NOT the heavy blackout the old JPG needed. Height 28%,
+            transparent at top so the cityscape blends naturally. */}
         <div
           className="absolute inset-x-0 bottom-0 pointer-events-none"
           style={{
-            height: "40%",
+            height: "28%",
             background:
-              "linear-gradient(to top, rgba(8,8,12,1) 0%, rgba(8,8,12,1) 65%, rgba(8,8,12,0.92) 80%, rgba(8,8,12,0.55) 92%, rgba(8,8,12,0) 100%)",
+              "linear-gradient(to top, rgba(8,8,12,0.85) 0%, rgba(8,8,12,0.55) 50%, rgba(8,8,12,0.2) 85%, rgba(8,8,12,0) 100%)",
           }}
         />
 
