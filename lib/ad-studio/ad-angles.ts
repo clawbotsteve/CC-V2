@@ -128,13 +128,29 @@ export const AD_ANGLES: AdAngle[] = [
       "Feature the AI UGC creator from the reference image, keeping their look and vibe consistent and natural, relaxed on a sofa talking candidly to the camera with a slightly surprised, won-over expression (the 'okay I'm actually impressed' look) while {presentation}, cozy warm home lighting, authentic unpolished UGC vlog framing, product clearly visible, vertical 9:16.",
   },
   {
+    // Key intentionally still "unboxing" (don't migrate — any persisted
+    // ad-angle selections in the DB key off this string and a rename
+    // would orphan them). User-facing label is "Faceless unboxing" now;
+    // the template generates a hands-only reveal (no face), which is the
+    // top-converting unboxing variant on TikTok/Reels because it's
+    // creator-agnostic (any brand can repurpose it across personas)
+    // and reads as authentic-found-it-on-my-doorstep rather than
+    // staged-influencer-content.
     key: "unboxing",
     exampleImage: "/ad-angles/unboxing.jpg",
-    label: "Unboxing reaction",
-    blurb: "Excited first-look reaction holding the product just out of the box.",
+    exampleVideo: "/ad-angles/unboxing.mp4",
+    label: "Faceless unboxing",
+    blurb: "Hands-only POV unboxing — no face. Top-converting variant on TikTok/Reels because it feels like a real customer, not an influencer ad.",
     aspectRatio: "9:16",
+    // Faceless / hands-only template. Critical guardrails:
+    //   - explicit "no face / no head in frame" (NB2 will default to
+    //     including the creator's face from the reference image otherwise)
+    //   - "the creator's hands" anchors identity to skin tone /
+    //     manicure / sleeves from the reference without dragging the
+    //     face in
+    //   - packaging/product centered, hands as the secondary subject
     template:
-      "Feature the AI UGC creator from the reference image, keeping their look and vibe consistent and natural, genuine excited 'ooh' reaction having just lifted it out of its packaging, {presentation}, packaging/box visible lower in frame, bright clean desk or kitchen counter setting, energetic authentic unboxing UGC energy, phone-camera realism, product and packaging in sharp focus, vertical 9:16.",
+      "Top-down or shoulder-down POV unboxing shot. The creator's hands ONLY enter the frame — using the hands from the AI UGC creator reference image (same skin tone, same nails/sleeves) to lift the product out of its packaging. ABSOLUTELY NO FACE in the frame, no head, no shoulders above the chest — strictly a faceless hands-and-product composition. {presentation} but framed so the product and the opened packaging/box are the visual centerpiece. Clean neutral surface (light wood desk or kitchen counter) softly blurred, bright soft natural daylight, authentic phone-camera POV unboxing UGC look, product label and packaging in sharp focus, vertical 9:16.",
   },
   {
     key: "before_after",
