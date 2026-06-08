@@ -121,6 +121,7 @@ export const AD_ANGLES: AdAngle[] = [
   {
     key: "testimonial",
     exampleImage: "/ad-angles/testimonial.jpg",
+    exampleVideo: "/ad-angles/testimonial.mp4",
     label: "Testimonial / skeptic",
     blurb: "\"I was skeptical but…\" — creator with a convinced, slightly surprised expression.",
     aspectRatio: "9:16",
@@ -155,6 +156,7 @@ export const AD_ANGLES: AdAngle[] = [
   {
     key: "before_after",
     exampleImage: "/ad-angles/before_after.jpg",
+    exampleVideo: "/ad-angles/before_after.mp4",
     label: "Before / after",
     blurb: "Confident 'look at the result' pose presenting the product as the cause.",
     aspectRatio: "9:16",
