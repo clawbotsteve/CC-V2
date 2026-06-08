@@ -113,6 +113,122 @@ function saveRecentProducts(list: RecentProduct[]) {
   }
 }
 
+/**
+ * Reusable drag-and-drop / click-to-upload zone. Owns its own hidden
+ * <input>, validates MIME type before bubbling the file up (so a bad
+ * drop doesn't burn a /api/upload round-trip), and shows clear
+ * dragging / busy states. Drop-in for both the product photo (Step 1)
+ * and the one-off creator photo (Step 2) — same UX, same affordance.
+ */
+const DROPZONE_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
+const DROPZONE_ACCEPT = DROPZONE_TYPES.join(",");
+
+function DropZone({
+  busy,
+  label,
+  hint,
+  onFile,
+  compact,
+}: {
+  busy: boolean;
+  /** Primary CTA — e.g. "Upload product photo". */
+  label: string;
+  /** Optional secondary line shown below the CTA. */
+  hint?: string;
+  onFile: (f: File) => void;
+  /** Tighter padding for the secondary creator-upload slot. */
+  compact?: boolean;
+}) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [dragging, setDragging] = useState(false);
+  // Track DOM enter/leave depth — dragging over a child element fires
+  // onDragLeave on the parent without it, which would flicker the
+  // highlight off-on-off as the cursor moves across the zone.
+  const dragDepth = useRef(0);
+
+  const handleFile = (f: File | undefined | null) => {
+    if (!f) return;
+    if (!(DROPZONE_TYPES as readonly string[]).includes(f.type)) {
+      toast.error(
+        `That file type isn't supported (${f.type || "unknown"}). Use JPG, PNG, or WebP.`,
+      );
+      return;
+    }
+    onFile(f);
+  };
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      aria-disabled={busy}
+      onClick={() => !busy && inputRef.current?.click()}
+      onKeyDown={(e) => {
+        if (busy) return;
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          inputRef.current?.click();
+        }
+      }}
+      onDragEnter={(e) => {
+        e.preventDefault();
+        if (busy) return;
+        dragDepth.current++;
+        setDragging(true);
+      }}
+      onDragOver={(e) => {
+        // Required to make the drop event fire.
+        e.preventDefault();
+        e.dataTransfer.dropEffect = busy ? "none" : "copy";
+      }}
+      onDragLeave={(e) => {
+        e.preventDefault();
+        dragDepth.current = Math.max(0, dragDepth.current - 1);
+        if (dragDepth.current === 0) setDragging(false);
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        dragDepth.current = 0;
+        setDragging(false);
+        if (busy) return;
+        handleFile(e.dataTransfer.files?.[0]);
+      }}
+      className={`relative rounded-xl border-2 border-dashed transition outline-none
+        ${compact ? "px-4 py-5" : "px-6 py-8"}
+        flex flex-col items-center justify-center text-center gap-1.5
+        ${busy ? "opacity-60 cursor-wait" : "cursor-pointer"}
+        ${
+          dragging
+            ? "border-[#6366f1] bg-[#6366f1]/10"
+            : "border-border hover:border-[#6366f1]/60 hover:bg-white/[0.02] focus:border-[#6366f1]/60"
+        }`}
+    >
+      <input
+        ref={inputRef}
+        type="file"
+        accept={DROPZONE_ACCEPT}
+        className="hidden"
+        onChange={(e) => {
+          handleFile(e.target.files?.[0]);
+          // Reset so re-selecting the same filename re-fires onChange.
+          e.currentTarget.value = "";
+        }}
+      />
+      {busy ? (
+        <Loader2 className="h-6 w-6 animate-spin text-[#a78bfa]" />
+      ) : (
+        <Upload className="h-6 w-6 text-[#a78bfa]" />
+      )}
+      <div className="text-sm font-medium text-foreground">
+        {busy ? "Uploading…" : label}
+      </div>
+      <div className="text-[11px] text-muted-foreground">
+        {hint || "Drag & drop, or click to browse — JPG, PNG, WebP up to 100MB"}
+      </div>
+    </div>
+  );
+}
+
 export default function AdStudioPage() {
   const [step, setStep] = useState<Step>(1);
   const [recentProducts, setRecentProducts] = useState<RecentProduct[]>([]);
@@ -131,7 +247,7 @@ export default function AdStudioPage() {
   };
   const [scrapeInput, setScrapeInput] = useState("");
   const [scraping, setScraping] = useState(false);
-  const productInputRef = useRef<HTMLInputElement | null>(null);
+  // productInputRef removed — DropZone owns its own hidden input now.
   const [uploadingProduct, setUploadingProduct] = useState(false);
 
   // ---- Creator ----
@@ -684,28 +800,11 @@ export default function AdStudioPage() {
                 <span className="flex-1 h-px bg-white/10" /> or <span className="flex-1 h-px bg-white/10" />
               </div>
 
-              <input
-                ref={productInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) uploadOne(f, setProductUrl, setUploadingProduct);
-                }}
+              <DropZone
+                busy={uploadingProduct}
+                label="Upload product photo"
+                onFile={(f) => uploadOne(f, setProductUrl, setUploadingProduct)}
               />
-              <Button
-                variant="outline"
-                onClick={() => productInputRef.current?.click()}
-                disabled={uploadingProduct}
-              >
-                {uploadingProduct ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Upload className="h-4 w-4 mr-2" />
-                )}
-                Upload product photo
-              </Button>
 
               {productUrl && (
                 <div className="mt-6 flex items-start gap-4">
