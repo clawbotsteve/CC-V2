@@ -252,7 +252,13 @@ export default function AdStudioPage() {
         toast.error(result.error);
         return;
       }
-      const url = (result as any)?.urls?.[0] || (result as any)?.url;
+      // The /api/upload route returns `{ message, files: [{ name, url, type }] }`.
+      // This previously read `result.urls?.[0]` / `result.url`, which never
+      // existed on the API response — so EVERY product/creator upload landed
+      // in R2 successfully but the client threw away the URL and toasted
+      // "Upload failed." Aligns with every other uploadFiles caller in the
+      // codebase (image-generation, face-swap, components/image-upload, etc.).
+      const url = result.files?.[0]?.url;
       if (!url) {
         toast.error("Upload failed.");
         return;
