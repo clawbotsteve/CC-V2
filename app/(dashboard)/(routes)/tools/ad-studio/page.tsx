@@ -14,6 +14,12 @@ import { uploadFiles } from "@/lib/utils";
 import { AD_ANGLES, AdAngleKey } from "@/lib/ad-studio/ad-angles";
 import { STOCK_CREATORS, stockCreatorImage, stockCreatorRefs, stockCreatorIdFromImage } from "@/lib/ad-studio/stock-creators";
 import {
+  buildSeedancePrompt,
+  hookStylesFor,
+  defaultHookStyle,
+  HookStyleKey,
+} from "@/lib/ad-studio/seedance-templates";
+import {
   PRODUCT_TYPES,
   ProductTypeKey,
   detectProductType,
@@ -61,23 +67,11 @@ const STEP_LABELS = ["Product", "Creator", "Angle", "Your ad"];
  */
 const SHOW_SPOKESPERSON = true;
 
-/**
- * Higgsfield-style pre-filled hook script. The talking box should
- * never be blank — give a strong, product-aware UGC line the user
- * can ship as-is or tweak ("don't make me think").
- */
-function defaultHookScript(productName: string, angle?: AdAngleKey): string {
-  const p = productName.trim();
-  if (angle === "virtual_tryon") {
-    // GRWM / try-on energy (condensed from the Higgsfield reference).
-    return p
-      ? `Okay get ready with me — I'm trying on the ${p} and I genuinely don't know if this is crazy or genius. ...Okay no, I kinda love it. I'm wearing this.`
-      : `Okay get ready with me — trying this on and I don't know if it's crazy or genius. ...Okay no, I kinda love it. I'm wearing this.`;
-  }
-  return p
-    ? `Okay I had to show you guys the ${p} — I genuinely use it every day now and I'm kind of obsessed. You need this.`
-    : `Okay I had to show you guys this — I genuinely use it every day now and I'm kind of obsessed. You need this.`;
-}
+// defaultHookScript removed — the per-angle hook-style picker
+// (lib/ad-studio/seedance-templates.ts) supplies a placeholder for
+// each style. The default placeholder for the angle's first style
+// is auto-applied when the user lands on Step 4 (see the useEffect
+// near the top of AdStudioPage).
 
 /**
  * Recent products — localStorage so the user doesn't re-enter the
@@ -288,12 +282,22 @@ export default function AdStudioPage() {
 
   // ---- Premium "Talking video ad" (Seedance-2 persona+seed T2V) ----
   const [talkingScript, setTalkingScript] = useState("");
+  // The hook-style chip the user has picked (e.g. "punchy" |
+  // "casual_review" | "calm_asmr"). Drives the placeholder + whether
+  // the dialogue input shows at all (silent styles hide it). Falls
+  // back to the first style for the current angle.
+  const [talkingHookStyle, setTalkingHookStyle] = useState<HookStyleKey>(
+    defaultHookStyle("lifestyle_hold").key,
+  );
   const [talkingDuration, setTalkingDuration] = useState<number>(5);
   const [talkingResolution, setTalkingResolution] =
     useState<TalkingResolution>("720p");
   const [talkingAspect, setTalkingAspect] = useState<TalkingAspect>("9:16");
   const [talkingBusy, setTalkingBusy] = useState(false);
   const [talkingUrl, setTalkingUrl] = useState<string | null>(null);
+  // Collapsed by default — the "Advanced: see assembled prompt"
+  // panel is for power users who want to verify what's being sent.
+  const [showAdvancedPrompt, setShowAdvancedPrompt] = useState(false);
   const talkingPollRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -341,13 +345,23 @@ export default function AdStudioPage() {
     [],
   );
 
-  // Pre-fill the talking-hook box with a strong product-aware line
-  // the moment the talking card can show (Higgsfield-style — never a
-  // blank prompt). Only when still empty + not already rendered, so
-  // we never clobber the user's edits.
+  // Reset the hook style + pre-fill the dialogue input the moment the
+  // talking card can show. The dialogue defaults to the chosen hook
+  // style's placeholder (Playbook-aware copy per angle/style — see
+  // lib/ad-studio/seedance-templates.ts HOOK_STYLES). Don't clobber
+  // the user's edits — only pre-fill when the box is empty.
   useEffect(() => {
-    if (step === 4 && resultUrl && !talkingUrl && !talkingScript) {
-      setTalkingScript(defaultHookScript(productName, angle));
+    if (step !== 4 || !resultUrl || talkingUrl) return;
+    const styles = hookStylesFor(angle);
+    // If the current hook style doesn't belong to this angle (e.g.
+    // user changed angles), snap to the angle's first style.
+    const stillValid = styles.some((s) => s.key === talkingHookStyle);
+    const nextStyle = stillValid
+      ? styles.find((s) => s.key === talkingHookStyle)!
+      : styles[0];
+    if (!stillValid) setTalkingHookStyle(nextStyle.key);
+    if (!talkingScript && !nextStyle.silent) {
+      setTalkingScript(nextStyle.placeholder || "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step, resultUrl, talkingUrl, angle]);
@@ -595,7 +609,12 @@ export default function AdStudioPage() {
   const generateTalkingAd = async () => {
     // Animate the EXACT fused still (creator+product) into a talking
     // video via WaveSpeed Seedance-2 i2v — the real thing.
-    if (!resultUrl || !talkingScript.trim() || talkingBusy) return;
+    if (!resultUrl || talkingBusy) return;
+    const styles = hookStylesFor(angle);
+    const style = styles.find((s) => s.key === talkingHookStyle) || styles[0];
+    // Silent hook styles (faceless ASMR) don't need a dialogue line —
+    // the server skips the "add a hook line" guard when style.silent.
+    if (!style.silent && !talkingScript.trim()) return;
     setTalkingBusy(true);
     setTalkingUrl(null);
     try {
@@ -604,11 +623,12 @@ export default function AdStudioPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           imageUrl: resultUrl,
-          script: talkingScript.trim(),
+          script: style.silent ? "" : talkingScript.trim(),
           duration: talkingDuration,
           resolution: talkingResolution,
           aspectRatio: talkingAspect,
           angle,
+          hookStyle: style.key,
           productName: productName.trim() || undefined,
         }),
       });
@@ -1335,19 +1355,132 @@ export default function AdStudioPage() {
                         </>
                       ) : (
                         <>
-                          <textarea
-                            value={talkingScript}
-                            onChange={(e) => setTalkingScript(e.target.value.slice(0, 240))}
-                            placeholder={'e.g. "Okay I had to show you guys this — honestly obsessed, you need it."'}
-                            rows={3}
-                            disabled={talkingBusy}
-                            className="mt-3 w-full rounded-lg border border-border bg-black/30 px-3 py-2 text-sm outline-none focus:border-[#6366f1] resize-none"
-                          />
-                          <div className="mt-1">
-                            <span className="text-[10px] text-muted-foreground">
-                              {talkingScript.length}/240
-                            </span>
-                          </div>
+                          {/* Hook-style picker — drives the Playbook
+                              template the server uses. Chips visible
+                              for any angle with >1 style; 7 angles ×
+                              2 styles today, easy to add more. */}
+                          {(() => {
+                            const styles = hookStylesFor(angle);
+                            const currentStyle =
+                              styles.find((s) => s.key === talkingHookStyle) ||
+                              styles[0];
+                            return (
+                              <>
+                                <div className="mt-3">
+                                  <div className="text-[11px] text-muted-foreground mb-1.5 uppercase tracking-wider font-medium">
+                                    Hook style
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    {styles.map((s) => {
+                                      const active = s.key === currentStyle.key;
+                                      return (
+                                        <button
+                                          key={s.key}
+                                          type="button"
+                                          disabled={talkingBusy}
+                                          onClick={() => {
+                                            setTalkingHookStyle(s.key);
+                                            // If the user hasn't typed
+                                            // anything, swap in the new
+                                            // style's placeholder so the
+                                            // input always shows useful
+                                            // pre-filled copy. If they
+                                            // HAVE typed, keep their
+                                            // text — never clobber edits.
+                                            if (!s.silent && !talkingScript.trim()) {
+                                              setTalkingScript(s.placeholder || "");
+                                            }
+                                          }}
+                                          className={`text-left rounded-lg border px-3 py-2 transition ${
+                                            active
+                                              ? "border-[#6366f1] bg-[#6366f1]/20"
+                                              : "border-border bg-black/30 hover:border-[#6366f1]/60"
+                                          }`}
+                                        >
+                                          <div className="text-[12px] font-semibold text-white flex items-center gap-1.5">
+                                            {active && (
+                                              <Check className="h-3 w-3 text-[#a78bfa]" />
+                                            )}
+                                            {s.label}
+                                          </div>
+                                          <div className="text-[10px] text-muted-foreground mt-0.5 leading-tight">
+                                            {s.blurb}
+                                          </div>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+
+                                {currentStyle.silent ? (
+                                  /* Silent / ASMR styles — no dialogue
+                                     needed. Show a small note so the
+                                     missing input isn't confusing. */
+                                  <div className="mt-3 rounded-lg border border-border bg-black/30 px-3 py-2.5 text-[11px] text-muted-foreground">
+                                    <span className="text-zinc-300 font-medium">Sound-led.</span>{" "}
+                                    This style has no dialogue — the reveal carries it.
+                                    No script needed.
+                                  </div>
+                                ) : (
+                                  <>
+                                    <div className="mt-3">
+                                      <div className="text-[11px] text-muted-foreground mb-1.5 uppercase tracking-wider font-medium">
+                                        Their hook line
+                                      </div>
+                                      <textarea
+                                        value={talkingScript}
+                                        onChange={(e) =>
+                                          setTalkingScript(e.target.value.slice(0, 240))
+                                        }
+                                        placeholder={currentStyle.placeholder}
+                                        rows={3}
+                                        disabled={talkingBusy}
+                                        className="w-full rounded-lg border border-border bg-black/30 px-3 py-2 text-sm outline-none focus:border-[#6366f1] resize-none"
+                                      />
+                                      <div className="mt-1 flex items-center justify-between">
+                                        <span className="text-[10px] text-muted-foreground">
+                                          1–2 short sentences works best for lip sync.
+                                        </span>
+                                        <span className="text-[10px] text-muted-foreground">
+                                          {talkingScript.length}/240
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </>
+                                )}
+
+                                {/* Advanced: see the full assembled
+                                    Seedance prompt. Same builder as the
+                                    server uses — what you see is what
+                                    Seedance gets. */}
+                                <div className="mt-3">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setShowAdvancedPrompt((v) => !v)
+                                    }
+                                    className="text-[10px] text-muted-foreground hover:text-zinc-300 transition uppercase tracking-wider font-medium"
+                                  >
+                                    {showAdvancedPrompt ? "▾" : "▸"} Advanced: see assembled prompt
+                                  </button>
+                                  {showAdvancedPrompt && (
+                                    <pre className="mt-2 max-h-64 overflow-y-auto rounded-lg border border-border bg-black/40 p-3 text-[10px] leading-snug text-zinc-400 whitespace-pre-wrap font-mono">
+                                      {buildSeedancePrompt({
+                                        angleKey: angle,
+                                        hookStyleKey: currentStyle.key,
+                                        dialogue: currentStyle.silent
+                                          ? ""
+                                          : talkingScript,
+                                        productName,
+                                        duration: talkingDuration,
+                                        aspectRatio: talkingAspect,
+                                      })}
+                                    </pre>
+                                  )}
+                                </div>
+                              </>
+                            );
+                          })()}
                           <div className="mt-3">
                             <div className="flex items-center justify-between text-[11px] mb-1">
                               <span className="text-muted-foreground">
@@ -1429,7 +1562,16 @@ export default function AdStudioPage() {
                           <Button
                             className="mt-3 w-full bg-gradient-to-r from-[#6366f1] to-[#8b7bff] text-white"
                             onClick={generateTalkingAd}
-                            disabled={talkingBusy || !talkingScript.trim()}
+                            disabled={(() => {
+                              if (talkingBusy) return true;
+                              // Silent hook styles (faceless ASMR) don't
+                              // need a script; talking styles do.
+                              const styles = hookStylesFor(angle);
+                              const cur =
+                                styles.find((s) => s.key === talkingHookStyle) ||
+                                styles[0];
+                              return cur.silent ? false : !talkingScript.trim();
+                            })()}
                           >
                             {talkingBusy ? (
                               <>
