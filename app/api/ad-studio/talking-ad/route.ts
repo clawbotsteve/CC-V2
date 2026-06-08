@@ -15,6 +15,11 @@ import {
   talkingVariant,
   talkingCredits,
 } from "@/lib/ad-studio/talking-pricing";
+import {
+  buildSeedancePrompt,
+  resolveHookStyle,
+} from "@/lib/ad-studio/seedance-templates";
+import type { AdAngleKey } from "@/lib/ad-studio/ad-angles";
 
 /**
  * POST /api/ad-studio/talking-ad
@@ -34,9 +39,18 @@ import {
  * polling WaveSpeed (model = "wavespeed-seedance2").
  *
  * Body:
- *   imageUrl  — the fused still (creator+product) to animate (req)
- *   script    — the spoken hook line (req, <= ~240 chars)
- *   duration? — 5 (default) | 10
+ *   imageUrl    — the fused still (creator+product) to animate (req)
+ *   script      — the spoken hook line (req unless the chosen
+ *                 hookStyle is silent — e.g. faceless unboxing ASMR)
+ *   angle       — the AdAngleKey the user picked in Step 3 (drives
+ *                 which Seedance template + hook-style set apply)
+ *   hookStyle?  — the user's hook-style pick from the angle's
+ *                 hookStylesFor() list. Falls back to the first
+ *                 style for the angle when omitted (back-compat).
+ *   productName?— short product name, anchors scene/beats
+ *   duration?   — clamped by normalizeTalkingDuration
+ *   resolution? — 480p | 720p | 1080p (drives credit cost)
+ *   aspectRatio?— 9:16 | 1:1 | 16:9 (no extra cost)
  */
 export async function POST(req: Request) {
   try {
@@ -65,6 +79,10 @@ export async function POST(req: Request) {
     const imageUrl: string | undefined = body?.imageUrl;
     const script: string =
       typeof body?.script === "string" ? body.script.trim() : "";
+    const angleKey: AdAngleKey =
+      (typeof body?.angle === "string" ? body.angle : "lifestyle_hold") as AdAngleKey;
+    const hookStyleKey: string | undefined =
+      typeof body?.hookStyle === "string" ? body.hookStyle : undefined;
 
     if (!imageUrl) {
       return NextResponse.json(
@@ -72,7 +90,11 @@ export async function POST(req: Request) {
         { status: 400 },
       );
     }
-    if (!script) {
+
+    // Faceless / ASMR styles (e.g. unboxing → calm_asmr) are sound-led
+    // by design — no dialogue. Talking styles require a hook line.
+    const style = resolveHookStyle(angleKey, hookStyleKey);
+    if (!style.silent && !script) {
       return NextResponse.json(
         { error: "Add a short line for the creator to say." },
         { status: 400 },
@@ -100,38 +122,24 @@ export async function POST(req: Request) {
     const resolution = normalizeTalkingResolution(body?.resolution);
     const aspectRatio = normalizeTalkingAspect(body?.aspectRatio);
 
-    // The still already contains the exact creator + product, so the
-    // prompt only drives MOTION + the spoken line. Dialogue in double
-    // quotes = Seedance audio convention. Gender-neutral.
-    const safe = script.replace(/["\\]/g, "").replace(/\s+/g, " ").trim().slice(0, 240);
-    const isTryOn = body?.angle === "virtual_tryon";
     const productName: string =
       typeof body?.productName === "string"
         ? body.productName.trim().slice(0, 80)
         : "";
-    const item = productName || "the item";
 
-    let prompt: string;
-    if (isTryOn) {
-      // Haul → (for longer clips) try-on. The still shows her in a
-      // plain base top holding the garment; animate that, and for
-      // 8s+ add a second beat where she actually puts it on.
-      const putOnBeat =
-        duration >= 8
-          ? ` Partway through she pulls ${item} on over her plain top and turns to show how it fits, posing in it.`
-          : "";
-      prompt =
-        `The person in the image holds up ${item} and talks to the phone ` +
-        "front camera with genuine excited 'get ready with me' energy, " +
-        `natural handheld movement.${putOnBeat} Authentic, unpolished UGC. ` +
-        `They say: "${safe}"`;
-    } else {
-      prompt =
-        "The person in the image talks directly to the phone front camera " +
-        "with genuine, warm, excited UGC energy, showing the product to the " +
-        "lens, natural handheld movement and micro-expressions, authentic " +
-        `and unpolished. They say: "${safe}"`;
-    }
+    // Single source of truth for prompt construction — same builder
+    // the client renders into its "Advanced: see assembled prompt"
+    // preview, so what the user sees is exactly what Seedance gets.
+    // Implements the UGC Creator Playbook (June 2026) 7-part framework
+    // per-angle. See lib/ad-studio/seedance-templates.ts.
+    const prompt = buildSeedancePrompt({
+      angleKey,
+      hookStyleKey,
+      dialogue: script,
+      productName,
+      duration,
+      aspectRatio,
+    });
 
     const moderation = await moderateAndLog({
       userId,
