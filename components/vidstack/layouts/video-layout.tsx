@@ -49,6 +49,14 @@ export function VideoLayout({ thumbnails, showMuteButton, download }: VideoLayou
           {download && (
             <DownloadButton
               fileUrl={download}
+              // VideoLayout is video-only, so the right default fallback
+              // is mp4 — NOT the DownloadButton's component-level "jpg"
+              // default. Without this override, every Kling/Seedance/etc
+              // download with a CORS-failed fetch (or a missing/wrong R2
+              // Content-Type) would land on disk as `download-<ts>.jpg`,
+              // which is unplayable garbage. (Bug observed in Railway
+              // prod 2026-06-11.)
+              defaultExtension="mp4"
               className="h-10 w-10 p-0 text-white bg-white/20 hover:bg-white/30"
             >
               <Download className="h-5 w-5" />

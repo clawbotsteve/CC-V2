@@ -73,8 +73,29 @@ export const DownloadButton = forwardRef<
         // (/api/download) which re-streams the asset with the proper
         // Content-Disposition header so the browser downloads it
         // instead of opening it inline. See app/api/download/route.ts.
+        //
+        // IMPORTANT: sniff the URL extension before falling back to
+        // `defaultExtension`. Previously this path went straight to
+        // `defaultExtension` (which was "jpg" at the component level
+        // and rarely overridden), so a video URL like
+        //   https://r2.../foo.mp4
+        // would download as `download-<ts>.jpg` on any CORS failure —
+        // unplayable. Sniffing the URL first keeps mp4/png/etc intact.
+        const urlExt = fileUrl
+          .split("?")[0]
+          .split("#")[0]
+          .split(".")
+          .pop()
+          ?.toLowerCase();
+        const knownExts = new Set([
+          "mp4", "mov", "webm", "mkv",
+          "jpg", "jpeg", "png", "gif", "webp", "avif",
+          "mp3", "wav", "m4a",
+          "pdf",
+        ]);
+        const ext = urlExt && knownExts.has(urlExt) ? urlExt : defaultExtension;
         const downloadName =
-          fileName || `download-${Date.now()}.${defaultExtension}`;
+          fileName || `download-${Date.now()}.${ext}`;
         const proxyUrl = `/api/download?url=${encodeURIComponent(fileUrl)}&name=${encodeURIComponent(downloadName)}`;
         const link = document.createElement("a");
         link.href = proxyUrl;
