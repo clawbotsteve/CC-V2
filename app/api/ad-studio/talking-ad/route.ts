@@ -7,6 +7,7 @@ import { resolveAccessTier } from "@/lib/plan-access";
 import {
   submitWaveSpeedI2V,
   isWaveSpeedConfigured,
+  classifyWaveSpeedError,
 } from "@/lib/wavespeed-client";
 import {
   normalizeTalkingDuration,
@@ -183,9 +184,10 @@ export async function POST(req: Request) {
       taskId = r.taskId;
     } catch (err: any) {
       console.error("[AD-STUDIO_TALKING_AD] WaveSpeed submit failed", err?.message || err);
+      const classified = classifyWaveSpeedError(err);
       return NextResponse.json(
-        { error: "Couldn't start the talking video. Please try again." },
-        { status: 502 },
+        { error: classified.message },
+        { status: classified.status },
       );
     }
 

@@ -12,7 +12,11 @@ import { getFalJobResult } from "@/lib/fal-client";
 import { canUseVideoModel, requiredPlanForVideoModel, resolveAccessTier } from "@/lib/plan-access";
 import { moderateAndLog } from "@/lib/content-moderation";
 import { requireTermsAccepted } from "@/lib/require-terms-accepted";
-import { submitWaveSpeedI2V, isWaveSpeedConfigured } from "@/lib/wavespeed-client";
+import {
+  submitWaveSpeedI2V,
+  isWaveSpeedConfigured,
+  classifyWaveSpeedError,
+} from "@/lib/wavespeed-client";
 
 function getFalEndpointFromModel(model?: string): string | null {
   if (!model) return null;
@@ -217,9 +221,10 @@ export async function POST(req: Request) {
         taskId = r.taskId;
       } catch (err: any) {
         console.error("[VIDEO TOOLS][seedance→wavespeed] submit failed", err?.message || err);
+        const classified = classifyWaveSpeedError(err);
         return NextResponse.json(
-          { error: "Couldn't start Seedance video. Please try again." },
-          { status: 502 },
+          { error: classified.message },
+          { status: classified.status },
         );
       }
 
